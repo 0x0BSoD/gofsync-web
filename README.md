@@ -1,5 +1,8 @@
 # go-fsync-web
 
+
+![screen](screen.png)
+
 ## Project setup
 ```
 yarn install

@@ -4,6 +4,9 @@ export default {
     hgList (host) {
         return Api().get(`/hg/${host}`);
     },
+    envList (host) {
+        return Api().get(`/env/${host}`);
+    },
     hosts () {
         return Api().get("/hosts");
     },

@@ -7,9 +7,9 @@
     >
       {{hgErrorMsg}}
     </v-alert>
-
+    <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
     <v-layout>
-      <v-flex xs4>
+      <v-flex xs3>
         <v-autocomplete
                 class="pr-5"
                 v-model="sHost"
@@ -19,8 +19,17 @@
         >
         </v-autocomplete>
       </v-flex>
-
-      <v-flex xs4>
+      <v-flex xs3>
+        <v-autocomplete
+                class="pr-5"
+                v-model="env"
+                :items="Environments"
+                label="Environment"
+                persistent-hint
+        >
+        </v-autocomplete>
+      </v-flex>
+      <v-flex xs3>
         <v-autocomplete
                 class="pr-5"
                 v-model="hostGroupId"
@@ -48,7 +57,7 @@
         </v-autocomplete>
       </v-flex>
       <v-flex xs1>
-        <v-btn :disabled="hgExist" @click="submit()">Upload</v-btn>
+        <v-btn :disabled="hgExist || !envExist" @click="submit()">Upload</v-btn>
       </v-flex>
 
     </v-layout>
@@ -152,6 +161,7 @@
     data: () => ({
       hosts: [],
       hostGroups: [],
+      hostGroupsFull: [],
       sHost: null,
       tHost: null,
       hostGroupId: null,
@@ -160,7 +170,10 @@
       hgErrorMsg: null,
       existData: null,
       hgExist: null,
-      envExist: null
+      envExist: null,
+      wip: false,
+      Environments: ["any"],
+      env: "any"
     }),
 
     async mounted () {
@@ -170,8 +183,49 @@
     watch: {
       sHost: {
         async handler (val) {
+
+          this.tHost = null;
+          this.existData = null;
+          this.hgExist = null;
+          this.envExist = null;
+          this.hostGroup = null;
+
+
           this.hostGroups = (await GoService.hgList(val)).data;
-          console.log(this.hostGroups)
+          this.hostGroupsFull = (await GoService.hgList(val)).data;
+          let tmpEnv = (await GoService.envList(val)).data;
+
+          let reg = new RegExp('[0-9]');
+          let result = [];
+          for (let env in tmpEnv) {
+            if (reg.test(tmpEnv[env])) {
+              let uEnvId = tmpEnv[env].slice(3,6);
+              if (result.indexOf(uEnvId) === -1) {
+                result.push(uEnvId)
+              }
+            }
+          }
+          this.Environments = result;
+          this.Environments.push("any");
+        }
+      },
+      env: {
+        async handler (val) {
+
+          this.tHost = null;
+          this.existData = null;
+          this.hgExist = null;
+          this.envExist = null;
+          this.hostGroup = null;
+
+          let filtredHG = [];
+          for (let i in this.hostGroupsFull) {
+            if (this.hostGroupsFull[i].name.includes(val)) {
+              console.log(this.hostGroupsFull[i].name);
+              filtredHG.push(this.hostGroupsFull[i]);
+            }
+          }
+          this.hostGroups = filtredHG;
         }
       },
       hostGroupId: {
@@ -224,6 +278,7 @@
         // this.hostGroupId = oldHg;
       },
       async submit () {
+        this.wip = true;
         let data = {
           source_host: this.sHost,
           target_host: this.tHost,
@@ -231,6 +286,7 @@
         };
         let resposnse = (await GoService.hgSend(data)).data;
         console.log(resposnse);
+        this.wip = false;
       },
     }
   }
