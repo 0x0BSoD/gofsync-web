@@ -7,6 +7,14 @@
     >
       {{hgErrorMsg}}
     </v-alert>
+    <v-alert
+            v-model="hgDone"
+            dismissible
+            type="success"
+    >
+      {{hgDoneMsg}}
+    </v-alert>
+
     <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
     <v-layout>
       <v-flex xs3>
@@ -168,6 +176,8 @@
       hostGroup: null,
       hgError: null,
       hgErrorMsg: null,
+      hgDone: null,
+      hgDoneMsg: null,
       existData: null,
       hgExist: null,
       envExist: null,
@@ -273,9 +283,6 @@
       showInfo () {
         this.existData = false;
         this.sHost = this.tHost;
-        // let oldHg = this.hostGroupId;
-        // this.tHost = null;
-        // this.hostGroupId = oldHg;
       },
       async submit () {
         this.wip = true;
@@ -284,8 +291,19 @@
           target_host: this.tHost,
           hg_id: this.hostGroupId
         };
-        let resposnse = (await GoService.hgSend(data)).data;
-        console.log(resposnse);
+        try {
+          let response = (await GoService.hgSend(data));
+          console.log(response.status);
+          console.log(JSON.parse(response.data));
+          if (response.status === 200) {
+            this.hgDone = true;
+            this.hgDoneMsg = `HostGroup ${this.hostGroup.name} added to ${this.tHost}`;
+          }
+        } catch (e) {
+          this.hgError = true;
+          this.hgErrorMsg = e.message;
+        }
+
         this.wip = false;
       },
     }
