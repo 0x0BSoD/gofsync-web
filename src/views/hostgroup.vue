@@ -16,7 +16,9 @@
     </v-alert>
 
     <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
-    <v-layout>
+
+    <v-layout row wrap>
+
       <v-flex xs3>
         <v-autocomplete
                 class="pr-5"
@@ -28,15 +30,18 @@
         </v-autocomplete>
       </v-flex>
       <v-flex xs3>
+
         <v-autocomplete
                 class="pr-5"
                 v-model="env"
                 :items="Environments"
                 label="Environment"
                 persistent-hint
+                :disabled="!sHost"
         >
         </v-autocomplete>
       </v-flex>
+
       <v-flex xs3>
         <v-autocomplete
                 class="pr-5"
@@ -46,6 +51,7 @@
                 persistent-hint
                 item-text="name"
                 item-value="id"
+                :disabled="!sHost"
         >
           <template slot="item" slot-scope="data">
             <v-list-tile-content>
@@ -54,6 +60,7 @@
           </template>
         </v-autocomplete>
       </v-flex>
+
       <v-flex xs3>
         <v-autocomplete
                 class="pr-5"
@@ -61,105 +68,127 @@
                 :items="hosts"
                 label="Target Host"
                 persistent-hint
+                :disabled="!sHost"
         >
         </v-autocomplete>
       </v-flex>
-      <v-flex xs1>
-        <v-btn :disabled="hgExist || !envExist" @click="submit()">Upload</v-btn>
-      </v-flex>
+<!--      <v-flex xs1>-->
+
+<!--      </v-flex>-->
 
     </v-layout>
 
-    <div v-if="hostGroup">
-      <v-layout row wrap>
+      <v-layout row wrap v-if="hostGroup">
         <v-flex xs12 pb-2>
           <v-card>
             <v-layout>
-              <v-flex xs8>
+              <v-flex xs6>
                 <v-card>
-                  <v-card-title primary-title>
-                    <div>
-                      <h3 class="headline mb-0">Host Group info</h3>
-                    </div>
-                  </v-card-title>
                   <v-card-text>
-                    <p>Name: {{hostGroup.name}}</p>
-                    <p>Environment: <v-chip label>{{hostGroup.environment}}</v-chip></p>
+                    <v-layout>
+                      <v-flex xs6>
+                        <p><v-label>Name: </v-label><v-chip label>{{hostGroup.name}}</v-chip></p>
+                        <v-label>Environment: </v-label><v-chip label>{{hostGroup.environment}}</v-chip>
+                      </v-flex>
+                      <v-flex xs6>
+                        <p><v-label>Puppet Classes: </v-label><v-chip label>{{pc_count}}</v-chip></p>
+                        <p><v-label>Overrides: </v-label><v-chip label>{{ovr_count}}</v-chip></p>
+                      </v-flex>
+                    </v-layout>
+
                   </v-card-text>
                 </v-card>
               </v-flex>
-              <v-flex xs4 v-if="existData" class="text-xs-center" pt-5>
-                <v-chip v-if="hgExist"><h3>Host Group exist on host</h3></v-chip>
-                <v-chip v-else ><h3 >Host Group not exist on host</h3></v-chip>
-                <v-chip v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
-                <!--<p v-if="exist" @click="showInfo()"><v-btn>show hg info on target</v-btn></p>-->
+              <v-flex xs6 v-if="existData" pt-5>
+                <v-layout row wrap>
+                  <v-flex xs12 class="text-xs-center" >
+                    <v-chip color="yellow" v-if="hgExist"><h3>Host Group exist on host</h3></v-chip>
+                    <v-chip color="green" v-else ><h3 >Host Group not exist on host</h3></v-chip>
+                    <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+                  </v-flex>
+                  <v-flex xs-12 class="text-xs-center">
+                    <v-btn v-if="!hgExist && envExist" @click="submit()">Upload</v-btn>
+                    <v-btn v-if="hgExist && envExist" @click="submit()">Update</v-btn>
+                    <v-btn v-if="!envExist" @click="submit()">Create ENv</v-btn>
+                  </v-flex>
+                </v-layout>
+
               </v-flex>
             </v-layout>
           </v-card>
         </v-flex>
       </v-layout>
 
-      <v-layout row wrap>
-        <v-flex xs6>
-          <v-expansion-panel>
-            <v-expansion-panel-content
-                    v-for="(val, i) in hostGroup.puppet_classes"
-                    :key="i"
+      <v-layout row wrap v-if="hostGroup">
+        <v-flex xs12>
+          <v-card
+            v-for="(val, i) in pc"
+
+            :key="i"
+          >
+<!--          <v-card-title><h3 class="headline mb-0">{{i}}</h3></v-card-title>-->
+            <v-expansion-panel>
+              <v-expansion-panel-content
+                    v-for="(subval, j) in val"
+                    :key="j"
             >
-              <template v-slot:header>
-                <div>{{i}}</div>
-              </template>
+                <template v-slot:header>
+                  <v-layout>
+                    <v-flex xs8>
+                      <h5 class="mb-0">{{subval.subclass}}</h5>
+                    </v-flex>
+                    <v-flex xs2 v-if="subval.param_count">
+                      <v-badge left>
+                        <template v-slot:badge>
+                          <span>{{subval.param_count}}</span>
+                        </template>
+                        <v-chip>
+                          parameters
+                        </v-chip>
+                      </v-badge>
+                    </v-flex>
+                    <v-flex xs2 v-if="subval.ovr_count">
+                      <v-badge left>
+                        <template v-slot:badge>
+                          <span>{{subval.ovr_count}}</span>
+                        </template>
+                        <v-chip>
+                          overrides
+                        </v-chip>
+                      </v-badge>
+                    </v-flex>
+                  </v-layout>
+                </template>
 
-              <v-card v-for="(subval, j) in val" :key="j">
-                <v-card-text>
-                  <h4>{{subval.subclass}}</h4>
-                  <v-chip
-                          v-for="sc, l in subval.smart_classes"
-                          :key="l"
-                          >
-                    {{sc}}
-                  </v-chip>
-                </v-card-text>
-              </v-card>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-flex>
-        <v-flex xs6 pl-2>
-
-          <v-card>
-            <v-card-title primary-title>
-              <div>
-                <h3 class="headline mb-0">Overrides</h3>
-              </div>
-            </v-card-title>
-
-            <v-card-text>
-              <div v-for="(val, i) in hostGroup.puppet_classes" :key="i">
-                <div v-for="(subval, j) in val" :key="j">
-                  <div v-if="subval.hasOwnProperty('overrides')"
-                     v-for="(ovr, k) in subval.overrides"
-                     :key="k">
-                    <v-card>
-                      <v-card-title primary-title>
-                        <div>
-                          <h3 class="headline mb-0">{{ovr.parameter}}</h3>
-                        </div>
-                      </v-card-title>
-                      <v-card-text>
-                        <div>Value: <p><v-chip label>{{ovr.value}}</v-chip></p></div>
-                        <div>Match: <p><v-chip label>{{ovr.match}}</v-chip></p></div>
-                      </v-card-text>
-                    </v-card>
-                  </div>
-                </div>
-              </div>
-            </v-card-text>
+                <v-layout>
+                  <v-flex xs4>
+                    <div class="ml-2">
+                      <v-chip
+                              label
+                              v-for="(sc, l) in subval.smart_classes"
+                              :key="l"
+                      >
+                        {{sc}}
+                      </v-chip>
+                    </div>
+                  </v-flex>
+                  <v-flex xs8 mr-1>
+                    <div v-if="subval.ovr_count" class="ml-2 mb-2">
+                      <div
+                              v-for="(ovr, l) in subval.overrides"
+                              :key="l"
+                      >
+                        <v-label>Parameter: </v-label> {{ovr.parameter}}
+                        <pre><code>{{ovr.value}}</code></pre>
+                      </div>
+                    </div>
+                  </v-flex>
+                </v-layout>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
           </v-card>
         </v-flex>
       </v-layout>
-    </div>
-
-
   </v-container>
 </template>
 
@@ -182,8 +211,13 @@
       hgExist: null,
       envExist: null,
       wip: false,
+      pc_count: 0,
+      ovr_count: 0,
       Environments: ["any"],
-      env: "any"
+      env: "any",
+      pc: {},
+      sc: {},
+      ovr: {}
     }),
 
     async mounted () {
@@ -199,6 +233,7 @@
           this.hgExist = null;
           this.envExist = null;
           this.hostGroup = null;
+          this.env = "any";
 
 
           this.hostGroups = (await GoService.hgList(val)).data;
@@ -240,6 +275,7 @@
       },
       hostGroupId: {
         async handler (val) {
+          this.wip = true;
           let old_th = this.tHost;
           try {
 
@@ -256,8 +292,49 @@
               this.hgErrorMsg = `Host group ${val} not fond on spb01-puppet`;
             }
           }
-          console.log(this.hostGroup);
+
+          let pc = this.hostGroup.puppet_classes;
+
+          this.pc_count = 0;
+          this.ovr_count = 0;
+          for (let i in pc) {
+            this.pc_count++;
+            this.pc[i] = [];
+
+            for (let j in pc[i]) {
+              let tmp = {};
+              let param_count = 0;
+              let ovr_curr_count = 0;
+
+              tmp["subclass"] = pc[i][j]["subclass"];
+
+              if ("smart_classes" in pc[i][j]) {
+                let sc = pc[i][j]["smart_classes"];
+                for (let l in sc) {
+                  param_count++;
+                  this.sc[l]= sc;
+                }
+                tmp["param_count"] = param_count;
+                tmp["smart_classes"] = sc;
+              }
+
+              if ("overrides" in pc[i][j]) {
+                let ovr = pc[i][j]["overrides"];
+                for (let t in ovr) {
+                  this.ovr_count++;
+                  ovr_curr_count++;
+                  this.ovr[t]= ovr;
+                }
+                tmp["ovr_count"] = ovr_curr_count;
+                tmp["overrides"] = ovr;
+              }
+
+              this.pc[i].push(tmp);
+            }
+          }
+
           this.tHost = old_th;
+          this.wip = false;
         }
       },
       tHost: {
@@ -273,8 +350,6 @@
           };
           this.hgExist = (await GoService.hgCheck(hgData)).data;
           this.envExist = (await GoService.envCheck(envData)).data !== -1;
-          console.log(this.hgExist);
-          console.log(this.envExist);
           this.existData = true;
         }
       }
@@ -293,8 +368,6 @@
         };
         try {
           let response = (await GoService.hgSend(data));
-          console.log(response.status);
-          console.log(JSON.parse(response.data));
           if (response.status === 200) {
             this.hgDone = true;
             this.hgDoneMsg = `HostGroup ${this.hostGroup.name} added to ${this.tHost}`;
