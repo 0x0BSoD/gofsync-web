@@ -108,7 +108,7 @@
                   </v-flex>
                   <v-flex xs-12 class="text-xs-center">
                     <v-btn v-if="!hgExist && envExist" @click="submit()">Upload</v-btn>
-                    <v-btn v-if="hgExist && envExist" @click="submit()">Update</v-btn>
+                    <v-btn v-if="hgExist && envExist" disabled="true" @click="submit()">Update</v-btn>
                     <v-btn v-if="!envExist" @click="submit()">Create ENv</v-btn>
                   </v-flex>
                 </v-layout>
@@ -119,7 +119,7 @@
         </v-flex>
       </v-layout>
 
-      <v-layout row wrap v-if="hostGroup">
+      <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
         <v-flex xs12>
           <v-card
             v-for="(val, i) in pc"
@@ -189,6 +189,144 @@
           </v-card>
         </v-flex>
       </v-layout>
+      <v-layout row wrap v-if="sourceLoaded && targetLoaded">
+        <v-flex xs6>
+          <v-card
+                  v-for="(val, i) in pc"
+
+                  :key="i"
+          >
+            <!--          <v-card-title><h3 class="headline mb-0">{{i}}</h3></v-card-title>-->
+            <v-expansion-panel>
+              <v-expansion-panel-content
+                      v-for="(subval, j) in val"
+                      :key="j"
+              >
+                <template v-slot:header>
+                  <v-layout>
+                    <v-flex xs8>
+                      <h5 class="mb-0">{{subval.subclass}}</h5>
+                    </v-flex>
+                    <v-flex xs2 v-if="subval.param_count">
+                      <v-badge left>
+                        <template v-slot:badge>
+                          <span>{{subval.param_count}}</span>
+                        </template>
+                        <v-chip>
+                          parameters
+                        </v-chip>
+                      </v-badge>
+                    </v-flex>
+                    <v-flex xs2 v-if="subval.ovr_count">
+                      <v-badge left>
+                        <template v-slot:badge>
+                          <span>{{subval.ovr_count}}</span>
+                        </template>
+                        <v-chip>
+                          overrides
+                        </v-chip>
+                      </v-badge>
+                    </v-flex>
+                  </v-layout>
+                </template>
+
+                <v-layout row wrap>
+                  <v-flex xs12 md4>
+                    <div class="ml-2">
+                      <v-chip
+                              label
+                              v-for="(sc, l) in subval.smart_classes"
+                              :key="l"
+                      >
+                        {{sc}}
+                      </v-chip>
+                    </div>
+                  </v-flex>
+                  <v-flex xs12 md8 mr-1>
+                    <div v-if="subval.ovr_count" class="ml-2 mb-2">
+                      <div
+                              v-for="(ovr, l) in subval.overrides"
+                              :key="l"
+                      >
+                        <v-label>Parameter: </v-label> {{ovr.parameter}}
+                        <pre><code>{{ovr.value}}</code></pre>
+                      </div>
+                    </div>
+                  </v-flex>
+                </v-layout>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-card>
+        </v-flex>
+        <v-flex xs6>
+          <v-card
+                  v-for="(val, i) in targPc"
+
+                  :key="i"
+          >
+            <!--          <v-card-title><h3 class="headline mb-0">{{i}}</h3></v-card-title>-->
+            <v-expansion-panel>
+              <v-expansion-panel-content
+                      v-for="(subval, j) in val"
+                      :key="j"
+              >
+                <template v-slot:header>
+                  <v-layout>
+                    <v-flex xs8>
+                      <h5 class="mb-0">{{subval.subclass}}</h5>
+                    </v-flex>
+                    <v-flex xs2 v-if="subval.param_count">
+                      <v-badge left>
+                        <template v-slot:badge>
+                          <span>{{subval.param_count}}</span>
+                        </template>
+                        <v-chip>
+                          parameters
+                        </v-chip>
+                      </v-badge>
+                    </v-flex>
+                    <v-flex xs2 v-if="subval.ovr_count">
+                      <v-badge left>
+                        <template v-slot:badge>
+                          <span>{{subval.ovr_count}}</span>
+                        </template>
+                        <v-chip>
+                          overrides
+                        </v-chip>
+                      </v-badge>
+                    </v-flex>
+                  </v-layout>
+                </template>
+
+                <v-layout row wrap>
+                  <v-flex xs12 md4>
+                    <div class="ml-2">
+                      <v-chip
+                              label
+                              v-for="(sc, l) in subval.smart_classes"
+                              :key="l"
+                      >
+                        {{sc}}
+                      </v-chip>
+                    </div>
+                  </v-flex>
+                  <v-flex xs12 md8 mr-1>
+                    <div v-if="subval.ovr_count" class="ml-2 mb-2">
+                      <div
+                              v-for="(ovr, l) in subval.overrides"
+                              :key="l"
+                      >
+                        <v-label>Parameter: </v-label> {{ovr.parameter}}
+                        <pre><code>{{ovr.value}}</code></pre>
+                      </div>
+                    </div>
+                  </v-flex>
+                </v-layout>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-card>
+        </v-flex>
+      </v-layout>
   </v-container>
 </template>
 
@@ -198,6 +336,7 @@
     data: () => ({
       hosts: [],
       hostGroups: [],
+      targetHostGroup: [],
       hostGroupsFull: [],
       sHost: null,
       tHost: null,
@@ -211,13 +350,20 @@
       hgExist: null,
       envExist: null,
       wip: false,
+      targPc_count: 0,
       pc_count: 0,
       ovr_count: 0,
+      targOvr_count: 0,
       Environments: ["any"],
       env: "any",
       pc: {},
+      targPc: {},
+      targSc: {},
       sc: {},
-      ovr: {}
+      ovr: {},
+      targOvr: {},
+      targetLoaded: false,
+      sourceLoaded: false
     }),
 
     async mounted () {
@@ -284,7 +430,6 @@
             this.hgExist = null;
             this.envExist = null;
 
-            console.log(val);
             this.hostGroup = (await GoService.hg(this.sHost, val)).data;
           } catch (e) {
             if (e.message.includes("404")) {
@@ -334,11 +479,16 @@
           }
 
           this.tHost = old_th;
+          this.sourceLoaded = true;
           this.wip = false;
         }
       },
       tHost: {
         async handler (val) {
+          this.wip = true;
+          this.targetHostGroup = [];
+          this.targetLoaded = false;
+
           let hgData = {
             source_host: this.sHost,
             target_host: val,
@@ -350,6 +500,66 @@
           };
           this.hgExist = (await GoService.hgCheck(hgData)).data;
           this.envExist = (await GoService.envCheck(envData)).data !== -1;
+
+
+
+
+
+
+
+
+
+
+
+          try {
+            this.targetHostGroup = (await GoService.hg(this.tHost, this.hostGroupId)).data;
+          } catch (e) {
+            if (e.message.includes("404")) {
+              this.hgError = true;
+              this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;
+            }
+          }
+
+          let pc = this.targetHostGroup.puppet_classes;
+
+          for (let i in pc) {
+            this.targPc_count++;
+            this.targPc[i] = [];
+
+            for (let j in pc[i]) {
+              let tmp = {};
+              let param_count = 0;
+              let ovr_curr_count = 0;
+
+              tmp["subclass"] = pc[i][j]["subclass"];
+
+              if ("smart_classes" in pc[i][j]) {
+                let sc = pc[i][j]["smart_classes"];
+                for (let l in sc) {
+                  param_count++;
+                  this.targSc[l]= sc;
+                }
+                tmp["param_count"] = param_count;
+                tmp["smart_classes"] = sc;
+              }
+
+              if ("overrides" in pc[i][j]) {
+                let ovr = pc[i][j]["overrides"];
+                for (let t in ovr) {
+                  this.targOvr_count++;
+                  ovr_curr_count++;
+                  this.targOvr[t]= ovr;
+                }
+                tmp["ovr_count"] = ovr_curr_count;
+                tmp["overrides"] = ovr;
+              }
+
+              this.targPc[i].push(tmp);
+            }
+          }
+
+          this.targetLoaded = true;
+          this.wip = false;
           this.existData = true;
         }
       }
@@ -361,6 +571,7 @@
       },
       async submit () {
         this.wip = true;
+        let env = this.env;
         let data = {
           source_host: this.sHost,
           target_host: this.tHost,
@@ -377,6 +588,10 @@
           this.hgErrorMsg = e.message;
         }
 
+        this.sHost = data.target_host;
+        // this.tHost = null;
+        // this.env = env;
+        // this.hostGroupId = data.hg_id;
         this.wip = false;
       },
     }
