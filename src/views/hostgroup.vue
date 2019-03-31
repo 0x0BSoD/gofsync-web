@@ -109,7 +109,7 @@
                   <v-flex xs-12 class="text-xs-center">
                     <v-btn v-if="!hgExist && envExist" @click="submit()">Upload</v-btn>
                     <v-btn v-if="hgExist && envExist" disabled="true" @click="submit()">Update</v-btn>
-                    <v-btn v-if="!envExist" @click="submit()">Create ENv</v-btn>
+                    <v-btn v-if="!envExist" disabled="true" @click="submit()">Create ENv</v-btn>
                   </v-flex>
                 </v-layout>
 
@@ -501,64 +501,56 @@
           this.hgExist = (await GoService.hgCheck(hgData)).data;
           this.envExist = (await GoService.envCheck(envData)).data !== -1;
 
-
-
-
-
-
-
-
-
-
-
-          try {
-            this.targetHostGroup = (await GoService.hg(this.tHost, this.hostGroupId)).data;
-          } catch (e) {
-            if (e.message.includes("404")) {
-              this.hgError = true;
-              this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;
+          if (this.hgExist) {
+            try {
+              this.targetHostGroup = (await GoService.hg(this.tHost, this.hostGroupId)).data;
+            } catch (e) {
+              if (e.message.includes("404")) {
+                this.hgError = true;
+                this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;
+              }
             }
+
+            let pc = this.targetHostGroup.puppet_classes;
+
+            for (let i in pc) {
+              this.targPc_count++;
+              this.targPc[i] = [];
+
+              for (let j in pc[i]) {
+                let tmp = {};
+                let param_count = 0;
+                let ovr_curr_count = 0;
+
+                tmp["subclass"] = pc[i][j]["subclass"];
+
+                if ("smart_classes" in pc[i][j]) {
+                  let sc = pc[i][j]["smart_classes"];
+                  for (let l in sc) {
+                    param_count++;
+                    this.targSc[l]= sc;
+                  }
+                  tmp["param_count"] = param_count;
+                  tmp["smart_classes"] = sc;
+                }
+
+                if ("overrides" in pc[i][j]) {
+                  let ovr = pc[i][j]["overrides"];
+                  for (let t in ovr) {
+                    this.targOvr_count++;
+                    ovr_curr_count++;
+                    this.targOvr[t]= ovr;
+                  }
+                  tmp["ovr_count"] = ovr_curr_count;
+                  tmp["overrides"] = ovr;
+                }
+
+                this.targPc[i].push(tmp);
+              }
+            }
+            this.targetLoaded = true;
           }
 
-          let pc = this.targetHostGroup.puppet_classes;
-
-          for (let i in pc) {
-            this.targPc_count++;
-            this.targPc[i] = [];
-
-            for (let j in pc[i]) {
-              let tmp = {};
-              let param_count = 0;
-              let ovr_curr_count = 0;
-
-              tmp["subclass"] = pc[i][j]["subclass"];
-
-              if ("smart_classes" in pc[i][j]) {
-                let sc = pc[i][j]["smart_classes"];
-                for (let l in sc) {
-                  param_count++;
-                  this.targSc[l]= sc;
-                }
-                tmp["param_count"] = param_count;
-                tmp["smart_classes"] = sc;
-              }
-
-              if ("overrides" in pc[i][j]) {
-                let ovr = pc[i][j]["overrides"];
-                for (let t in ovr) {
-                  this.targOvr_count++;
-                  ovr_curr_count++;
-                  this.targOvr[t]= ovr;
-                }
-                tmp["ovr_count"] = ovr_curr_count;
-                tmp["overrides"] = ovr;
-              }
-
-              this.targPc[i].push(tmp);
-            }
-          }
-
-          this.targetLoaded = true;
           this.wip = false;
           this.existData = true;
         }
