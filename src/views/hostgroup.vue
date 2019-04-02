@@ -1,21 +1,21 @@
 <template>
   <v-container>
-    <v-alert
+      <v-alert
             v-model="hgError"
             dismissible
             type="error"
     >
       {{hgErrorMsg}}
     </v-alert>
-    <v-alert
+      <v-alert
             v-model="hgDone"
             dismissible
             type="success"
     >
       {{hgDoneMsg}}
     </v-alert>
-    <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
-    <v-layout wrap row>
+      <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+      <v-layout wrap row>
       <v-flex xs6>
         <v-layout wrap row>
           <v-flex xs6 pr-5>
@@ -70,8 +70,35 @@
           </v-flex>
         </v-layout>
       </v-flex>
-
     </v-layout>
+
+      <v-item-group v-if="!sHost">
+          <v-container grid-list-md>
+              <v-layout wrap>
+                  <v-flex
+                          v-for="n in locations"
+                          :key="n"
+                          xs12
+                          md4
+                  >
+                      <v-item>
+                          <v-card>
+                              <v-card-title><h4>{{n.host}}</h4></v-card-title>
+                              <v-divider></v-divider>
+                              <v-hover v-for="c in n.locations">
+                              <v-chip
+                                      slot-scope="{ hover }"
+                                      :class="`elevation-${hover ? 12 : 2}`"
+                                      class="mx-auto"
+                                      label >{{c}}</v-chip>
+                              </v-hover>
+                          </v-card>
+                      </v-item>
+                  </v-flex>
+              </v-layout>
+          </v-container>
+      </v-item-group>
+
       <v-layout row wrap v-if="hostGroup">
 
         <v-flex xs12 pb-2>
@@ -344,11 +371,13 @@
       targOvr: {},
       targetLoaded: false,
       sourceLoaded: false,
-      foremanCheckHG: false
+      foremanCheckHG: false,
+      locations: []
     }),
 
     async mounted () {
       this.hosts = (await GoService.hosts()).data;
+      this.locations =  (await GoService.locList()).data;
     },
 
     watch: {

@@ -7,6 +7,9 @@ export default {
     envList (host) {
         return Api().get(`/env/${host}`);
     },
+    locList () {
+        return Api().get(`/loc`);
+    },
     hosts () {
         return Api().get("/hosts");
     },
