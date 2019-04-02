@@ -21,5 +21,14 @@ export default {
     },
     hgSend(data) {
         return Api().post("/send/hg", data)
-    }
+    },
+    hgUpdate(data) {
+        return Api().post("/hg/update", data)
+    },
+    hgFCheck (host, hgId) {
+        return Api().get(`/hg/foreman/check/${host}/${hgId}`);
+    },
+    hgFGet (host, hgId) {
+        return Api().get(`/hg/foreman/get/${host}/${hgId}`);
+    },
 }
