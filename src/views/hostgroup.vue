@@ -72,32 +72,7 @@
       </v-flex>
     </v-layout>
 
-      <v-item-group v-if="!sHost">
-          <v-container grid-list-md>
-              <v-layout wrap>
-                  <v-flex
-                          v-for="n in locations"
-                          :key="n"
-                          xs12
-                          md4
-                  >
-                      <v-item>
-                          <v-card>
-                              <v-card-title><h4>{{n.host}}</h4></v-card-title>
-                              <v-divider></v-divider>
-                              <v-hover v-for="c in n.locations">
-                              <v-chip
-                                      slot-scope="{ hover }"
-                                      :class="`elevation-${hover ? 12 : 2}`"
-                                      class="mx-auto"
-                                      label >{{c}}</v-chip>
-                              </v-hover>
-                          </v-card>
-                      </v-item>
-                  </v-flex>
-              </v-layout>
-          </v-container>
-      </v-item-group>
+      <Locations v-if="!sHost" :locations="locations"/>
 
       <v-layout row wrap v-if="hostGroup">
 
@@ -158,180 +133,16 @@
 
       <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
         <v-flex xs12>
-          <v-card
-            v-for="(val, i) in pc"
-            :key="i"
-          >
-            <v-expansion-panel>
-              <v-expansion-panel-content
-                    v-for="(subval, j) in val"
-                    :key="j"
-            >
-                <template v-slot:actions>
-                  <v-badge overlap left v-if="subval.smart_classes">
-                    <template v-slot:badge>
-                      <span>{{subval.param_count}}</span>
-                    </template>
-                    <v-icon color="green darken-2" large>star</v-icon>
-                  </v-badge>
-                  <v-icon v-else color="primary">$vuetify.icons.expand</v-icon>
-                  <v-badge overlap left color="orange" v-if="subval.ovr_count">
-                    <template v-slot:badge>
-                      <span>{{subval.ovr_count}}</span>
-                    </template>
-                    <v-icon  color="blue darken-2" large>star_border</v-icon>
-                  </v-badge>
-                </template>
-                <template v-slot:header>
-                  <div>{{subval.subclass}}</div>
-                </template>
-                <v-layout>
-                  <v-flex xs4>
-                    <div class="ml-2">
-                      <v-chip
-                              label
-                              v-for="(sc, l) in subval.smart_classes"
-                              :key="l"
-                      >
-                        {{sc}}
-                      </v-chip>
-                    </div>
-                  </v-flex>
-                  <v-flex xs8 mr-1>
-                    <div v-if="subval.ovr_count" class="ml-2 mb-2">
-                      <div
-                              v-for="(ovr, l) in subval.overrides"
-                              :key="l"
-                      >
-                        <v-label>Parameter: </v-label> {{ovr.parameter}}
-                        <pre><code>{{ovr.value}}</code></pre>
-                      </div>
-                    </div>
-                  </v-flex>
-                </v-layout>
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-card>
+            <HGInfo :puppetClasses="pc"/>
         </v-flex>
       </v-layout>
       <!-- ================================= If Target loaded ================================= -->
       <v-layout row wrap v-if="sourceLoaded && targetLoaded">
         <v-flex xs6>
-          <v-card
-                  v-for="(val, i) in pc"
-                  :key="i"
-          >
-            <v-expansion-panel>
-              <v-expansion-panel-content
-                      v-for="(subval, j) in val"
-                      :key="j"
-              >
-                <template v-slot:actions>
-
-                  <v-badge overlap left v-if="subval.smart_classes">
-                    <template v-slot:badge>
-                      <span>{{subval.param_count}}</span>
-                    </template>
-                    <v-icon color="green darken-2" large>star</v-icon>
-                  </v-badge>
-
-                  <v-icon v-else color="primary">$vuetify.icons.expand</v-icon>
-
-                  <v-badge overlap left color="orange" v-if="subval.ovr_count">
-                    <template v-slot:badge>
-                      <span>{{subval.ovr_count}}</span>
-                    </template>
-                    <v-icon  color="blue darken-2" large>star_border</v-icon>
-                  </v-badge>
-
-                </template>
-                <template v-slot:header>
-                  <div>{{subval.subclass}}</div>
-                </template>
-                <v-layout>
-                  <v-flex xs4>
-                    <div class="ml-2">
-                      <v-chip
-                              label
-                              v-for="(sc, l) in subval.smart_classes"
-                              :key="l"
-                      >
-                        {{sc}}
-                      </v-chip>
-                    </div>
-                  </v-flex>
-                  <v-flex xs8 mr-1>
-                    <div v-if="subval.ovr_count" class="ml-2 mb-2">
-                      <div
-                              v-for="(ovr, l) in subval.overrides"
-                              :key="l"
-                      >
-                        <v-label>Parameter: </v-label> {{ovr.parameter}}
-                        <pre><code>{{ovr.value}}</code></pre>
-                      </div>
-                    </div>
-                  </v-flex>
-                </v-layout>
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-card>
+            <HGInfo :puppetClasses="pc"/>
         </v-flex>
-        <!-- ================================================================= -->
         <v-flex xs6>
-          <v-card
-                  v-for="(val, i) in targPc"
-                  :key="i"
-          >
-            <v-expansion-panel>
-              <v-expansion-panel-content
-                      v-for="(subval, j) in val"
-                      :key="j"
-              >
-                <template v-slot:actions>
-                  <v-badge overlap left v-if="subval.smart_classes">
-                    <template v-slot:badge>
-                      <span>{{subval.param_count}}</span>
-                    </template>
-                    <v-icon color="green darken-2" large>star</v-icon>
-                  </v-badge>
-                  <v-icon v-else color="primary">$vuetify.icons.expand</v-icon>
-                  <v-badge overlap left color="orange" v-if="subval.ovr_count">
-                    <template v-slot:badge>
-                      <span>{{subval.ovr_count}}</span>
-                    </template>
-                    <v-icon  color="blue darken-2" large>star_border</v-icon>
-                  </v-badge>
-                </template>
-                <template v-slot:header>
-                  <div>{{subval.subclass}}</div>
-                </template>
-                <v-layout>
-                  <v-flex xs4>
-                    <div class="ml-2">
-                      <v-chip
-                              label
-                              v-for="(sc, l) in subval.smart_classes"
-                              :key="l"
-                      >
-                        {{sc}}
-                      </v-chip>
-                    </div>
-                  </v-flex>
-                  <v-flex xs8 mr-1>
-                    <div v-if="subval.ovr_count" class="ml-2 mb-2">
-                      <div
-                              v-for="(ovr, l) in subval.overrides"
-                              :key="l"
-                      >
-                        <v-label>Parameter: </v-label> {{ovr.parameter}}
-                        <pre><code>{{ovr.value}}</code></pre>
-                      </div>
-                    </div>
-                  </v-flex>
-                </v-layout>
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-card>
+            <HGInfo :puppetClasses="targPc"/>
         </v-flex>
       </v-layout>
   </v-container>
@@ -339,7 +150,15 @@
 
 <script>
   import GoService from "@/services/GoService";
+  import Locations from "@/components/locations";
+  import HGInfo from "@/components/hgInfo";
+
   export default {
+      components: {
+          Locations,
+          HGInfo
+      },
+
     data: () => ({
       hosts: [],
       hostGroups: [],
@@ -415,12 +234,15 @@
       },
       env: {
         async handler (val) {
-
           this.tHost = null;
           this.existData = null;
           this.hgExist = null;
           this.envExist = null;
           this.hostGroup = null;
+            this.pc = {};
+            this.targPc = {};
+            this.targetLoaded = false;
+            this.sourceLoaded = false;
 
           let filtredHG = [];
           for (let i in this.hostGroupsFull) {
