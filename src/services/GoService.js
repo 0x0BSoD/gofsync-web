@@ -34,4 +34,7 @@ export default {
     hgFGet (host, hgId) {
         return Api().get(`/hg/foreman/get/${host}/${hgId}`);
     },
+    hgFUpdate (host, hgId) {
+        return Api().get(`/hg/foreman/update/${host}/${hgId}`);
+    },
 }
