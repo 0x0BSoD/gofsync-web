@@ -83,7 +83,7 @@
 
         <Locations v-if="!sHost" :locations="locations"/>
 
-        <v-layout row wrap v-if="hostGroup.name">
+        <v-layout row wrap v-if="hostGroup">
 
             <v-flex xs12 pb-2>
                 <v-card>
@@ -168,9 +168,6 @@
             HGInfo
         },
 
-
-
-
         data: () => ({
             hosts: [],
             hostGroups: [],
@@ -179,11 +176,7 @@
             sHost: null,
             tHost: null,
             hostGroupId: null,
-            hostGroup: {
-                name: null,
-                environment: null,
-                puppet_classes: null,
-            },
+            hostGroup: null,
             hgError: null,
             hgErrorMsg: null,
             hgDone: null,
@@ -237,7 +230,7 @@
                 this.userData = JSON.parse(loggedIn);
                 this.username = this.userData.CN[0];
                 this.userGroups = this.userData.OU.join("|");
-                this.$store.dispatch("setPane", this.username);
+                this.$store.dispatch("setUsername", this.username);
                 try {
                     await userService.refreshjwt();
                 } catch (e) {
@@ -263,8 +256,8 @@
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
-                    this.hostGroups = (await hostService.hgList(val)).data;
-                    this.hostGroupsFull = (await hostService.hgList(val)).data;
+                    this.hostGroups = (await hostGroupService.hgList(val)).data;
+                    this.hostGroupsFull = (await hostGroupService.hgList(val)).data;
                     let tmpEnv = (await environmentService.envList(val)).data;
 
                     let reg = new RegExp('[0-9]');
@@ -314,7 +307,7 @@
                             this.hgExist = null;
                             this.envExist = null;
 
-                            this.hostGroup = (await hostService.hg(this.sHost, val)).data;
+                            this.hostGroup = (await hostGroupService.hg(this.sHost, val)).data;
                             this.pc = {};
                         } catch (e) {
                             console.error(e);
@@ -385,9 +378,9 @@
                             host: val,
                             env: this.hostGroup.environment
                         };
-                        this.hgExist = (await hostService.hgCheck(hgData)).data;
+                        this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
                         this.envExist = (await environmentService.envCheck(envData)).data !== -1;
-                        let fchg = (await hostService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                        let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
                         if (fchg.error !== "not found") {
                             this.foremanCheckHG = true;
                         }
@@ -403,7 +396,7 @@
                 this.wip = true;
                 let old_th = this.tHost;
                 try {
-                    let res = await hostService.hgFUpdate(this.sHost, this.hostGroup.name);
+                    let res = await hostGroupService.hgFUpdate(this.sHost, this.hostGroup.name);
                     console.log(res);
 
                     this.tHost = null;
@@ -411,7 +404,7 @@
                     this.hgExist = null;
                     this.envExist = null;
 
-                    this.hostGroup = (await hostService.hg(this.sHost, this.hostGroupId)).data;
+                    this.hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
                 } catch (e) {
                     console.error(e);
@@ -469,7 +462,7 @@
 
                 // get host group info from target foreman
                 try {
-                    this.targetHostGroup = (await hostService.hgFGet(this.tHost, this.hostGroup.name)).data;
+                    this.targetHostGroup = (await hostGroupService.hgFGet(this.tHost, this.hostGroup.name)).data;
                 } catch (e) {
                     if (e.message.includes("404")) {
                         this.hgError = true;
@@ -546,7 +539,7 @@
 
                 // Commit new data
                 try {
-                    let response = (await hostService.hgSend(data));
+                    let response = (await hostGroupService.hgSend(data));
                     console.log(response);
                     if (response.status === 200) {
                         this.hgDone = true;
@@ -565,7 +558,7 @@
 
                 // Get Host Group ID for target host
                 let targetId = null;
-                let targetHgs = (await hostService.hgList(this.tHost)).data;
+                let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
                 for (let i in targetHgs) {
                     if (targetHgs.hasOwnProperty(i)) {
                         if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
@@ -582,7 +575,7 @@
 
                 // Commit new data
                 try {
-                    let response = (await hostService.hgUpdate(data));
+                    let response = (await hostGroupService.hgUpdate(data));
                     console.log(response);
                     if (response.status === 200) {
                         this.hgDone = true;
