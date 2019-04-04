@@ -83,11 +83,10 @@
 
         <Locations v-if="!sHost" :locations="locations"/>
 
-        <v-layout row wrap v-if="hostGroup">
+        <v-layout row wrap v-if="hostGroup.name">
 
             <v-flex xs12 pb-2>
                 <v-card>
-
                     <v-layout>
                         <v-flex xs6>
                             <v-card-text>
@@ -158,7 +157,8 @@
 </template>
 
 <script>
-    import GoService from "@/services/GoService";
+    import { hostGroupService, environmentService,
+              hostService, locationsService, userService } from "../_services"
     import Locations from "@/components/locations";
     import HGInfo from "@/components/hgInfo";
 
@@ -167,6 +167,9 @@
             Locations,
             HGInfo
         },
+
+
+
 
         data: () => ({
             hosts: [],
@@ -204,12 +207,45 @@
             targetLoaded: false,
             sourceLoaded: false,
             foremanCheckHG: false,
-            locations: []
+            locations: [],
+            loggedIn: false,
+            userData: {
+                CN: [],
+                DC: [],
+                OU: []
+            },
+            username: null,
+            userGroups: null,
+            btn_logout: false,
         }),
 
         async mounted () {
-            this.hosts = (await GoService.hosts()).data;
-            this.locations =  (await GoService.locList()).data;
+            try {
+                this.hosts = (await hostService.hosts()).data;
+                this.locations =  (await locationsService.locList()).data;
+            } catch (e) {
+                this.hgError = true;
+                this.hgErrorMsg = "Backend not reachable or in errored state"
+            }
+
+            const loggedIn = localStorage.getItem('userData');
+            const token    = this.$cookies.isKey("token");
+
+            if (token && !!loggedIn) {
+                this.btn_logout = true;
+                this.loggedIn = true;
+                this.userData = JSON.parse(loggedIn);
+                this.username = this.userData.CN[0];
+                this.userGroups = this.userData.OU.join("|");
+                this.$store.dispatch("setPane", this.username);
+                try {
+                    await userService.refreshjwt();
+                } catch (e) {
+                    console.log("token is ok");
+                }
+            } else {
+                this.$router.push({name: "login"});
+            }
         },
 
         watch: {
@@ -227,9 +263,9 @@
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
-                    this.hostGroups = (await GoService.hgList(val)).data;
-                    this.hostGroupsFull = (await GoService.hgList(val)).data;
-                    let tmpEnv = (await GoService.envList(val)).data;
+                    this.hostGroups = (await hostService.hgList(val)).data;
+                    this.hostGroupsFull = (await hostService.hgList(val)).data;
+                    let tmpEnv = (await environmentService.envList(val)).data;
 
                     let reg = new RegExp('[0-9]');
                     let result = [];
@@ -278,7 +314,7 @@
                             this.hgExist = null;
                             this.envExist = null;
 
-                            this.hostGroup = (await GoService.hg(this.sHost, val)).data;
+                            this.hostGroup = (await hostService.hg(this.sHost, val)).data;
                             this.pc = {};
                         } catch (e) {
                             console.error(e);
@@ -349,9 +385,9 @@
                             host: val,
                             env: this.hostGroup.environment
                         };
-                        this.hgExist = (await GoService.hgCheck(hgData)).data;
-                        this.envExist = (await GoService.envCheck(envData)).data !== -1;
-                        let fchg = (await GoService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                        this.hgExist = (await hostService.hgCheck(hgData)).data;
+                        this.envExist = (await environmentService.envCheck(envData)).data !== -1;
+                        let fchg = (await hostService.hgFCheck(this.tHost, this.hostGroup.name)).data;
                         if (fchg.error !== "not found") {
                             this.foremanCheckHG = true;
                         }
@@ -367,7 +403,7 @@
                 this.wip = true;
                 let old_th = this.tHost;
                 try {
-                    let res = await GoService.hgFUpdate(this.sHost, this.hostGroup.name);
+                    let res = await hostService.hgFUpdate(this.sHost, this.hostGroup.name);
                     console.log(res);
 
                     this.tHost = null;
@@ -375,7 +411,7 @@
                     this.hgExist = null;
                     this.envExist = null;
 
-                    this.hostGroup = (await GoService.hg(this.sHost, this.hostGroupId)).data;
+                    this.hostGroup = (await hostService.hg(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
                 } catch (e) {
                     console.error(e);
@@ -433,7 +469,7 @@
 
                 // get host group info from target foreman
                 try {
-                    this.targetHostGroup = (await GoService.hgFGet(this.tHost, this.hostGroup.name)).data;
+                    this.targetHostGroup = (await hostService.hgFGet(this.tHost, this.hostGroup.name)).data;
                 } catch (e) {
                     if (e.message.includes("404")) {
                         this.hgError = true;
@@ -510,7 +546,7 @@
 
                 // Commit new data
                 try {
-                    let response = (await GoService.hgSend(data));
+                    let response = (await hostService.hgSend(data));
                     console.log(response);
                     if (response.status === 200) {
                         this.hgDone = true;
@@ -529,7 +565,7 @@
 
                 // Get Host Group ID for target host
                 let targetId = null;
-                let targetHgs = (await GoService.hgList(this.tHost)).data;
+                let targetHgs = (await hostService.hgList(this.tHost)).data;
                 for (let i in targetHgs) {
                     if (targetHgs.hasOwnProperty(i)) {
                         if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
@@ -546,7 +582,7 @@
 
                 // Commit new data
                 try {
-                    let response = (await GoService.hgUpdate(data));
+                    let response = (await hostService.hgUpdate(data));
                     console.log(response);
                     if (response.status === 200) {
                         this.hgDone = true;
@@ -558,7 +594,12 @@
                 }
 
                 this.wip = false;
-            }
+            },
+            logout () {
+                localStorage.clear();
+                this.$cookies.remove("token");
+                this.$router.push({name: "login"});
+            },
         }
     }
 </script>
