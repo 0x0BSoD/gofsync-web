@@ -32,7 +32,7 @@ function hgCheck(data) {
     return Api().post("/hg/check", data)
 }
 function hgSend(data) {
-    return Api().post("/hg/send", data)
+    return Api().post("/hg/upload", data)
 }
 function hgUpdate(data) {
     return Api().post("/hg/update", data)
