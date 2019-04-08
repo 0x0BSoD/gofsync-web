@@ -7,9 +7,9 @@ export const environmentService = {
 
 // GET ===========================================
 function envList(host) {
-    return Api().get(`/env/${host}`);
+    return Api().get(`env/${host}`);
 }
 // POST ===========================================
 function envCheck(data) {
-    return Api().post("/env/check", data)
+    return Api().post("env/check", data)
 }

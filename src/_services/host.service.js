@@ -6,5 +6,5 @@ export const hostService = {
 
 // GET ===========================================
 function hosts() {
-    return Api().get(`/hosts`);
+    return Api().get(`hosts`);
 }

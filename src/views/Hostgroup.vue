@@ -214,8 +214,10 @@
 
         async mounted () {
             try {
+                this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
                 this.locations =  (await locationsService.locList()).data;
+                this.wip = false;
             } catch (e) {
                 this.hgError = true;
                 this.hgErrorMsg = "Backend not reachable or in errored state"
@@ -236,9 +238,10 @@
                 } catch (e) {
                     console.log("token is ok");
                 }
-            } else {
-                this.$router.push({name: "login"});
             }
+            // else {
+            //     this.$router.push({name: "login"});
+            // }
         },
 
         watch: {

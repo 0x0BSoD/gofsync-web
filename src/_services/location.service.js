@@ -6,5 +6,5 @@ export const locationsService = {
 
 // GET ===========================================
 function locList() {
-    return Api().get(`/loc`);
+    return Api().get(`loc`);
 }
