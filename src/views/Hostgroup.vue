@@ -46,7 +46,7 @@
                             <template v-slot:activator="{ on }">
                                 <v-btn icon flat @click="renewSourceHG()" v-on="on"><v-icon>sync</v-icon></v-btn>
                             </template>
-                            <span>Load data from target host</span>
+                            <span>Load data from target host (about 5 minutes)</span>
                         </v-tooltip>
 
                     </v-flex>
@@ -105,14 +105,17 @@
                         <v-flex xs6 v-if="existData" pt-5>
                             <v-layout row wrap>
                                 <v-flex xs12 class="text-xs-center" >
-                                    <v-chip color="yellow" v-if="foremanCheckHG"><h3>Host Group exist on host</h3></v-chip>
+                                    <v-chip color="yellow" v-if="foremanCheckHG">
+                                        <h3>Host Group exist on host</h3>
+                                    </v-chip>
+                                    <p v-if="foremanCheckHG"><v-label>hg not be updated in local db</v-label></p>
                                     <!--<v-chip color="yellow" v-if="hgExist"><h3>Host Group exist in base</h3></v-chip>-->
                                     <v-chip color="green" v-else ><h3 >Host Group not exist on host</h3></v-chip>
                                     <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
                                 </v-flex>
                                 <v-flex xs-12 class="text-xs-center">
-                                    <v-btn v-if="!hgExist && envExist" @click="submit()">Upload</v-btn>
-                                    <v-btn v-if="hgExist && envExist"  @click="update()">Update</v-btn>
+                                    <v-btn v-if="!hgExist && envExist" :disabled="wip" @click="submit()">Upload</v-btn>
+                                    <v-btn v-if="hgExist && envExist"  :disabled="wip" @click="update()">Update</v-btn>
                                     <v-btn v-if="!envExist" :disabled="true" @click="submit()">Create ENv</v-btn>
                                     <v-tooltip bottom>
                                         <template v-slot:activator="{ on }">
@@ -239,9 +242,9 @@
                     console.log("token is ok");
                 }
             }
-            // else {
-            //     this.$router.push({name: "login"});
-            // }
+            else {
+                this.$router.push({name: "login"});
+            }
         },
 
         watch: {
