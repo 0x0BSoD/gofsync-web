@@ -102,27 +102,94 @@
                                 </v-layout>
                             </v-card-text>
                         </v-flex>
-                        <v-flex xs6 v-if="existData" pt-5>
+                        <v-flex xs6 v-if="existData" pt-3>
                             <v-layout row wrap>
-                                <v-flex xs12 class="text-xs-center" >
-                                    <v-chip color="yellow" v-if="foremanCheckHG">
-                                        <h3>Host Group exist on host</h3>
-                                    </v-chip>
-                                    <p v-if="foremanCheckHG"><v-label>hg not be updated in local db</v-label></p>
-                                    <!--<v-chip color="yellow" v-if="hgExist"><h3>Host Group exist in base</h3></v-chip>-->
-                                    <v-chip color="green" v-else ><h3 >Host Group not exist on host</h3></v-chip>
-                                    <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+
+                                <v-flex xs12 v-if="foremanCheckHG">
+                                    <v-layout row wrap>
+                                        <v-flex xs12>
+                                            <v-layout class="text-xs-center">
+                                                <v-flex xs4></v-flex>
+                                                <v-flex xs4>
+                                                    <v-chip color="yellow">
+                                                        <h3>Host Group exist on host</h3>
+                                                    </v-chip>
+                                                    <p v-if="!hgExist"><v-label>not exist in local DB</v-label></p>
+                                                    <p><v-label v-if="!updateDB">hg not be updated in local DB</v-label></p>
+                                                </v-flex>
+                                                <v-flex xs4></v-flex>
+                                            </v-layout>
+                                        </v-flex>
+
+                                        <v-flex xs12>
+                                            <v-layout>
+                                                <v-flex xs4></v-flex>
+                                                <v-flex xs4>
+                                                    <v-list two-line>
+                                                        <v-list-tile >
+                                                            <v-list-tile-action>
+                                                                <v-tooltip bottom>
+                                                                    <template v-slot:activator="{ on }">
+                                                                        <v-checkbox v-model="updateDB" :disabled="wip" v-on="on"/>
+                                                                    </template>
+                                                                    <span>Renew data in local DB</span>
+                                                                </v-tooltip>
+                                                            </v-list-tile-action>
+                                                            <div class="d-flex">
+                                                                <v-btn :disabled="wip" @click="update()">Update</v-btn>
+                                                                <v-tooltip bottom>
+                                                                    <template v-slot:activator="{ on }">
+                                                                        <v-btn @click="ontargetHG()" color="primary" :disabled="wip" v-on="on">Load Data</v-btn>
+                                                                    </template>
+                                                                    <span>Load data from target host</span>
+                                                                </v-tooltip>
+                                                            </div>
+                                                        </v-list-tile>
+                                                    </v-list>
+                                                </v-flex>
+                                                <v-flex xs4></v-flex>
+                                            </v-layout>
+                                        </v-flex>
+                                    </v-layout>
                                 </v-flex>
-                                <v-flex xs-12 class="text-xs-center">
-                                    <v-btn v-if="!hgExist && envExist" :disabled="wip" @click="submit()">Upload</v-btn>
-                                    <v-btn v-if="hgExist && envExist"  :disabled="wip" @click="update()">Update</v-btn>
-                                    <v-btn v-if="!envExist" :disabled="true" @click="submit()">Create ENv</v-btn>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
-                                            <v-btn v-if="hgExist && envExist && foremanCheckHG" @click="ontargetHG()" color="primary" dark v-on="on">Load Data</v-btn>
-                                        </template>
-                                        <span>Load data from target host</span>
-                                    </v-tooltip>
+
+                                <v-flex xs12 v-else>
+                                    <v-layout row wrap>
+                                        <v-flex xs12>
+                                            <v-layout class="text-xs-center">
+                                                <v-flex xs4></v-flex>
+                                                <v-flex xs4>
+                                                    <v-chip color="green" ><h3 >Host Group not exist on host</h3></v-chip>
+                                                    <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+                                                </v-flex>
+                                                <v-flex xs4></v-flex>
+                                            </v-layout>
+                                        </v-flex>
+
+                                        <v-flex xs12>
+                                            <v-layout>
+                                                <v-flex xs4></v-flex>
+                                                <v-flex xs4>
+                                                    <v-list two-line>
+                                                        <v-list-tile >
+                                                            <v-list-tile-action>
+                                                                <v-tooltip bottom>
+                                                                    <template v-slot:activator="{ on }">
+                                                                        <v-checkbox v-model="updateDB" :disabled="wip" v-on="on"/>
+                                                                    </template>
+                                                                    <span>Renew data in local DB</span>
+                                                                </v-tooltip>
+                                                            </v-list-tile-action>
+                                                            <div class="d-flex">
+                                                                <v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">Upload</v-btn>
+                                                            </div>
+                                                        </v-list-tile>
+                                                    </v-list>
+                                                </v-flex>
+                                                <v-flex xs4></v-flex>
+                                            </v-layout>
+                                        </v-flex>
+                                    </v-layout>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
@@ -213,6 +280,7 @@
             username: null,
             userGroups: null,
             btn_logout: false,
+            updateDB: false,
         }),
 
         async mounted () {
@@ -242,9 +310,9 @@
                     console.log("token is ok");
                 }
             }
-            else {
-                this.$router.push({name: "login"});
-            }
+            // else {
+            //     this.$router.push({name: "login"});
+            // }
         },
 
         watch: {
@@ -540,7 +608,8 @@
                 let data = {
                     source_host: this.sHost,
                     target_host: this.tHost,
-                    source_hg_id: this.hostGroupId
+                    source_hg_id: this.hostGroupId,
+                    db_update: this.updateDB,
                 };
 
                 // Commit new data
@@ -576,7 +645,8 @@
                     source_host: this.sHost,
                     target_host: this.tHost,
                     source_hg_id: this.hostGroupId,
-                    target_hg_id: targetId
+                    target_hg_id: targetId,
+                    db_update: this.updateDB,
                 };
 
                 // Commit new data
