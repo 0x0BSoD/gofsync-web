@@ -6,7 +6,7 @@
                     <span>go</span>
                     <span class="font-weight-light">Fsync</span>
                 </v-toolbar-title>
-                <v-btn disabled="true" flat :to="{name:'batch'}">BATCH</v-btn>
+                <v-btn flat :to="{name:'batch'}">BATCH</v-btn>
                 <v-spacer></v-spacer>
                 {{username}}
             </v-toolbar>

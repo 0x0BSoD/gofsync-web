@@ -232,6 +232,7 @@
                 this.locations =  (await locationsService.locList()).data;
                 this.wip = false;
             } catch (e) {
+                this.wip = false;
                 this.hgError = true;
                 this.hgErrorMsg = "Backend not reachable or in errored state"
             }
@@ -252,9 +253,9 @@
                     console.log("token is ok");
                 }
             }
-            // else {
-            //     this.$router.push({name: "login"});
-            // }
+            else {
+                this.$router.push({name: "login"});
+            }
         },
 
         watch: {
@@ -327,6 +328,7 @@
                             this.pc = {};
                         } catch (e) {
                             console.error(e);
+                            this.wip = false;
                             if (e.message.includes("404")) {
                                 this.hgError = true;
                                 this.hgErrorMsg = `Host group ${val} not fond on ${this.sHost}`;
@@ -423,6 +425,7 @@
                     this.pc = {};
                 } catch (e) {
                     console.error(e);
+                    this.wip = false;
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on spb01-puppet`;
@@ -492,6 +495,7 @@
                     this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
                     console.log(this.targetHostGroup);
                 } catch (e) {
+                    this.wip = false;
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;
@@ -547,7 +551,14 @@
                     }
                 }
 
-                this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
+                // Build POST parameters
+                let data = {
+                    source_host: this.sHost,
+                    target_host: this.tHost,
+                    source_hg_id: this.hostGroupId,
+                    db_update: this.updateDB,
+                };
+                this.hgExist = (await hostGroupService.hgCheck(data)).data;
                 let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
 
@@ -579,6 +590,7 @@
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} added to ${this.tHost}`;
                     }
                 } catch (e) {
+                    this.wip = false;
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
                 }
@@ -620,6 +632,7 @@
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
                     }
                 } catch (e) {
+                    this.wip = false;
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
                 }
