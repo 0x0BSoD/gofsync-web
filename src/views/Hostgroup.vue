@@ -113,7 +113,7 @@
                                             </v-chip>
                                             <p v-if="!hgExist"><v-label>not exist in local DB</v-label></p>
                                             <p></p>
-                                                <v-btn v-if="hgExist" :disabled="wip" @click="update()">Update</v-btn>
+                                                <v-btn v-if="hgExist" :disabled="wip" @click="submit()">Update</v-btn>
                                                 <v-tooltip bottom>
                                                     <template v-slot:activator="{ on }">
                                                         <v-btn @click="ontargetHG()" color="primary" :disabled="wip" v-on="on">Load Data</v-btn>
@@ -171,8 +171,8 @@
 <script>
     import { hostGroupService, environmentService,
               hostService, locationsService, userService } from "../_services"
-    import Locations from "@/components/locations";
-    import HGInfo from "@/components/hgInfo";
+    import Locations from "../components/hostgroups/locations";
+    import HGInfo from "../components/hostgroups/hgInfo";
 
     export default {
         components: {

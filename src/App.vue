@@ -2,6 +2,9 @@
     <v-app>
         <v-content>
             <v-toolbar app dense>
+                <v-btn :to="{name:'hostgroup'}" icon flat class="hidden-xs-only">
+                    <v-icon>sync</v-icon>
+                </v-btn>
                 <v-toolbar-title class="headline text-uppercase">
                     <span>go</span>
                     <span class="font-weight-light">Fsync</span>

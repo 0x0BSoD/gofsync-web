@@ -90,13 +90,13 @@
                                 <v-flex xs3>{{val.hgName}}</v-flex>
                                 <v-flex xs6>
                                     <v-progress-linear v-if="val.wip" :indeterminate="val.wip"></v-progress-linear>
+                                    <v-chip v-else-if="val.error" color="error">Errored</v-chip>
                                     <v-chip v-else label color="success">Uploaded</v-chip>
                                 </v-flex>
                             </v-layout>
                            <v-layout row v-else>
                                <v-flex xs3>{{val.tHost}}</v-flex>
-                               <v-flex xs3><a :href="`https://${val.tHost}/hostgroups/${val.foremanTargetId}-${val.hgName}/edit`">{{val.hgName}}</a></v-flex>
-<!--                               <v-flex xs3 v-if="val.hostgroup"><v-chip label color="warning">Exist, to update</v-chip></v-flex>-->
+                               <v-flex xs3>{{val.hgName}}</v-flex>
                                <v-flex xs3 v-if="val.foremanCheckHG"><v-chip label color="warning">Exist</v-chip></v-flex>
                                <v-flex xs3 v-else><v-chip label color="success">Add new</v-chip></v-flex>
                                <v-flex xs3 v-if="val.environment === -1"><v-chip label color="warning">Env not exist</v-chip></v-flex>
@@ -105,8 +105,8 @@
                         </v-card-text>
                     </v-card>
 
-                    <v-btn flat color="warning" @click="e1 = 3" >back</v-btn>
-                    <v-btn flat color="success" :disabled="started" @click="startJob()" >upload</v-btn>
+                    <v-btn v-if="!wip" flat color="warning" @click="e1 = 3" >back</v-btn>
+                    <v-btn v-if="!wip" flat color="success" :disabled="started" @click="startJob()" >upload</v-btn>
 
                 </v-stepper-content>
             </v-stepper-items>
@@ -144,8 +144,8 @@
             async startJob () {
                 this.started = true;
                 for (let i in this.checkRes) {
+                    if (this.checkRes[i].environment) {
 
-                    if (!this.checkRes[i].foremanCheckHG) {
                         // Build POST parameters
                         let data = {
                             source_host: this.sHost,
@@ -153,37 +153,35 @@
                             source_hg_id: this.checkRes[i].source_hg_id,
                             db_update: true,
                         };
-
-                        console.log(data);
-
                         // Commit new data
                         try {
                             let response = (await hostGroupService.hgSend(data));
                             console.log(response);
                         } catch (e) {
                             console.error(e);
-                            return;
+                            this.checkRes[i].error = true;
                         }
                         //    ==============================================================================================
-                    } else {
-                          // Build POST parameters
-                        let data = {
-                            source_host: this.sHost,
-                            target_host: this.checkRes[i].tHost,
-                            source_hg_id: this.checkRes[i].source_hg_id,
-                            target_hg_id: this.checkRes[i].foremanTargetId,
-                            db_update: true,
-                        };
-                        console.log(data);
-                        // Commit new data
-                        try {
-                            let response = (await hostGroupService.hgUpdate(data));
-                            console.log(response);
-                        } catch (e) {
-                            console.error(e);
-                            return;
-                        }
                     }
+                    // else {
+                    //       // Build POST parameters
+                    //     let data = {
+                    //         source_host: this.sHost,
+                    //         target_host: this.checkRes[i].tHost,
+                    //         source_hg_id: this.checkRes[i].source_hg_id,
+                    //         target_hg_id: this.checkRes[i].foremanTargetId,
+                    //         db_update: true,
+                    //     };
+                    //     console.log(data);
+                    //     // Commit new data
+                    //     try {
+                    //         let response = (await hostGroupService.hgUpdate(data));
+                    //         console.log(response);
+                    //     } catch (e) {
+                    //         console.error(e);
+                    //         this.checkRes[i].error = true;
+                    //     }
+                    // }
                     this.checkRes[i].wip = false;
                 }
                 await this.checks()
@@ -194,9 +192,16 @@
             async checks() {
                 this.started = false;
                 this.wip = true;
+                this.checkRes = {};
                 let res = [];
                 for (let hg in this.hostGroupSelected) {
-                    let hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupSelected[hg])).data;
+                    let hostGroup = {};
+                    try {
+                        hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupSelected[hg])).data;
+                    } catch (e) {
+                        this.wip = false;
+                        return ;
+                    }
                     for (let target in this.tHost) {
                         if (this.tHost[target] !== this.sHost) {
                             let hgData = {
@@ -204,6 +209,7 @@
                                 target_host: this.tHost[target],
                                 source_hg_id: this.hostGroupSelected[hg],
                                 foremanCheckHG: false,
+                                error: false,
                                 wip: true,
                             };
 
@@ -224,8 +230,6 @@
                                     }
                                 }
                             }
-
-
                             res.push({
                                 tHost: this.tHost[target],
                                 hgName: hostGroup.name,
