@@ -643,11 +643,6 @@
 
                 this.wip = false;
             },
-            logout () {
-                localStorage.clear();
-                this.$cookies.remove("token");
-                this.$router.push({name: "login"});
-            },
         }
     }
 </script>

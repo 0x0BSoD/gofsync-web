@@ -133,6 +133,12 @@
             wipUploading: true,
         }),
         async mounted () {
+            const loggedIn = localStorage.getItem('userData');
+            const token    = this.$cookies.isKey("token");
+            if (!token && !loggedIn) {
+                this.$router.push({name: "login"});
+            }
+
             try {
                 this.hosts = (await hostService.hosts()).data;
             } catch (e) {
