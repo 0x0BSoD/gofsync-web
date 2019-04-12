@@ -102,27 +102,36 @@
                                 </v-layout>
                             </v-card-text>
                         </v-flex>
-                        <v-flex xs6 v-if="existData" pt-5>
+                        <v-flex xs6 v-if="existData" pt-3>
                             <v-layout row wrap>
-                                <v-flex xs12 class="text-xs-center" >
-                                    <v-chip color="yellow" v-if="foremanCheckHG">
-                                        <h3>Host Group exist on host</h3>
-                                    </v-chip>
-                                    <p v-if="foremanCheckHG"><v-label>hg not be updated in local db</v-label></p>
-                                    <!--<v-chip color="yellow" v-if="hgExist"><h3>Host Group exist in base</h3></v-chip>-->
-                                    <v-chip color="green" v-else ><h3 >Host Group not exist on host</h3></v-chip>
-                                    <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+
+                                <v-flex xs12 v-if="foremanCheckHG">
+                                    <v-layout row wrap class="text-xs-center">
+                                        <v-flex xs12>
+                                            <v-chip color="yellow">
+                                                <h3>Host Group exist on host</h3>
+                                            </v-chip>
+                                            <p v-if="!hgExist"><v-label>not exist in local DB</v-label></p>
+                                            <p></p>
+                                                <v-btn v-if="hgExist" :disabled="wip" @click="submit()">Update</v-btn>
+                                                <v-tooltip bottom>
+                                                    <template v-slot:activator="{ on }">
+                                                        <v-btn @click="ontargetHG()" color="primary" :disabled="wip" v-on="on">Load Data</v-btn>
+                                                    </template>
+                                                    <span>Load data from target host</span>
+                                                </v-tooltip>
+                                        </v-flex>
+                                    </v-layout>
                                 </v-flex>
-                                <v-flex xs-12 class="text-xs-center">
-                                    <v-btn v-if="!hgExist && envExist" :disabled="wip" @click="submit()">Upload</v-btn>
-                                    <v-btn v-if="hgExist && envExist"  :disabled="wip" @click="update()">Update</v-btn>
-                                    <v-btn v-if="!envExist" :disabled="true" @click="submit()">Create ENv</v-btn>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
-                                            <v-btn v-if="hgExist && envExist && foremanCheckHG" @click="ontargetHG()" color="primary" dark v-on="on">Load Data</v-btn>
-                                        </template>
-                                        <span>Load data from target host</span>
-                                    </v-tooltip>
+
+                                <v-flex xs12 v-else>
+                                    <v-layout row wrap class="text-xs-center">
+                                        <v-flex xs12>
+                                            <v-chip color="green" ><h3 >Host Group not exist on host</h3></v-chip>
+                                            <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">Upload</v-btn></p>
+                                        </v-flex>
+                                    </v-layout>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
@@ -162,8 +171,8 @@
 <script>
     import { hostGroupService, environmentService,
               hostService, locationsService, userService } from "../_services"
-    import Locations from "@/components/locations";
-    import HGInfo from "@/components/hgInfo";
+    import Locations from "../components/hostgroups/locations";
+    import HGInfo from "../components/hostgroups/hgInfo";
 
     export default {
         components: {
@@ -213,6 +222,7 @@
             username: null,
             userGroups: null,
             btn_logout: false,
+            updateDB: false,
         }),
 
         async mounted () {
@@ -222,6 +232,7 @@
                 this.locations =  (await locationsService.locList()).data;
                 this.wip = false;
             } catch (e) {
+                this.wip = false;
                 this.hgError = true;
                 this.hgErrorMsg = "Backend not reachable or in errored state"
             }
@@ -317,6 +328,7 @@
                             this.pc = {};
                         } catch (e) {
                             console.error(e);
+                            this.wip = false;
                             if (e.message.includes("404")) {
                                 this.hgError = true;
                                 this.hgErrorMsg = `Host group ${val} not fond on ${this.sHost}`;
@@ -384,12 +396,11 @@
                             host: val,
                             env: this.hostGroup.environment
                         };
-                        this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
                         this.envExist = (await environmentService.envCheck(envData)).data !== -1;
+
+                        this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
                         let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
-                        if (fchg.error !== "not found") {
-                            this.foremanCheckHG = true;
-                        }
+                        this.foremanCheckHG = fchg.error != "not found";
 
                         this.wip = false;
                         this.existData = true;
@@ -414,6 +425,7 @@
                     this.pc = {};
                 } catch (e) {
                     console.error(e);
+                    this.wip = false;
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on spb01-puppet`;
@@ -458,6 +470,10 @@
                     }
                 }
 
+                this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
+                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.foremanCheckHG = fchg.error != "not found";
+
                 this.tHost = old_th;
                 this.sourceLoaded = true;
                 this.wip = false;
@@ -465,11 +481,21 @@
 
             async ontargetHG () {
                 this.wip = true;
-
-                // get host group info from target foreman
                 try {
-                    this.targetHostGroup = (await hostGroupService.hgFGet(this.tHost, this.hostGroup.name)).data;
+                    // this.targetHostGroup = (await hostGroupService.hgFGet(this.tHost, this.hostGroup.name)).data;
+                    let res = await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name);
+
+                    let targetId = null;
+                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    for (let i in targetHgs) {
+                        if (targetHgs.hasOwnProperty(i)) {
+                            if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
+                        }
+                    }
+                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    console.log(this.targetHostGroup);
                 } catch (e) {
+                    this.wip = false;
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;
@@ -525,6 +551,17 @@
                     }
                 }
 
+                // Build POST parameters
+                let data = {
+                    source_host: this.sHost,
+                    target_host: this.tHost,
+                    source_hg_id: this.hostGroupId,
+                    db_update: this.updateDB,
+                };
+                this.hgExist = (await hostGroupService.hgCheck(data)).data;
+                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.foremanCheckHG = fchg.error != "not found";
+
                 this.targetLoaded = true;
                 this.wip = false;
             },
@@ -540,7 +577,8 @@
                 let data = {
                     source_host: this.sHost,
                     target_host: this.tHost,
-                    source_hg_id: this.hostGroupId
+                    source_hg_id: this.hostGroupId,
+                    db_update: this.updateDB,
                 };
 
                 // Commit new data
@@ -552,9 +590,14 @@
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} added to ${this.tHost}`;
                     }
                 } catch (e) {
+                    this.wip = false;
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
                 }
+
+                this.hgExist = (await hostGroupService.hgCheck(data)).data;
+                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.foremanCheckHG = fchg.error != "not found";
 
                 this.wip = false;
             },
@@ -576,7 +619,8 @@
                     source_host: this.sHost,
                     target_host: this.tHost,
                     source_hg_id: this.hostGroupId,
-                    target_hg_id: targetId
+                    target_hg_id: targetId,
+                    db_update: this.updateDB,
                 };
 
                 // Commit new data
@@ -588,16 +632,16 @@
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
                     }
                 } catch (e) {
+                    this.wip = false;
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
                 }
 
+                this.hgExist = (await hostGroupService.hgCheck(data)).data;
+                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.foremanCheckHG = fchg.error != "not found";
+
                 this.wip = false;
-            },
-            logout () {
-                localStorage.clear();
-                this.$cookies.remove("token");
-                this.$router.push({name: "login"});
             },
         }
     }
