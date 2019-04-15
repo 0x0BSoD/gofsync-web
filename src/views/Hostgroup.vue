@@ -120,6 +120,7 @@
                                                     </template>
                                                     <span>Load data from target host</span>
                                                 </v-tooltip>
+                                            <v-btn v-if="link" icon falt><a target="_blank" :rel="hostGroup.name" :href="link"><v-icon>link</v-icon></a></v-btn>
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
@@ -223,6 +224,7 @@
             userGroups: null,
             btn_logout: false,
             updateDB: false,
+            link: false,
         }),
 
         async mounted () {
@@ -280,10 +282,12 @@
                     let reg = new RegExp('[0-9]');
                     let result = [];
                     for (let env in tmpEnv) {
-                        if (reg.test(tmpEnv[env])) {
-                            let uEnvId = tmpEnv[env].slice(3,6);
-                            if (result.indexOf(uEnvId) === -1) {
-                                result.push(uEnvId)
+                        if (tmpEnv.hasOwnProperty(env)) {
+                            if (reg.test(tmpEnv[env])) {
+                                let uEnvId = tmpEnv[env].slice(3,6);
+                                if (result.indexOf(uEnvId) === -1) {
+                                    result.push(uEnvId)
+                                }
                             }
                         }
                     }
@@ -493,9 +497,11 @@
                         }
                     }
                     this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
-                    console.log(this.targetHostGroup);
+                    let name = this.hostGroup.name.replace(/\./g, "-");
+                    this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
                 } catch (e) {
                     this.wip = false;
+                    console.log(e);
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;
