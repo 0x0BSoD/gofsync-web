@@ -46,7 +46,7 @@
                             <template v-slot:activator="{ on }">
                                 <v-btn icon flat @click="renewSourceHG()" v-on="on"><v-icon>sync</v-icon></v-btn>
                             </template>
-                            <span>Load data from target host (about 5 minutes)</span>
+                            <span>Load data from source host (about 5 minutes)</span>
                         </v-tooltip>
 
                     </v-flex>
@@ -120,7 +120,13 @@
                                                     </template>
                                                     <span>Load data from target host</span>
                                                 </v-tooltip>
-                                            <v-btn v-if="link" icon falt><a target="_blank" :rel="hostGroup.name" :href="link"><v-icon>link</v-icon></a></v-btn>
+
+                                            <v-tooltip bottom>
+                                                <template v-slot:activator="{ on }">
+                                                    <v-btn v-if="link" icon falt><a target="_blank" v-on="on" :rel="hostGroup.name" :href="link"><v-icon>link</v-icon></a></v-btn>
+                                                </template>
+                                                <span>HostGroup link</span>
+                                            </v-tooltip>
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
@@ -307,13 +313,17 @@
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
-                    let parsedHG = [];
-                    for (let i in this.hostGroupsFull) {
-                        if (this.hostGroupsFull[i].name.includes(val)) {
-                            parsedHG.push(this.hostGroupsFull[i]);
+                    if (val === 'any') {
+                        this.hostGroups = this.hostGroupsFull;
+                    } else {
+                        let parsedHG = [];
+                        for (let i in this.hostGroupsFull) {
+                            if (this.hostGroupsFull[i].name.includes(val)) {
+                                parsedHG.push(this.hostGroupsFull[i]);
+                            }
                         }
+                        this.hostGroups = parsedHG;
                     }
-                    this.hostGroups = parsedHG;
                 }
             },
             hostGroupId: {
@@ -427,6 +437,10 @@
 
                     this.hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
+                    if ( this.hostGroup.status === 200) {
+                        this.hgDone = true;
+                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
+                    }
                 } catch (e) {
                     console.error(e);
                     this.wip = false;
@@ -473,10 +487,6 @@
                         this.pc[i].push(tmp);
                     }
                 }
-
-                this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
-                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
-                this.foremanCheckHG = fchg.error != "not found";
 
                 this.tHost = old_th;
                 this.sourceLoaded = true;

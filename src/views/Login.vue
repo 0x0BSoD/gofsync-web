@@ -44,7 +44,20 @@
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="primary" :disabled="!username && !password" @click="login()">Login</v-btn>
+
+                        <v-btn
+                                :loading="loading"
+                                color="primary"
+                                :disabled="(!username && !password) || loading"
+                                @click="login()"
+                        >Login
+                            <template v-slot:loader>
+                                <span class="custom-loader">
+                                  <v-icon light>cached</v-icon>
+                                </span>
+                            </template>
+                        </v-btn>
+
                     </v-card-actions>
                 </v-card>
             </v-flex>
@@ -64,6 +77,7 @@
             password: null,
             remember_me: null,
             error: false,
+            loading: false,
             rules: {
                 required: value => !!value || 'Required.',
             },
@@ -75,6 +89,7 @@
         },
         methods: {
             async login () {
+                this.loading = true;
                 try {
                     let resp = await userService.login(this.username,
                                                        this.password,
@@ -89,8 +104,10 @@
                 } catch (err) {
                     this.error = true;
                     console.error(err);
+                } finally {
+                    this.loading = false;
                 }
-            }
+            },
         }
     }
 
@@ -121,4 +138,42 @@
         width: 100%;
         height: 100%;
     }
+
+    .custom-loader {
+        animation: loader 1s infinite;
+        display: flex;
+    }
+    @-moz-keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @-webkit-keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @-o-keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
 </style>
