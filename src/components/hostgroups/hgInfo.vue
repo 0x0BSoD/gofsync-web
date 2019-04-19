@@ -27,8 +27,8 @@
                     <template v-slot:header>
                         <div>{{subClass.subclass}}</div>
                     </template>
-                    <v-layout>
-                        <v-flex xs4>
+                    <v-layout row wrap>
+                        <v-flex xs12>
                             <div class="ml-2">
                                 <v-chip
                                         label
@@ -39,7 +39,7 @@
                                 </v-chip>
                             </div>
                         </v-flex>
-                        <v-flex xs8 mr-1>
+                        <v-flex xs12 pr-2 pt-2>
                             <div v-if="subClass.ovr_count" class="ml-2 mb-2">
                                 <div
                                         v-for="(ovr, l) in subClass.overrides"

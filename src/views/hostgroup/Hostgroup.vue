@@ -41,15 +41,6 @@
             </v-flex>
             <v-flex xs6>
                 <v-layout wrap row>
-                    <v-flex xs1 pt-2 v-if="hostGroupId">
-                        <v-tooltip bottom>
-                            <template v-slot:activator="{ on }">
-                                <v-btn icon flat @click="renewSourceHG()" v-on="on"><v-icon>sync</v-icon></v-btn>
-                            </template>
-                            <span>Load data from source host (about 5 minutes)</span>
-                        </v-tooltip>
-
-                    </v-flex>
                     <v-flex xs5 pr-5>
                         <v-autocomplete
                                 v-model="hostGroupId"
@@ -113,17 +104,23 @@
                                             </v-chip>
                                             <p v-if="!hgExist"><v-label>not exist in local DB</v-label></p>
                                             <p></p>
-                                                <v-btn v-if="hgExist" :disabled="wip" @click="submit()">Update</v-btn>
-                                                <v-tooltip bottom>
+                                                <v-tooltip bottom v-if="hostGroupId">
                                                     <template v-slot:activator="{ on }">
-                                                        <v-btn @click="ontargetHG()" color="primary" :disabled="wip" v-on="on">Load Data</v-btn>
+                                                        <v-btn @click="updateSourceHG()" color="primary" :disabled="wip" v-on="on">Update source</v-btn>
                                                     </template>
-                                                    <span>Load data from target host</span>
+                                                    <span>Load data from source host (about 5 minutes)</span>
                                                 </v-tooltip>
+                                            <v-tooltip bottom>
+                                                    <template v-slot:activator="{ on }">
+                                                        <v-btn @click="updateTargetHG()" color="secondary" :disabled="wip" v-on="on">Update target</v-btn>
+                                                    </template>
+                                                    <span>Load data from target host (about 5 minutes)</span>
+                                            </v-tooltip>
+                                            <v-btn v-if="hgExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>cloud_upload</v-icon></v-btn>
 
                                             <v-tooltip bottom>
                                                 <template v-slot:activator="{ on }">
-                                                    <v-btn v-if="link" icon falt><a target="_blank" v-on="on" :rel="hostGroup.name" :href="link"><v-icon>link</v-icon></a></v-btn>
+                                                    <v-btn v-if="link" icon flat><a target="_blank" v-on="on" :rel="hostGroup.name" :href="link"><v-icon>link</v-icon></a></v-btn>
                                                 </template>
                                                 <span>HostGroup link</span>
                                             </v-tooltip>
@@ -136,11 +133,19 @@
                                         <v-flex xs12>
                                             <v-chip color="green" ><h3 >Host Group not exist on host</h3></v-chip>
                                             <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
-                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">Upload</v-btn></p>
+                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>expand_less</v-icon></v-btn></p>
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
                             </v-layout>
+                        </v-flex>
+                        <v-flex xs6 v-else pt-3  class="text-xs-center">
+                            <v-tooltip bottom>
+                                <template v-slot:activator="{ on }">
+                                    <v-btn @click="updateSourceHG()" color="primary" :disabled="wip" v-on="on">Update source</v-btn>
+                                </template>
+                                <span>Load data from source host (about 5 minutes)</span>
+                            </v-tooltip>
                         </v-flex>
                     </v-layout>
                 </v-card>
@@ -148,38 +153,120 @@
 
         </v-layout>
 
-        <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
-            <v-flex xs12>
-                <v-btn
-                        v-for="(val, i) in hostGroups"
-                        :key="i"
-                        @click="setHG(val.id)"
-                >{{val.name}}</v-btn>
+        <v-card v-if="sourceDiff && targetDiff">
+            <v-card-text>
+                <v-layout row wrap class="text-xs-center">
+                    <v-flex xs6>
+                        <h3>Not in source</h3>
+                        <h3 v-if="puppetClassesMissingSource">Puppet Classes</h3>
+                        <p v-if="puppetClassesMissingSource">{{puppetClassesMissingSource}}</p>
+                        <h3 v-if="smartClassesMissingSource">Smart Class</h3>
+                        <p v-if="smartClassesMissingSource">{{smartClassesMissingSource}}</p>
+                        <h3 v-if="smartClassesParameterMissingSource">Smart Class parameters</h3>
+                        <p v-if="smartClassesParameterMissingSource">{{smartClassesParameterMissingSource}}</p>
+                        <h3 v-if="overridesMissingSource">Overrides</h3>
+                        <p v-if="overridesMissingSource">{{overridesMissingSource}}</p>
+                    </v-flex>
+                    <v-flex xs6>
+                        <h3>Not in target</h3>
+                        <h3 v-if="puppetClassesMissing">Puppet Classes</h3>
+                        <p v-if="puppetClassesMissing">{{puppetClassesMissing}}</p>
+                        <h3 v-if="smartClassesMissing">Smart Class</h3>
+                        <p v-if="smartClassesMissing">{{smartClassesMissing}}</p>
+                        <h3 v-if="smartClassesParameterMissing">Smart Class parameters</h3>
+                        <p v-if="smartClassesParameterMissing">{{smartClassesParameterMissing}}</p>
+                        <h3 v-if="overridesMissing">Overrides</h3>
+                        <p v-if="overridesMissing">{{overridesMissing}}</p>
+                    </v-flex>
+                    <v-flex xs12>
+                        <h3 v-if="overridesMismatch">Overrides mismatch</h3>
+                        <p v-if="overridesMismatch">{{overridesMismatch}}</p>
+                    </v-flex>
+                </v-layout>
+            </v-card-text>
+        </v-card>
+        <v-card v-else-if="sourceDiff || targetDiff">
+            <v-card-text>
+                <v-layout row wrap  class="text-xs-center">
+                    <v-flex xs12 v-if="sourceDiff">
+                        <h3>Not in source</h3>
+                        <h3 v-if="puppetClassesMissingSource">Puppet Classes</h3>
+                        <p v-if="puppetClassesMissingSource">{{puppetClassesMissingSource}}</p>
+                        <h3 v-if="smartClassesMissingSource">Smart Class</h3>
+                        <p v-if="smartClassesMissingSource">{{smartClassesMissingSource}}</p>
+                        <h3 v-if="smartClassesParameterMissingSource">Smart Class parameters</h3>
+                        <p v-if="smartClassesParameterMissingSource">{{smartClassesParameterMissingSource}}</p>
+                        <h3 v-if="overridesMissingSource">Overrides</h3>
+                        <p v-if="overridesMissingSource">{{overridesMissingSource}}</p>
+                    </v-flex>
+                    <v-flex xs12 v-if="targetDiff">
+                        <h3>Not in target</h3>
+                        <h3 v-if="puppetClassesMissing">Puppet Classes</h3>
+                        <p v-if="puppetClassesMissing">{{puppetClassesMissing}}</p>
+                        <h3 v-if="smartClassesMissing">Smart Class</h3>
+                        <p v-if="smartClassesMissing">{{smartClassesMissing}}</p>
+                        <h3 v-if="smartClassesParameterMissing">Smart Class parameters</h3>
+                        <p v-if="smartClassesParameterMissing">{{smartClassesParameterMissing}}</p>
+                        <h3 v-if="overridesMissing">Overrides</h3>
+                        <p v-if="overridesMissing">{{overridesMissing}}</p>
+                    </v-flex>
+                    <v-flex xs12>
+                        <h3 v-if="overridesMismatch">Overrides mismatch</h3>
+                        <p v-if="overridesMismatch">{{overridesMismatch}}</p>
+                    </v-flex>
+                </v-layout>
+            </v-card-text>
+        </v-card>
+
+        <v-layout v-if="sourceLoaded" row>
+            <v-flex xs12 class="text-xs-center">
+                <v-btn v-if="!showPC" @click="showPC = !showPC"  round color="primary" dark>Show puppet classes
+                    <v-icon right dark>expand_more</v-icon></v-btn>
+                <v-btn v-else @click="showPC = !showPC" round color="primary" dark>Hide puppet classes
+                    <v-icon right dark>expand_less</v-icon></v-btn>
             </v-flex>
         </v-layout>
 
-        <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
-            <v-flex xs12>
-                <HGInfo :puppetClasses="pc"/>
-            </v-flex>
-        </v-layout>
-        <!-- ================================= If Target loaded ================================= -->
-        <v-layout row wrap v-if="sourceLoaded && targetLoaded">
-            <v-flex xs6>
-                <HGInfo :puppetClasses="pc"/>
-            </v-flex>
-            <v-flex xs6>
-                <HGInfo :puppetClasses="targPc"/>
-            </v-flex>
-        </v-layout>
+
+            <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
+                <v-flex xs12>
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            @click="setHG(val.id)"
+                    >{{val.name}}</v-btn>
+                </v-flex>
+            </v-layout>
+
+        <div v-if="showPC">
+            <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
+                <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
+                <v-flex xs12>
+                    <HGInfo :puppetClasses="pc"/>
+                </v-flex>
+            </v-layout>
+            <!-- ================================= If Target loaded ================================= -->
+            <v-layout row wrap v-if="sourceLoaded && targetLoaded">
+                <v-flex xs6>
+                    <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
+                    <HGInfo :puppetClasses="pc"/>
+                </v-flex>
+                <v-flex xs6>
+                    <v-flex xs12 class="text-xs-center"><h3>TARGET</h3></v-flex>
+                    <HGInfo :puppetClasses="targPc"/>
+                </v-flex>
+            </v-layout>
+        </div>
+
     </v-container>
 </template>
 
 <script>
     import { hostGroupService, environmentService,
-              hostService, locationsService, userService } from "../_services"
-    import Locations from "../components/hostgroups/locations";
-    import HGInfo from "../components/hostgroups/hgInfo";
+              hostService, locationsService, userService } from "../../_services"
+    import Locations from "../../components/hostgroups/locations";
+    import HGInfo from "../../components/hostgroups/hgInfo";
+    import { PuppetMethods } from "./methods"
 
     export default {
         components: {
@@ -204,18 +291,11 @@
             hgExist: null,
             envExist: null,
             wip: false,
-            targPc_count: 0,
             pc_count: 0,
             ovr_count: 0,
-            targOvr_count: 0,
             Environments: ["any"],
             env: "any",
             pc: {},
-            targPc: {},
-            targSc: {},
-            sc: {},
-            ovr: {},
-            targOvr: {},
             targetLoaded: false,
             sourceLoaded: false,
             foremanCheckHG: false,
@@ -231,6 +311,19 @@
             btn_logout: false,
             updateDB: false,
             link: false,
+            showPC: false,
+            sourceDiff: false,
+            targetDiff: false,
+            puppetClassesMissing: false,
+            smartClassesMissing: false,
+            smartClassesParameterMissing: false,
+            overridesMissing: false,
+            overridesMismatch: false,
+            puppetClassesMissingSource: false,
+            smartClassesMissingSource: false,
+            smartClassesParameterMissingSource: false,
+            overridesMissingSource: false,
+            overridesMismatchSource: false,
         }),
 
         async mounted () {
@@ -348,45 +441,10 @@
                                 this.hgErrorMsg = `Host group ${val} not fond on ${this.sHost}`;
                             }
                         }
-                        let pc = this.hostGroup.puppet_classes;
-
-                        this.pc_count = 0;
-                        this.ovr_count = 0;
-                        for (let i in pc) {
-                            this.pc_count++;
-                            this.pc[i] = [];
-
-                            for (let j in pc[i]) {
-                                let tmp = {};
-                                let param_count = 0;
-                                let ovr_curr_count = 0;
-
-                                tmp["subclass"] = pc[i][j]["subclass"];
-
-                                if ("smart_classes" in pc[i][j]) {
-                                    let sc = pc[i][j]["smart_classes"];
-                                    for (let l in sc) {
-                                        param_count++;
-                                        this.sc[l]= sc;
-                                    }
-                                    tmp["param_count"] = param_count;
-                                    tmp["smart_classes"] = sc;
-                                }
-
-                                if ("overrides" in pc[i][j]) {
-                                    let ovr = pc[i][j]["overrides"];
-                                    for (let t in ovr) {
-                                        this.ovr_count++;
-                                        ovr_curr_count++;
-                                        this.ovr[t]= ovr;
-                                    }
-                                    tmp["ovr_count"] = ovr_curr_count;
-                                    tmp["overrides"] = ovr;
-                                }
-
-                                this.pc[i].push(tmp);
-                            }
-                        }
+                        let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                        this.pc_count = pcData.PuppetClassesCount;
+                        this.ovr_count = pcData.PuppetClassesOverrides;
+                        this.pc = pcData.PuppetClasses;
 
                         this.tHost = old_th;
                         this.sourceLoaded = true;
@@ -401,20 +459,41 @@
                         this.targetHostGroup = [];
                         this.targetLoaded = false;
 
+                        resetMismatch(this);
+
                         let hgData = {
                             source_host: this.sHost,
                             target_host: val,
                             source_hg_id: this.hostGroupId
                         };
+
                         let envData = {
                             host: val,
                             env: this.hostGroup.environment
                         };
+
                         this.envExist = (await environmentService.envCheck(envData)).data !== -1;
 
                         this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
                         let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
                         this.foremanCheckHG = fchg.error != "not found";
+
+                        if (this.foremanCheckHG) {
+                            let targetId = null;
+                            let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                            for (let i in targetHgs) {
+                                if (targetHgs.hasOwnProperty(i)) {
+                                    if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
+                                }
+                            }
+                            this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                            // fill puppet classes info
+                            let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                            this.targPc = pcData.PuppetClasses;
+                            this.targetLoaded = true;
+                            setMismatch(this);
+                        }
+
 
                         this.wip = false;
                         this.existData = true;
@@ -423,13 +502,12 @@
             }
         },
         methods: {
-            async renewSourceHG () {
+            async updateSourceHG () {
                 this.wip = true;
                 let old_th = this.tHost;
-                try {
-                    let res = await hostGroupService.hgFUpdate(this.sHost, this.hostGroup.name);
-                    console.log(res);
 
+                try {
+                    await hostGroupService.hgFUpdate(this.sHost, this.hostGroup.name);
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
@@ -449,55 +527,21 @@
                         this.hgErrorMsg = `Host group ${val} not fond on spb01-puppet`;
                     }
                 }
-                let pc = this.hostGroup.puppet_classes;
 
-                this.pc_count = 0;
-                this.ovr_count = 0;
-                for (let i in pc) {
-                    this.pc_count++;
-                    this.pc[i] = [];
-
-                    for (let j in pc[i]) {
-                        let tmp = {};
-                        let param_count = 0;
-                        let ovr_curr_count = 0;
-
-                        tmp["subclass"] = pc[i][j]["subclass"];
-
-                        if ("smart_classes" in pc[i][j]) {
-                            let sc = pc[i][j]["smart_classes"];
-                            for (let l in sc) {
-                                param_count++;
-                                this.sc[l]= sc;
-                            }
-                            tmp["param_count"] = param_count;
-                            tmp["smart_classes"] = sc;
-                        }
-
-                        if ("overrides" in pc[i][j]) {
-                            let ovr = pc[i][j]["overrides"];
-                            for (let t in ovr) {
-                                this.ovr_count++;
-                                ovr_curr_count++;
-                                this.ovr[t]= ovr;
-                            }
-                            tmp["ovr_count"] = ovr_curr_count;
-                            tmp["overrides"] = ovr;
-                        }
-                        this.pc[i].push(tmp);
-                    }
-                }
+                let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                this.pc_count = pcData.PuppetClassesCount;
+                this.ovr_count = pcData.PuppetClassesOverrides;
+                this.pc = pcData.PuppetClasses;
 
                 this.tHost = old_th;
                 this.sourceLoaded = true;
                 this.wip = false;
             },
 
-            async ontargetHG () {
+            async updateTargetHG () {
                 this.wip = true;
                 try {
-                    // this.targetHostGroup = (await hostGroupService.hgFGet(this.tHost, this.hostGroup.name)).data;
-                    let res = await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name);
+                    await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name);
 
                     let targetId = null;
                     let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
@@ -519,53 +563,9 @@
                 }
 
                 // fill puppet classes info
-                let pc = this.targetHostGroup.puppet_classes;
-                this.targPc_count = 0;
-                this.targOvr_count = 0;
+                let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                this.targPc = pcData.PuppetClasses;
 
-                for (let i in pc) {
-                    if (pc.hasOwnProperty(i)) {
-                        this.targPc_count++;
-                        this.targPc[i] = [];
-
-                        for (let j in pc[i]) {
-                            if (pc[i].hasOwnProperty(j)) {
-                                let tmp = {};
-                                let param_count = 0;
-                                let ovr_curr_count = 0;
-
-                                tmp["subclass"] = pc[i][j]["subclass"];
-
-                                if ("smart_classes" in pc[i][j]) {
-                                    let sc = pc[i][j]["smart_classes"];
-                                    for (let l in sc) {
-                                        if (sc.hasOwnProperty(l)) {
-                                            param_count++;
-                                            this.targSc[l]= sc;
-                                        }
-                                    }
-                                    tmp["param_count"] = param_count;
-                                    tmp["smart_classes"] = sc;
-                                }
-
-                                if ("overrides" in pc[i][j]) {
-                                    let ovr = pc[i][j]["overrides"];
-                                    for (let t in ovr) {
-                                        if (ovr.hasOwnProperty(t)) {
-                                            this.targOvr_count++;
-                                            ovr_curr_count++;
-                                            this.targOvr[t]= ovr;
-                                        }
-                                    }
-                                    tmp["ovr_count"] = ovr_curr_count;
-                                    tmp["overrides"] = ovr;
-                                }
-
-                                this.targPc[i].push(tmp);
-                            }
-                        }
-                    }
-                }
 
                 // Build POST parameters
                 let data = {
@@ -617,52 +617,60 @@
 
                 this.wip = false;
             },
-
-            async update () {
-                this.wip = true;
-
-                // Get Host Group ID for target host
-                let targetId = null;
-                let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
-                for (let i in targetHgs) {
-                    if (targetHgs.hasOwnProperty(i)) {
-                        if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
-                    }
-                }
-
-                // Build POST parameters
-                let data = {
-                    source_host: this.sHost,
-                    target_host: this.tHost,
-                    source_hg_id: this.hostGroupId,
-                    target_hg_id: targetId,
-                    db_update: this.updateDB,
-                };
-
-                // Commit new data
-                try {
-                    let response = (await hostGroupService.hgUpdate(data));
-                    console.log(response);
-                    if (response.status === 200) {
-                        this.hgDone = true;
-                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
-                    }
-                } catch (e) {
-                    this.wip = false;
-                    this.hgError = true;
-                    this.hgErrorMsg = e.message;
-                }
-
-                this.hgExist = (await hostGroupService.hgCheck(data)).data;
-                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
-                this.foremanCheckHG = fchg.error != "not found";
-
-                this.wip = false;
-            },
         }
     }
+
+    function setMismatch(t) {
+        console.log("Source => Target");
+        let td = PuppetMethods.compare(t.pc, t.targPc);
+
+        console.log("Target => Source");
+        let sd = PuppetMethods.compare(t.targPc, t.pc);
+
+
+        if (td.puppetClassesMissing.length > 0) t.puppetClassesMissing = td.puppetClassesMissing;
+        if (td.smartClassesMissing.length > 0) t.smartClassesMissing = td.smartClassesMissing;
+        if (td.smartClassesParameterMissing.length > 0) t.smartClassesParameterMissing = td.smartClassesParameterMissing;
+        if (td.overridesMissing.length > 0) t.overridesMissing = td.overridesMissing;
+        if (td.overridesMismatch.length > 0) t.overridesMismatch = td.overridesMismatch;
+
+        if (sd.puppetClassesMissing.length > 0) t.puppetClassesMissingSource = sd.puppetClassesMissing;
+        if (sd.smartClassesMissing.length > 0) t.smartClassesMissingSource = sd.smartClassesMissing;
+        if (sd.smartClassesParameterMissing.length > 0) t.smartClassesParameterMissingSource = sd.smartClassesParameterMissing;
+        if (sd.overridesMissing.length > 0) t.overridesMissingSource = sd.overridesMissing;
+        if (sd.overridesMismatch.length > 0) t.overridesMismatchSource = sd.overridesMismatch;
+
+        if (t.puppetClassesMissing         ||
+            t.smartClassesMissing          ||
+            t.smartClassesParameterMissing ||
+            t.overridesMissing             ||
+            t.overridesMismatch) t.targetDiff = true;
+
+        if (t.puppetClassesMissingSource         ||
+            t.smartClassesMissingSource          ||
+            t.smartClassesParameterMissingSource ||
+            t.overridesMissingSource             ||
+            t.overridesMismatchSource) t.sourceDiff = true;
+    }
+    function resetMismatch(t) {
+
+        t.targetDiff = false;
+        t.sourceDiff = false;
+
+        t.puppetClassesMissing = false;
+        t.smartClassesMissing = false;
+        t.smartClassesParameterMissing = false;
+        t.overridesMissing = false;
+        t.overridesMismatch = false;
+
+        t.puppetClassesMissingSource = false;
+        t.smartClassesMissingSource = false;
+        t.smartClassesParameterMissingSource = false;
+        t.overridesMissingSource = false;
+        t.overridesMismatchSource = false;
+    }
+
+
 </script>
 
-<style>
-
-</style>
+<style></style>
