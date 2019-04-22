@@ -304,13 +304,13 @@
         //========================================================================================================
         sockets: {
             connect: function () {
-                console.log("Socket server: Connected");
+                // console.log("Socket server: Connected");
             },
             disconnect: function () {
-                console.log("Socket server: Disconnected");
+                // console.log("Socket server: Disconnected");
             },
             event: function (data) {
-                console.log(data);
+                // console.log(data);
             },
         },
 
@@ -344,7 +344,7 @@
                 try {
                     await userService.refreshjwt();
                 } catch (e) {
-                    console.log("token is ok");
+                    // console.log("token is ok");
                 }
             }
             else {
@@ -581,7 +581,7 @@
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
                 } catch (e) {
                     this.wip = false;
-                    console.log(e);
+                    console.error(e);
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on ${this.tHost}`;

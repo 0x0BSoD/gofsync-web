@@ -162,14 +162,12 @@
         watch: {
             sourceDiff: {
                 handler (val) {
-                    console.log(val);
-
+                    // console.log(val);
                 },
             },
             targetDiff: {
                 handler (val) {
-                    console.log(val);
-
+                    // console.log(val);
                 },
             },
         },
