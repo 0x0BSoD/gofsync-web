@@ -86,28 +86,53 @@
                         <v-card-title class="headline font-weight-regular blue-grey white--text">Checks</v-card-title>
                         <v-card-text v-for="(val, idx) in checkRes" :key="idx">
                             <v-layout v-if="started">
+
                                 <v-flex xs3>{{val.tHost}}</v-flex>
                                 <v-flex xs3>{{val.hgName}}</v-flex>
                                 <v-flex xs6>
                                     <v-progress-linear v-if="val.wip" :indeterminate="val.wip"></v-progress-linear>
-                                    <v-chip v-else-if="val.error" color="error">Errored</v-chip>
-                                    <v-chip label color="success" text-color="white" v-else>
-                                        <v-icon left>check</v-icon>Uploaded
+
+
+
+                                    <v-chip label color="primary" text-color="white" v-if="val.wip && val.uploaded && !val.updated">
+                                    <v-icon left>cached</v-icon>Updating ...
+                                    </v-chip>
+
+                                    <v-chip label color="success" text-color="white" v-if="val.wip && !val.uploaded">
+                                        <v-icon left>cached</v-icon>Uploading ...
+                                    </v-chip>
+
+                                    <v-chip v-if="val.error" color="error">Errored</v-chip>
+
+                                    <v-chip label color="success" text-color="white" v-if="val.uploaded">
+                                        <v-icon left>done</v-icon>Uploaded
+                                    </v-chip>
+
+                                    <v-chip label color="primary" text-color="white" v-if="val.updated">
+                                        <v-icon left>done</v-icon>Updated
                                     </v-chip>
                                 </v-flex>
                             </v-layout>
+
                            <v-layout row v-else>
                                <v-flex xs3>{{val.tHost}}</v-flex>
                                <v-flex xs3>{{val.hgName}}</v-flex>
                                <v-flex xs6 class="text-xs-center">
                                    <v-chip label color="warning" v-if="val.foremanCheckHG">Exist</v-chip>
                                    <v-chip label color="success" v-else>Add new</v-chip>
-                                   <v-chip label color="success" text-color="white" v-if="val.uploaded">
-                                       <v-icon left>check</v-icon>Uploaded
-                                   </v-chip>
-                                   <v-chip label color="warning" v-if="val.environment === -1">Env not exist, will be skipped</v-chip>
-                               </v-flex>
 
+                                   <v-chip label color="success" text-color="white" v-if="val.uploaded">
+                                       <v-icon left>done_all</v-icon>Done
+                                   </v-chip>
+
+                                   <v-chip label v-if="val.environment === -1">Env not exist, will be skipped</v-chip>
+                                   <v-tooltip bottom v-if="val.foremanCheckHG">
+                                       <template v-slot:activator="{ on }">
+                                           <v-btn icon small><a target="_blank" v-on="on" :rel="val.hgName" :href="val.hg_link"><v-icon>link</v-icon></a></v-btn>
+                                       </template>
+                                       <span>{{val.hgName}} link</span>
+                                   </v-tooltip>
+                               </v-flex>
                            </v-layout>
                         </v-card-text>
                     </v-card>
@@ -134,6 +159,7 @@
             hosts: [],
             hostGroups: [],
             hostGroupSelected: [],
+            targetHostGroup: {},
             wip: false,
             checkRes: [],
             started: false,
@@ -169,15 +195,31 @@
                         // Commit new data
                         try {
                             let response = (await hostGroupService.hgSend(data));
-                            console.log(response);
                             this.checkRes[i].uploaded = true;
                         } catch (e) {
                             console.error(e);
                             this.checkRes[i].error = true;
                         }
                     }
+                    // this.checkRes[i].wip = false;
+                }
+
+                for (let i in this.checkRes) {
+                    if (this.checkRes[i].environment) {
+                        if (!this.checkRes[i].error) {
+                            // Commit new data
+                            try {
+                                let response = (await hostGroupService.hgFUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName));
+                                this.checkRes[i].updated = true;
+                            } catch (e) {
+                                console.error(e);
+                                this.checkRes[i].error = true;
+                            }
+                        }
+                    }
                     this.checkRes[i].wip = false;
                 }
+
                 // await this.checks()
             },
             async getHostGroups() {
@@ -221,9 +263,13 @@
                                 let targetHgs = (await hostGroupService.hgList(this.tHost[target])).data;
                                 for (let j in targetHgs) {
                                     if (targetHgs.hasOwnProperty(j)) {
-                                        if (targetHgs[j].name === hostGroup.name) targetId = targetHgs[j].id;
-                                        let name = hostGroup.name.replace(/\./g, "-");
-                                        link = `https://${this.tHost[target]}/hostgroups/${targetId}-SWE-${name}/edit`;
+                                        if (targetHgs[j].name === hostGroup.name) {
+                                            targetId = targetHgs[j].id;
+                                            this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                                            let name = hostGroup.name.replace(/\./g, "-");
+                                            link = `https://${this.tHost[target]}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
+                                        }
+
                                     }
                                 }
                             }
@@ -233,6 +279,7 @@
                                 environment: envExist,
                                 hostgroup: hgExist,
                                 uploaded: false,
+                                updated: false,
                                 foremanCheckHG: tmp,
                                 foremanTargetId: targetId,
                                 source_hg_id: this.hostGroupSelected[hg],

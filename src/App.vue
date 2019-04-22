@@ -9,24 +9,42 @@
                     <span>go</span>
                     <span class="font-weight-light">Fsync</span>
                 </v-toolbar-title>
-                <v-btn :disabled="!loggedIn" flat :to="{name:'batch'}">BATCH</v-btn>
+                <v-menu offset-y>
+                    <template v-slot:activator="{ on }">
+                        <v-btn
+                                :disabled="!loggedIn"
+                                flat
+                                v-on="on"
+                        >
+                            TOOLS
+                        </v-btn>
+                    </template>
+                    <v-list>
+                        <v-list-tile :to="{name:'batch'}">
+                            <v-list-tile-title>Batch</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile :disabled="true" :to="{name:'batch'}">
+                            <v-list-tile-title>Json editor</v-list-tile-title>
+                        </v-list-tile>
+                    </v-list>
+                </v-menu>
+
+
                 <v-spacer></v-spacer>
                 <v-menu offset-y>
                     <template v-slot:activator="{ on }">
                         <v-btn
                                 :disabled="!loggedIn"
-                                falt
+                                flat
                                 v-on="on"
                         >
                             {{username}}
+                            <v-icon right>account_circle</v-icon>
                         </v-btn>
                     </template>
                     <v-list>
                         <v-list-tile @click="logout()">
                             <v-list-tile-title>Logout</v-list-tile-title>
-                        </v-list-tile>
-                        <v-list-tile @click="sktest()">
-                            <v-list-tile-title>test</v-list-tile-title>
                         </v-list-tile>
                     </v-list>
                 </v-menu>
@@ -66,7 +84,7 @@
         watch: {
             "$route": {
                 async handler (val) {
-                    console.log(val);
+                    // console.log(val);
                     this.loggedIn = localStorage.getItem('userData');
                     this.token    = this.$cookies.isKey("token");
                     if (!this.token && !this.loggedIn) {
@@ -76,7 +94,7 @@
             },
             "username": {
                 async handler(val) {
-                    console.log(val);
+                    // console.log(val);
                 }
             }
         },
@@ -88,10 +106,6 @@
                 localStorage.clear();
                 this.$cookies.remove("token");
                 this.$router.push({name: "login"});
-            },
-            sktest() {
-                let data = '{"msg": "start"}';
-                this.$socket.emit('state', data)
             },
         },
     }
