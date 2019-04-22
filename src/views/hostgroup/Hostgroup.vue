@@ -74,7 +74,7 @@
 
         <Locations v-if="!sHost" :locations="locations"/>
 
-        <v-layout row wrap v-if="hostGroup">
+        <v-layout row wrap v-if="hostGroup.id">
 
             <v-flex xs12 pb-2>
                 <v-card>
@@ -153,70 +153,7 @@
 
         </v-layout>
 
-        <v-card v-if="sourceDiff && targetDiff">
-            <v-card-text>
-                <v-layout row wrap class="text-xs-center">
-                    <v-flex xs6>
-                        <h3>Not in source</h3>
-                        <h3 v-if="puppetClassesMissingSource">Puppet Classes</h3>
-                        <p v-if="puppetClassesMissingSource">{{puppetClassesMissingSource}}</p>
-                        <h3 v-if="smartClassesMissingSource">Smart Class</h3>
-                        <p v-if="smartClassesMissingSource">{{smartClassesMissingSource}}</p>
-                        <h3 v-if="smartClassesParameterMissingSource">Smart Class parameters</h3>
-                        <p v-if="smartClassesParameterMissingSource">{{smartClassesParameterMissingSource}}</p>
-                        <h3 v-if="overridesMissingSource">Overrides</h3>
-                        <p v-if="overridesMissingSource">{{overridesMissingSource}}</p>
-                    </v-flex>
-                    <v-flex xs6>
-                        <h3>Not in target</h3>
-                        <h3 v-if="puppetClassesMissing">Puppet Classes</h3>
-                        <p v-if="puppetClassesMissing">{{puppetClassesMissing}}</p>
-                        <h3 v-if="smartClassesMissing">Smart Class</h3>
-                        <p v-if="smartClassesMissing">{{smartClassesMissing}}</p>
-                        <h3 v-if="smartClassesParameterMissing">Smart Class parameters</h3>
-                        <p v-if="smartClassesParameterMissing">{{smartClassesParameterMissing}}</p>
-                        <h3 v-if="overridesMissing">Overrides</h3>
-                        <p v-if="overridesMissing">{{overridesMissing}}</p>
-                    </v-flex>
-                    <v-flex xs12>
-                        <h3 v-if="overridesMismatch">Overrides mismatch</h3>
-                        <p v-if="overridesMismatch">{{overridesMismatch}}</p>
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-        </v-card>
-        <v-card v-else-if="sourceDiff || targetDiff">
-            <v-card-text>
-                <v-layout row wrap  class="text-xs-center">
-                    <v-flex xs12 v-if="sourceDiff">
-                        <h3>Not in source</h3>
-                        <h3 v-if="puppetClassesMissingSource">Puppet Classes</h3>
-                        <p v-if="puppetClassesMissingSource">{{puppetClassesMissingSource}}</p>
-                        <h3 v-if="smartClassesMissingSource">Smart Class</h3>
-                        <p v-if="smartClassesMissingSource">{{smartClassesMissingSource}}</p>
-                        <h3 v-if="smartClassesParameterMissingSource">Smart Class parameters</h3>
-                        <p v-if="smartClassesParameterMissingSource">{{smartClassesParameterMissingSource}}</p>
-                        <h3 v-if="overridesMissingSource">Overrides</h3>
-                        <p v-if="overridesMissingSource">{{overridesMissingSource}}</p>
-                    </v-flex>
-                    <v-flex xs12 v-if="targetDiff">
-                        <h3>Not in target</h3>
-                        <h3 v-if="puppetClassesMissing">Puppet Classes</h3>
-                        <p v-if="puppetClassesMissing">{{puppetClassesMissing}}</p>
-                        <h3 v-if="smartClassesMissing">Smart Class</h3>
-                        <p v-if="smartClassesMissing">{{smartClassesMissing}}</p>
-                        <h3 v-if="smartClassesParameterMissing">Smart Class parameters</h3>
-                        <p v-if="smartClassesParameterMissing">{{smartClassesParameterMissing}}</p>
-                        <h3 v-if="overridesMissing">Overrides</h3>
-                        <p v-if="overridesMissing">{{overridesMissing}}</p>
-                    </v-flex>
-                    <v-flex xs12>
-                        <h3 v-if="overridesMismatch">Overrides mismatch</h3>
-                        <p v-if="overridesMismatch">{{overridesMismatch}}</p>
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-        </v-card>
+        <HGDiff :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
 
         <v-layout v-if="sourceLoaded" row>
             <v-flex xs12 class="text-xs-center">
@@ -264,41 +201,36 @@
 <script>
     import { hostGroupService, environmentService,
               hostService, locationsService, userService } from "../../_services"
-    import Locations from "../../components/hostgroups/locations";
-    import HGInfo from "../../components/hostgroups/hgInfo";
+    import Locations from "../../components/hostgroups/locations"
+    import HGInfo from "../../components/hostgroups/hgInfo"
+    import HGDiff from "../../components/hostgroups/hgdiff"
     import { PuppetMethods } from "./methods"
 
     export default {
+
+        //========================================================================================================
+        // COMPONENTS
+        //========================================================================================================
         components: {
             Locations,
-            HGInfo
+            HGInfo,
+            HGDiff
         },
 
+        //========================================================================================================
+        // DATA
+        //========================================================================================================
         data: () => ({
             hosts: [],
             hostGroups: [],
-            targetHostGroup: [],
             hostGroupsFull: [],
-            sHost: null,
-            tHost: null,
-            hostGroupId: null,
-            hostGroup: null,
             hgError: null,
             hgErrorMsg: null,
             hgDone: null,
             hgDoneMsg: null,
-            existData: null,
-            hgExist: null,
-            envExist: null,
             wip: false,
-            pc_count: 0,
-            ovr_count: 0,
             Environments: ["any"],
             env: "any",
-            pc: {},
-            targetLoaded: false,
-            sourceLoaded: false,
-            foremanCheckHG: false,
             locations: [],
             loggedIn: false,
             userData: {
@@ -310,22 +242,56 @@
             userGroups: null,
             btn_logout: false,
             updateDB: false,
-            link: false,
             showPC: false,
+            // source ======
+            sHost: null,
+            hostGroupId: null,
+            hostGroup: {
+                id: null,
+                foreman_id: null,
+                name: null,
+                environment: null,
+                parent_id: null,
+                puppet_classes: {},
+                updated: null,
+            },
+            sourceLoaded: false,
             sourceDiff: false,
+            pc_count: 0,
+            ovr_count: 0,
+            pc: {},
+            // target ======
+            tHost: null,
+            targetHostGroup: {
+                id: null,
+                foreman_id: null,
+                name: null,
+                environment: null,
+                parent_id: null,
+                puppet_classes: {},
+                updated: null,
+            },
+            existData: null,
+            hgExist: null,
+            envExist: null,
+            targetLoaded: false,
+            foremanCheckHG: false,
+            link: false,
             targetDiff: false,
-            puppetClassesMissing: false,
-            smartClassesMissing: false,
-            smartClassesParameterMissing: false,
-            overridesMissing: false,
-            overridesMismatch: false,
-            puppetClassesMissingSource: false,
-            smartClassesMissingSource: false,
-            smartClassesParameterMissingSource: false,
-            overridesMissingSource: false,
-            overridesMismatchSource: false,
         }),
 
+        //========================================================================================================
+        // SOCKET
+        //========================================================================================================
+        sockets: {
+            connect: function () {
+                console.log("Socket server: Connected");
+            }
+        },
+
+        //========================================================================================================
+        // MOUNTED
+        //========================================================================================================
         async mounted () {
             try {
                 this.wip = true;
@@ -359,15 +325,26 @@
             }
         },
 
+        //========================================================================================================
+        // WATCH
+        //========================================================================================================
         watch: {
             sHost: {
                 async handler (val) {
-
+                    PuppetMethods.resetMismatch(this);
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
                     this.envExist = null;
-                    this.hostGroup = null;
+                    this.hostGroup = {
+                        id: null,
+                        foreman_id: null,
+                        name: null,
+                        environment: null,
+                        parent_id: null,
+                        puppet_classes: {},
+                        updated: null,
+                    };
                     this.env = "any";
                     this.pc = {};
                     this.targPc = {};
@@ -396,11 +373,20 @@
             },
             env: {
                 async handler (val) {
+                    PuppetMethods.resetMismatch(this);
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
                     this.envExist = null;
-                    this.hostGroup = null;
+                    this.hostGroup = {
+                        id: null,
+                        foreman_id: null,
+                        name: null,
+                        environment: null,
+                        parent_id: null,
+                        puppet_classes: {},
+                        updated: null,
+                    };
                     this.pc = {};
                     this.targPc = {};
                     this.targetLoaded = false;
@@ -425,7 +411,7 @@
                         this.wip = true;
                         let old_th = this.tHost;
                         try {
-
+                            PuppetMethods.resetMismatch(this);
                             this.tHost = null;
                             this.existData = null;
                             this.hgExist = null;
@@ -459,7 +445,7 @@
                         this.targetHostGroup = [];
                         this.targetLoaded = false;
 
-                        resetMismatch(this);
+                        PuppetMethods.resetMismatch(this);
 
                         let hgData = {
                             source_host: this.sHost,
@@ -491,7 +477,7 @@
                             let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                             this.targPc = pcData.PuppetClasses;
                             this.targetLoaded = true;
-                            setMismatch(this);
+                            PuppetMethods.setMismatch(this);
                         }
 
 
@@ -501,6 +487,10 @@
                 }
             }
         },
+
+        //========================================================================================================
+        // METHODS
+        //========================================================================================================
         methods: {
             async updateSourceHG () {
                 this.wip = true;
@@ -515,10 +505,8 @@
 
                     this.hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
-                    if ( this.hostGroup.status === 200) {
-                        this.hgDone = true;
-                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
-                    }
+                    this.hgDone = true;
+                    this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
                 } catch (e) {
                     console.error(e);
                     this.wip = false;
@@ -619,58 +607,6 @@
             },
         }
     }
-
-    function setMismatch(t) {
-        console.log("Source => Target");
-        let td = PuppetMethods.compare(t.pc, t.targPc);
-
-        console.log("Target => Source");
-        let sd = PuppetMethods.compare(t.targPc, t.pc);
-
-
-        if (td.puppetClassesMissing.length > 0) t.puppetClassesMissing = td.puppetClassesMissing;
-        if (td.smartClassesMissing.length > 0) t.smartClassesMissing = td.smartClassesMissing;
-        if (td.smartClassesParameterMissing.length > 0) t.smartClassesParameterMissing = td.smartClassesParameterMissing;
-        if (td.overridesMissing.length > 0) t.overridesMissing = td.overridesMissing;
-        if (td.overridesMismatch.length > 0) t.overridesMismatch = td.overridesMismatch;
-
-        if (sd.puppetClassesMissing.length > 0) t.puppetClassesMissingSource = sd.puppetClassesMissing;
-        if (sd.smartClassesMissing.length > 0) t.smartClassesMissingSource = sd.smartClassesMissing;
-        if (sd.smartClassesParameterMissing.length > 0) t.smartClassesParameterMissingSource = sd.smartClassesParameterMissing;
-        if (sd.overridesMissing.length > 0) t.overridesMissingSource = sd.overridesMissing;
-        if (sd.overridesMismatch.length > 0) t.overridesMismatchSource = sd.overridesMismatch;
-
-        if (t.puppetClassesMissing         ||
-            t.smartClassesMissing          ||
-            t.smartClassesParameterMissing ||
-            t.overridesMissing             ||
-            t.overridesMismatch) t.targetDiff = true;
-
-        if (t.puppetClassesMissingSource         ||
-            t.smartClassesMissingSource          ||
-            t.smartClassesParameterMissingSource ||
-            t.overridesMissingSource             ||
-            t.overridesMismatchSource) t.sourceDiff = true;
-    }
-    function resetMismatch(t) {
-
-        t.targetDiff = false;
-        t.sourceDiff = false;
-
-        t.puppetClassesMissing = false;
-        t.smartClassesMissing = false;
-        t.smartClassesParameterMissing = false;
-        t.overridesMissing = false;
-        t.overridesMismatch = false;
-
-        t.puppetClassesMissingSource = false;
-        t.smartClassesMissingSource = false;
-        t.smartClassesParameterMissingSource = false;
-        t.overridesMissingSource = false;
-        t.overridesMismatchSource = false;
-    }
-
-
 </script>
 
 <style></style>

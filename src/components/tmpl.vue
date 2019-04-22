@@ -6,6 +6,7 @@
 <script>
   export default {
     data: () => ({}),
+    props: [],
     async mounted () {},
     watch: {},
     methods: {}

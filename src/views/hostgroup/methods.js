@@ -2,6 +2,8 @@
 export const PuppetMethods = {
     parse,
     compare,
+    setMismatch,
+    resetMismatch,
 };
 
 function parse(pc) {
@@ -101,7 +103,7 @@ function compare(source_pc, target_pc) {
                                                 let parameter = source_subclasses[gdx]["smart_classes"][edx];
                                                 if (target_subclasses[gdx]["smart_classes"].includes(parameter)) {
                                                 } else {
-                                                    let res = `${gdx}=>${parameter}`;
+                                                    let res = `${gdx}::${parameter}`;
                                                     console.error(`We don't have the smart class parameter ${parameter} in ${gdx}`);
                                                     result.smartClassesParameterMissing.push(res);
                                                 }
@@ -123,11 +125,11 @@ function compare(source_pc, target_pc) {
 
                                                     } else {
                                                         console.error(`Override parameter ${kdx} in ${gdx} mismatch`);
-                                                        result.overridesMismatch.push(kdx);
+                                                        result.overridesMismatch.push(`${gdx}::${kdx}`);
                                                     }
                                                 } else {
                                                     console.error(`We don't have the override parameter ${kdx} in ${gdx}`);
-                                                    result.overridesMissing.push(kdx);
+                                                    result.overridesMissing.push(`${gdx}::${kdx}`);
                                                 }
                                             }
                                         }
@@ -163,4 +165,25 @@ function buildSubclassObject(sc) {
         }
     }
     return result;
+}
+
+function setMismatch(t) {
+    let td = PuppetMethods.compare(t.pc, t.targPc);
+    let sd = PuppetMethods.compare(t.targPc, t.pc);
+
+    if (td.puppetClassesMissing.length > 0         ||
+        td.smartClassesMissing.length > 0          ||
+        td.smartClassesParameterMissing.length > 0 ||
+        td.overridesMissing.length > 0             ||
+        td.overridesMismatch.length > 0) t.targetDiff = td;
+
+    if (sd.puppetClassesMissing.length > 0         ||
+        sd.smartClassesMissing.length > 0          ||
+        sd.smartClassesParameterMissing.length > 0 ||
+        sd.overridesMissing.length > 0             ||
+        sd.overridesMismatch.length > 0) t.sourceDiff = sd;
+}
+function resetMismatch(t) {
+    t.targetDiff = false;
+    t.sourceDiff = false;
 }
