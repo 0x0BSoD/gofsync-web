@@ -91,16 +91,23 @@
                                 <v-flex xs6>
                                     <v-progress-linear v-if="val.wip" :indeterminate="val.wip"></v-progress-linear>
                                     <v-chip v-else-if="val.error" color="error">Errored</v-chip>
-                                    <v-chip v-else label color="success">Uploaded</v-chip>
+                                    <v-chip label color="success" text-color="white" v-else>
+                                        <v-icon left>check</v-icon>Uploaded
+                                    </v-chip>
                                 </v-flex>
                             </v-layout>
                            <v-layout row v-else>
                                <v-flex xs3>{{val.tHost}}</v-flex>
                                <v-flex xs3>{{val.hgName}}</v-flex>
-                               <v-flex xs3 v-if="val.foremanCheckHG"><v-chip label color="warning">Exist</v-chip></v-flex>
-                               <v-flex xs3 v-else><v-chip label color="success">Add new</v-chip></v-flex>
-                               <v-flex xs3 v-if="val.environment === -1"><v-chip label color="warning">Env not exist</v-chip></v-flex>
-                               <v-flex xs3 v-else><v-chip label color="success">Env exist</v-chip></v-flex>
+                               <v-flex xs6 class="text-xs-center">
+                                   <v-chip label color="warning" v-if="val.foremanCheckHG">Exist</v-chip>
+                                   <v-chip label color="success" v-else>Add new</v-chip>
+                                   <v-chip label color="success" text-color="white" v-if="val.uploaded">
+                                       <v-icon left>check</v-icon>Uploaded
+                                   </v-chip>
+                                   <v-chip label color="warning" v-if="val.environment === -1">Env not exist, will be skipped</v-chip>
+                               </v-flex>
+
                            </v-layout>
                         </v-card-text>
                     </v-card>
@@ -163,34 +170,15 @@
                         try {
                             let response = (await hostGroupService.hgSend(data));
                             console.log(response);
+                            this.checkRes[i].uploaded = true;
                         } catch (e) {
                             console.error(e);
                             this.checkRes[i].error = true;
                         }
-                        //    ==============================================================================================
                     }
-                    // else {
-                    //       // Build POST parameters
-                    //     let data = {
-                    //         source_host: this.sHost,
-                    //         target_host: this.checkRes[i].tHost,
-                    //         source_hg_id: this.checkRes[i].source_hg_id,
-                    //         target_hg_id: this.checkRes[i].foremanTargetId,
-                    //         db_update: true,
-                    //     };
-                    //     console.log(data);
-                    //     // Commit new data
-                    //     try {
-                    //         let response = (await hostGroupService.hgUpdate(data));
-                    //         console.log(response);
-                    //     } catch (e) {
-                    //         console.error(e);
-                    //         this.checkRes[i].error = true;
-                    //     }
-                    // }
                     this.checkRes[i].wip = false;
                 }
-                await this.checks()
+                // await this.checks()
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.hgList(this.sHost)).data;
@@ -228,11 +216,14 @@
                             let fchg = (await hostGroupService.hgFCheck(this.tHost[target], hostGroup.name)).data;
                             let tmp = fchg.error != "not found";
                             let targetId = null;
+                            let link = null;
                             if (tmp) {
                                 let targetHgs = (await hostGroupService.hgList(this.tHost[target])).data;
                                 for (let j in targetHgs) {
                                     if (targetHgs.hasOwnProperty(j)) {
                                         if (targetHgs[j].name === hostGroup.name) targetId = targetHgs[j].id;
+                                        let name = hostGroup.name.replace(/\./g, "-");
+                                        link = `https://${this.tHost[target]}/hostgroups/${targetId}-SWE-${name}/edit`;
                                     }
                                 }
                             }
@@ -241,10 +232,12 @@
                                 hgName: hostGroup.name,
                                 environment: envExist,
                                 hostgroup: hgExist,
+                                uploaded: false,
                                 foremanCheckHG: tmp,
                                 foremanTargetId: targetId,
                                 source_hg_id: this.hostGroupSelected[hg],
                                 wip: true,
+                                hg_link: link,
                             })
                         }
                     }
@@ -253,10 +246,6 @@
                 this.checkRes = res;
             },
         }
-    }
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 </script>
 

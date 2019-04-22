@@ -5,7 +5,7 @@ export const hostGroupService = {
     hgList,
     hgFCheck,
     // hgFGet,
-    // hgFUpdate,
+    hgFUpdate,
     hgCheck,
     hgSend,
     hgUpdate,

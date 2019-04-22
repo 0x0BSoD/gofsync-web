@@ -1,0 +1,15 @@
+import Vue from "vue";
+import Vuex from "vuex";
+
+import socketModule from "./modules/socketModule";
+import userModule from "./modules/userModule";
+
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+  strict: true,
+  modules: {
+    socketModule,
+    userModule,
+  },
+});

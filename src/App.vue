@@ -25,6 +25,9 @@
                         <v-list-tile @click="logout()">
                             <v-list-tile-title>Logout</v-list-tile-title>
                         </v-list-tile>
+                        <v-list-tile @click="sktest()">
+                            <v-list-tile-title>test</v-list-tile-title>
+                        </v-list-tile>
                     </v-list>
                 </v-menu>
             </v-toolbar>
@@ -85,6 +88,10 @@
                 localStorage.clear();
                 this.$cookies.remove("token");
                 this.$router.push({name: "login"});
+            },
+            sktest() {
+                let data = '{"msg": "start"}';
+                this.$socket.emit('state', data)
             },
         },
     }
