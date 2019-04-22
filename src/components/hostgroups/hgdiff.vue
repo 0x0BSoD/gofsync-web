@@ -6,7 +6,7 @@
             <v-card-text>
                 <v-layout row wrap class="text-xs-center">
                     <v-flex xs6>
-                        <h3 class="pb-2 display-2">Not in source</h3>
+                        <h3 class="pb-2 display-1">Not in source</h3>
 
                         <h3 class="headline" v-if="sourceDiff.puppetClassesMissing.length > 0">Puppet Classes</h3>
                         <v-chip
@@ -33,7 +33,7 @@
                         </v-chip>
                     </v-flex>
                     <v-flex xs6>
-                        <h3 class="pb-2 display-2">Not in target</h3>
+                        <h3 class="pb-2 display-1">Not in target</h3>
 
                         <h3 class="headline" v-if="targetDiff.puppetClassesMissing.length > 0">Puppet Classes</h3>
                         <v-chip
@@ -79,7 +79,7 @@
             <v-card-text>
                 <v-layout row wrap  class="text-xs-center">
                     <v-flex xs12 v-if="sourceDiff">
-                        <h3 class="pb-2 display-2">Not in source</h3>
+                        <h3 class="pb-2 display-1">Not in source</h3>
 
                         <h3 class="headline" v-if="sourceDiff.puppetClassesMissing.length > 0">Puppet Classes</h3>
                         <v-chip
@@ -106,7 +106,7 @@
                         </v-chip>
                     </v-flex>
                     <v-flex xs12 v-if="targetDiff">
-                        <h3 class="pb-2 display-2">Not in target</h3>
+                        <h3 class="pb-2 display-1">Not in target</h3>
 
                         <h3 class="headline" v-if="targetDiff.puppetClassesMissing.length > 0">Puppet Classes</h3>
                         <v-chip

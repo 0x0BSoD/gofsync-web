@@ -14,7 +14,22 @@
         >
             {{hgDoneMsg}}
         </v-alert>
-        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+
+        <v-layout row wrap v-if="wipMessage">
+            <v-flex xs3 class="pt-2">
+                {{wipMessage}}
+            </v-flex>
+            <v-flex xs9>
+                <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+            </v-flex>
+        </v-layout>
+        <v-layout row wrap v-else>
+            <v-flex xs12>
+                <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+            </v-flex>
+        </v-layout>
+
+
         <v-layout wrap row>
             <v-flex xs6>
                 <v-layout wrap row>
@@ -178,6 +193,7 @@
         <div v-if="showPC">
             <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
                 <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
+                <v-flex xs12 class="text-xs-center"><h4>Last update: {{hostGroup.updated}}</h4></v-flex>
                 <v-flex xs12>
                     <HGInfo :puppetClasses="pc"/>
                 </v-flex>
@@ -186,10 +202,12 @@
             <v-layout row wrap v-if="sourceLoaded && targetLoaded">
                 <v-flex xs6>
                     <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
+                    <v-flex xs12 class="text-xs-center"><h4>Last update: {{hostGroup.updated}}</h4></v-flex>
                     <HGInfo :puppetClasses="pc"/>
                 </v-flex>
                 <v-flex xs6>
                     <v-flex xs12 class="text-xs-center"><h3>TARGET</h3></v-flex>
+                    <v-flex xs12 class="text-xs-center"><h4>Last update: {{targetHostGroup.updated}}</h4></v-flex>
                     <HGInfo :puppetClasses="targPc"/>
                 </v-flex>
             </v-layout>
@@ -229,6 +247,7 @@
             hgDone: null,
             hgDoneMsg: null,
             wip: false,
+            wipMessage: false,
             Environments: ["any"],
             env: "any",
             locations: [],
@@ -286,13 +305,21 @@
         sockets: {
             connect: function () {
                 console.log("Socket server: Connected");
-            }
+            },
+            disconnect: function () {
+                console.log("Socket server: Disconnected");
+            },
+            event: function (data) {
+                console.log(data);
+            },
         },
 
         //========================================================================================================
         // MOUNTED
         //========================================================================================================
         async mounted () {
+
+            // Load Hosts ==========================================
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
@@ -304,9 +331,9 @@
                 this.hgErrorMsg = "Backend not reachable or in errored state"
             }
 
+            // User check ==========================================
             const loggedIn = localStorage.getItem('userData');
             const token    = this.$cookies.isKey("token");
-
             if (token && !!loggedIn) {
                 this.btn_logout = true;
                 this.loggedIn = true;
@@ -331,6 +358,8 @@
         watch: {
             sHost: {
                 async handler (val) {
+
+                    // RESET =================================
                     PuppetMethods.resetMismatch(this);
                     this.tHost = null;
                     this.existData = null;
@@ -351,10 +380,11 @@
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
+                    // Load source info =================================
                     this.hostGroups = (await hostGroupService.hgList(val)).data;
                     this.hostGroupsFull = (await hostGroupService.hgList(val)).data;
-                    let tmpEnv = (await environmentService.envList(val)).data;
 
+                    let tmpEnv = (await environmentService.envList(val)).data;
                     let reg = new RegExp('[0-9]');
                     let result = [];
                     for (let env in tmpEnv) {
@@ -373,6 +403,7 @@
             },
             env: {
                 async handler (val) {
+                    // RESET =================================
                     PuppetMethods.resetMismatch(this);
                     this.tHost = null;
                     this.existData = null;
@@ -392,6 +423,7 @@
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
+                    // =================================
                     if (val === 'any') {
                         this.hostGroups = this.hostGroupsFull;
                     } else {
@@ -403,6 +435,7 @@
                         }
                         this.hostGroups = parsedHG;
                     }
+
                 }
             },
             hostGroupId: {
@@ -427,6 +460,7 @@
                                 this.hgErrorMsg = `Host group ${val} not fond on ${this.sHost}`;
                             }
                         }
+
                         let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                         this.pc_count = pcData.PuppetClassesCount;
                         this.ovr_count = pcData.PuppetClassesOverrides;
@@ -478,6 +512,10 @@
                             this.targPc = pcData.PuppetClasses;
                             this.targetLoaded = true;
                             PuppetMethods.setMismatch(this);
+
+                            let name = this.hostGroup.name.replace(/\./g, "-");
+                            this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
+
                         }
 
 
@@ -565,6 +603,25 @@
                 this.hgExist = (await hostGroupService.hgCheck(data)).data;
                 let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
+                if (this.foremanCheckHG) {
+                    let targetId = null;
+                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    for (let i in targetHgs) {
+                        if (targetHgs.hasOwnProperty(i)) {
+                            if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
+                        }
+                    }
+                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    // fill puppet classes info
+                    let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                    this.targPc = pcData.PuppetClasses;
+                    this.targetLoaded = true;
+                    PuppetMethods.setMismatch(this);
+
+                    let name = this.hostGroup.name.replace(/\./g, "-");
+                    this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
+
+                }
 
                 this.targetLoaded = true;
                 this.wip = false;
@@ -575,7 +632,6 @@
             },
 
             async submit () {
-                this.wip = true;
 
                 // Build POST parameters
                 let data = {
@@ -587,23 +643,53 @@
 
                 // Commit new data
                 try {
+                    this.wip = true;
+                    this.wipMessage = "Uploading to target host ...";
                     let response = (await hostGroupService.hgSend(data));
-                    console.log(response);
                     if (response.status === 200) {
+                    }
+                    this.wip = false;
+
+                    this.wip = true;
+                    this.wipMessage = "Updating data ...";
+                    let response2 = (await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name));
+                    if (response2.status === 200) {
                         this.hgDone = true;
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} added to ${this.tHost}`;
                     }
+                    this.wipMessage = false;
+                    this.wip = false;
+
                 } catch (e) {
                     this.wip = false;
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
                 }
 
+
+                // =====================================================================================================
                 this.hgExist = (await hostGroupService.hgCheck(data)).data;
                 let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
+                if (this.foremanCheckHG) {
+                    let targetId = null;
+                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    for (let i in targetHgs) {
+                        if (targetHgs.hasOwnProperty(i)) {
+                            if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
+                        }
+                    }
+                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    // fill puppet classes info
+                    let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                    this.targPc = pcData.PuppetClasses;
+                    this.targetLoaded = true;
+                    PuppetMethods.setMismatch(this);
 
-                this.wip = false;
+                    let name = this.hostGroup.name.replace(/\./g, "-");
+                    this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
+
+                }
             },
         }
     }

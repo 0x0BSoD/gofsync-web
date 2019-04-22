@@ -3,7 +3,7 @@ import Vue from 'vue'
 import './plugins/vuetify'
 import './plugins/cookies'
 import './plugins/vue-particles'
-import './plugins/vuesocketio'
+// import './plugins/vuesocketio'
 
 import App from './App.vue'
 import router from './router'
