@@ -12,7 +12,7 @@
                         <v-chip
                                 color="indigo lighten-5"
                                 v-if="sourceDiff.puppetClassesMissing.length > 0"
-                                v-for="(val, id) in sourceDiff.puppetClassesMissing">
+                                v-for="(val, id) in sourceDiff.puppetClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -20,7 +20,7 @@
                         <v-chip
                                 color="indigo lighten-4"
                                 v-if="sourceDiff.smartClassesMissing.length > 0"
-                                v-for="(val, id) in sourceDiff.smartClassesMissing">
+                                v-for="(val, id) in sourceDiff.smartClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -28,7 +28,7 @@
                         <v-chip
                                 color="indigo lighten-3"
                                 v-if="sourceDiff.smartClassesParameterMissing.length > 0"
-                                v-for="(val, id) in sourceDiff.smartClassesParameterMissing">
+                                v-for="(val, id) in sourceDiff.smartClassesParameterMissing" :key="id">
                             {{val}}
                         </v-chip>
                     </v-flex>
@@ -39,7 +39,7 @@
                         <v-chip
                                 color="blue lighten-5"
                                 v-if="targetDiff.puppetClassesMissing.length > 0"
-                                v-for="(val, id) in targetDiff.puppetClassesMissing">
+                                v-for="(val, id) in targetDiff.puppetClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -47,7 +47,7 @@
                         <v-chip
                                 color="blue lighten-4"
                                 v-if="targetDiff.smartClassesMissing.length > 0"
-                                v-for="(val, id) in targetDiff.smartClassesMissing">
+                                v-for="(val, id) in targetDiff.smartClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -55,7 +55,7 @@
                         <v-chip
                                 color="blue lighten-3"
                                 v-if="targetDiff.smartClassesParameterMissing.length > 0"
-                                v-for="(val, id) in targetDiff.smartClassesParameterMissing">
+                                v-for="(val, id) in targetDiff.smartClassesParameterMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -67,7 +67,7 @@
                         <v-chip
                                 color="blue lighten-2"
                                 v-if="targetDiff.overridesMismatch.length > 0"
-                                v-for="(val, id) in targetDiff.overridesMismatch">
+                                v-for="(val, id) in targetDiff.overridesMismatch" :key="id">
                             {{val}}
                         </v-chip>
                     </v-flex>
@@ -85,7 +85,7 @@
                         <v-chip
                                 color="indigo lighten-5"
                                 v-if="sourceDiff.puppetClassesMissing.length > 0"
-                                v-for="(val, id) in sourceDiff.puppetClassesMissing">
+                                v-for="(val, id) in sourceDiff.puppetClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -93,7 +93,7 @@
                         <v-chip
                                 color="indigo lighten-4"
                                 v-if="sourceDiff.smartClassesMissing.length > 0"
-                                v-for="(val, id) in sourceDiff.smartClassesMissing">
+                                v-for="(val, id) in sourceDiff.smartClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -101,7 +101,7 @@
                         <v-chip
                                 color="indigo lighten-3"
                                 v-if="sourceDiff.smartClassesParameterMissing.length > 0"
-                                v-for="(val, id) in sourceDiff.smartClassesParameterMissing">
+                                v-for="(val, id) in sourceDiff.smartClassesParameterMissing" :key="id">
                             {{val}}
                         </v-chip>
                     </v-flex>
@@ -112,7 +112,7 @@
                         <v-chip
                                 color="blue lighten-5"
                                 v-if="targetDiff.puppetClassesMissing.length > 0"
-                                v-for="(val, id) in targetDiff.puppetClassesMissing">
+                                v-for="(val, id) in targetDiff.puppetClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -120,7 +120,7 @@
                         <v-chip
                                 color="blue lighten-4"
                                 v-if="targetDiff.smartClassesMissing.length > 0"
-                                v-for="(val, id) in targetDiff.smartClassesMissing">
+                                v-for="(val, id) in targetDiff.smartClassesMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -128,7 +128,7 @@
                         <v-chip
                                 color="blue lighten-3"
                                 v-if="targetDiff.smartClassesParameterMissing.length > 0"
-                                v-for="(val, id) in targetDiff.smartClassesParameterMissing">
+                                v-for="(val, id) in targetDiff.smartClassesParameterMissing" :key="id">
                             {{val}}
                         </v-chip>
 
@@ -140,7 +140,7 @@
                         <v-chip
                                 color="blue lighten-2"
                                 v-if="targetDiff.overridesMismatch.length > 0"
-                                v-for="(val, id) in targetDiff.overridesMismatch">
+                                v-for="(val, id) in targetDiff.overridesMismatch" :key="id">
                             {{val}}
                         </v-chip>
                     </v-flex>
