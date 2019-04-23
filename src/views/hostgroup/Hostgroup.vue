@@ -14,8 +14,11 @@
         >
             {{hgDoneMsg}}
         </v-alert>
-
         <v-layout row wrap v-if="wipMessage">
+            <v-flex v-if="wip" xs12>
+                <v-chip label>{{nowActions.actions}}</v-chip>
+                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+            </v-flex>
             <v-flex xs3 class="pt-2">
                 {{wipMessage}}
             </v-flex>
@@ -23,7 +26,11 @@
                 <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
             </v-flex>
         </v-layout>
-        <v-layout row wrap v-else>
+        <v-layout row wrap v-else class="text-xs-center">
+            <v-flex v-if="wip" xs12>
+                <v-chip label>{{nowActions.actions}}</v-chip>
+                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+            </v-flex>
             <v-flex xs12>
                 <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
             </v-flex>
@@ -223,8 +230,17 @@
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
     import { PuppetMethods } from "./methods"
+    // import {mapState} from "vuex";
 
     export default {
+        //========================================================================================================
+        // COMPOUNDED
+        //========================================================================================================
+        computed: {
+            nowActions () {
+                return this.$store.state.socketModule.socket.message;
+            },
+        },
 
         //========================================================================================================
         // COMPONENTS
@@ -302,17 +318,14 @@
         //========================================================================================================
         // SOCKET
         //========================================================================================================
-        sockets: {
-            connect: function () {
-                // console.log("Socket server: Connected");
-            },
-            disconnect: function () {
-                // console.log("Socket server: Disconnected");
-            },
-            event: function (data) {
-                // console.log(data);
-            },
-        },
+        // socket: {
+        //     connect: function () {
+        //         console.log("Socket server: Connected");
+        //     },
+        //     disconnect: function () {
+        //         console.log("Socket server: Disconnected");
+        //     },
+        // },
 
         //========================================================================================================
         // MOUNTED
@@ -356,6 +369,11 @@
         // WATCH
         //========================================================================================================
         watch: {
+            socket: {
+                async handler (val) {
+                    console.log(val);
+                }
+            },
             sHost: {
                 async handler (val) {
 
