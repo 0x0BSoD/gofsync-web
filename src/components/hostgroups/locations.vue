@@ -11,12 +11,16 @@
                     >
                         <v-item>
                             <v-card>
-                                <v-card-title><h4>{{n.host}}</h4></v-card-title>
+                                <v-card-title class="pr-0 pl-3 pt-0 pb-0">
+                                    <h4>{{n.host}}</h4>
+                                    <v-spacer></v-spacer>
+                                    <v-btn icon flat><a target="_blank" :rel="n.host" :href="`https://${n.host}`"><v-icon>link</v-icon></a></v-btn>
+                                </v-card-title>
                                 <v-divider></v-divider>
                                 <v-hover v-for="c in n.locations" :key="c">
                                     <v-chip
                                             slot-scope="{ hover }"
-                                            :class="`elevation-${hover ? 12 : 2}`"
+                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
                                             class="mx-auto"
                                             label >{{c}}</v-chip>
                                 </v-hover>

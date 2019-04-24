@@ -67,7 +67,6 @@
                 username: "Username",
             }),
         },
-
         data () {
             return {
                 loggedIn: false,
@@ -83,8 +82,7 @@
         },
         watch: {
             "$route": {
-                async handler (val) {
-                    // console.log(val);
+                async handler () {
                     this.loggedIn = localStorage.getItem('userData');
                     this.token    = this.$cookies.isKey("token");
                     if (!this.token && !this.loggedIn) {
@@ -92,11 +90,6 @@
                     }
                 }
             },
-            "username": {
-                async handler(val) {
-                    // console.log(val);
-                }
-            }
         },
         methods: {
             logout () {
