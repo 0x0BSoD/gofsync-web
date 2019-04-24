@@ -1,0 +1,9 @@
+Stable v1.0 24.04.2019
+----
+Comments:
+- All tasks work in parallel
+Features:
+- Uploading new Host Groups
+- Updating Host Groups
+- Batch processing
+- Show diff between Host Groups
