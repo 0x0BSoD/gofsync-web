@@ -104,13 +104,13 @@ function compare(source_pc, target_pc) {
                                                 if (target_subclasses[gdx]["smart_classes"].includes(parameter)) {
                                                 } else {
                                                     let res = `${gdx}::${parameter}`;
-                                                    console.error(`We don't have the smart class parameter ${parameter} in ${gdx}`);
+                                                    console.info(`We don't have the smart class parameter ${parameter} in ${gdx}`);
                                                     result.smartClassesParameterMissing.push(res);
                                                 }
                                             }
 
                                         } else {
-                                            console.error("We don't have a smart class parameters at all in ", source_smart_classes[jdx]["subclass"]);
+                                            console.info("We don't have a smart class parameters at all in ", source_smart_classes[jdx]["subclass"]);
                                             result.smartClassesParameterMissing.push(source_smart_classes[jdx]["subclass"]);
                                         }
                                     }
@@ -124,18 +124,18 @@ function compare(source_pc, target_pc) {
                                                     if (source_ovr[kdx] === target_ovr[kdx]) {
 
                                                     } else {
-                                                        console.error(`Override parameter ${kdx} in ${gdx} mismatch`);
+                                                        console.info(`Override parameter ${kdx} in ${gdx} mismatch`);
                                                         result.overridesMismatch.push(`${gdx}::${kdx}`);
                                                     }
                                                 } else {
-                                                    console.error(`We don't have the override parameter ${kdx} in ${gdx}`);
+                                                    console.info(`We don't have the override parameter ${kdx} in ${gdx}`);
                                                     result.overridesMissing.push(`${gdx}::${kdx}`);
                                                 }
                                             }
                                         }
                                     }
                                 } else {
-                                    console.error(`We don't have the smart class ${gdx} in ${idx}`);
+                                    console.info(`We don't have the smart class ${gdx} in ${idx}`);
                                     result.smartClassesMissing.push(gdx);
                                 }
 
@@ -144,7 +144,7 @@ function compare(source_pc, target_pc) {
                     }
                 }
             } else {
-                console.error("We don't have a puppet class ", idx);
+                console.info("We don't have a puppet class ", idx);
                 result.puppetClassesMissing.push(idx);
             }
         }

@@ -1,12 +1,12 @@
 import axios from "axios";
 
+import config from "../settings";
+
 process.env.NODE_TLS_REJECT_UNAUTORIZED = '0';
 
 export default() => {
     return axios.create({
-        // baseURL: "https://sjc01-c01-pds10.c01.ringcentral.com:8086/api/v1/",
-        baseURL: "http://localhost:8086",
-        // headers: [{"Access-Control-Allow-Origin":"http://localhost:8087"}],
+        baseURL: config.api(),
         withCredentials: true,
     });
 }

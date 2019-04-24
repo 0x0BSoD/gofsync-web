@@ -1,5 +1,7 @@
 <template>
     <v-container>
+
+<!--    ============================================ Alerts ============================================    -->
         <v-alert
                 v-model="hgError"
                 dismissible
@@ -14,33 +16,37 @@
         >
             {{hgDoneMsg}}
         </v-alert>
+<!--    ============================================ /Alerts ============================================    -->
+
+<!--    ============================================ Progress ============================================    -->
         <v-layout row wrap v-if="wipMessage">
-            <v-flex v-if="wip" xs12>
-                <v-chip label>{{nowActions.actions}}</v-chip>
+            <v-flex v-if="wip" xs9>
+                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
                 <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
             </v-flex>
             <v-flex xs3 class="pt-2">
                 {{wipMessage}}
             </v-flex>
-            <v-flex xs9>
+            <v-flex xs12>
                 <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
             </v-flex>
         </v-layout>
         <v-layout row wrap v-else class="text-xs-center">
             <v-flex v-if="wip" xs12>
-                <v-chip label>{{nowActions.actions}}</v-chip>
+                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
                 <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
             </v-flex>
             <v-flex xs12>
                 <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
             </v-flex>
         </v-layout>
+<!--    ============================================ /Progress ============================================    -->
 
-
-        <v-layout wrap row>
+<!--    ============================================ Top menu - selects =========================================    -->
+        <v-layout wrap row class="text-xs-center">
             <v-flex xs6>
                 <v-layout wrap row>
-                    <v-flex xs6 pr-5>
+                    <v-flex xs6 pr-2>
                         <v-autocomplete
                                 v-model="sHost"
                                 :items="hosts"
@@ -49,7 +55,7 @@
                         >
                         </v-autocomplete>
                     </v-flex>
-                    <v-flex xs6  pr-5>
+                    <v-flex xs6  pr-2>
                         <v-autocomplete
                                 v-model="env"
                                 :items="Environments"
@@ -63,7 +69,7 @@
             </v-flex>
             <v-flex xs6>
                 <v-layout wrap row>
-                    <v-flex xs5 pr-5>
+                    <v-flex xs6 pr-2>
                         <v-autocomplete
                                 v-model="hostGroupId"
                                 :items="hostGroups"
@@ -80,7 +86,7 @@
                             </template>
                         </v-autocomplete>
                     </v-flex>
-                    <v-flex xs6 pr-5>
+                    <v-flex xs6>
                         <v-autocomplete
                                 v-model="tHost"
                                 :items="hosts"
@@ -93,11 +99,12 @@
                 </v-layout>
             </v-flex>
         </v-layout>
+<!--    ============================================ /Top menu - selects =========================================    -->
 
         <Locations v-if="!sHost" :locations="locations"/>
 
+<!--    ======================================== Middle menu - HG control========================================    -->
         <v-layout row wrap v-if="hostGroup.id">
-
             <v-flex xs12 pb-2>
                 <v-card>
                     <v-layout>
@@ -117,7 +124,6 @@
                         </v-flex>
                         <v-flex xs6 v-if="existData" pt-3>
                             <v-layout row wrap>
-
                                 <v-flex xs12 v-if="foremanCheckHG">
                                     <v-layout row wrap class="text-xs-center">
                                         <v-flex xs12>
@@ -149,13 +155,12 @@
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
-
                                 <v-flex xs12 v-else>
                                     <v-layout row wrap class="text-xs-center">
                                         <v-flex xs12>
                                             <v-chip color="green" ><h3 >Host Group not exist on host</h3></v-chip>
                                             <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
-                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>expand_less</v-icon></v-btn></p>
+                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>cloud_upload</v-icon></v-btn></p>
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
@@ -172,8 +177,8 @@
                     </v-layout>
                 </v-card>
             </v-flex>
-
         </v-layout>
+<!--    ======================================== /Middle menu - HG control========================================    -->
 
         <HGDiff :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
 
@@ -186,16 +191,18 @@
             </v-flex>
         </v-layout>
 
-
-            <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
-                <v-flex xs12>
-                    <v-btn
-                            v-for="(val, i) in hostGroups"
-                            :key="i"
-                            @click="setHG(val.id)"
-                    >{{val.name}}</v-btn>
-                </v-flex>
-            </v-layout>
+<!--    ============================================ HostGroups ============================================    -->
+        <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
+            <v-flex xs12>
+                <v-btn
+                        v-for="(val, i) in hostGroups"
+                        :key="i"
+                        v-if = "val.name !== 'SWE'"
+                        @click="setHG(val.id)"
+                >{{val.name}}</v-btn>
+            </v-flex>
+        </v-layout>
+<!--    ============================================ /HostGroups ============================================    -->
 
         <div v-if="showPC">
             <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
@@ -673,7 +680,7 @@
                     let response2 = (await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name));
                     if (response2.status === 200) {
                         this.hgDone = true;
-                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} added to ${this.tHost}`;
+                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
                     }
                     this.wipMessage = false;
                     this.wip = false;

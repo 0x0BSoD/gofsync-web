@@ -90,27 +90,29 @@
                                 <v-flex xs3>{{val.tHost}}</v-flex>
                                 <v-flex xs3>{{val.hgName}}</v-flex>
                                 <v-flex xs6>
-                                    <v-progress-linear v-if="val.wip" :indeterminate="val.wip"></v-progress-linear>
 
-
-
-                                    <v-chip label color="primary" text-color="white" v-if="val.wip && val.uploaded && !val.updated">
-                                    <v-icon left>cached</v-icon>Updating ...
+                                    <v-chip label color="primary" text-color="white" v-if="val.wip">
+                                        <span class="custom-loader">
+                                            <v-icon light>cached</v-icon>
+                                        </span>
+                                        {{val.wipText}}
                                     </v-chip>
-
-                                    <v-chip label color="success" text-color="white" v-if="val.wip && !val.uploaded">
-                                        <v-icon left>cached</v-icon>Uploading ...
+                                    <v-chip label color="primary" text-color="white" v-else-if="!val.wip">
+                                        <v-icon left>watch_later</v-icon>Idle
                                     </v-chip>
-
-                                    <v-chip v-if="val.error" color="error">Errored</v-chip>
 
                                     <v-chip label color="success" text-color="white" v-if="val.uploaded">
                                         <v-icon left>done</v-icon>Uploaded
                                     </v-chip>
-
                                     <v-chip label color="primary" text-color="white" v-if="val.updated">
                                         <v-icon left>done</v-icon>Updated
                                     </v-chip>
+
+                                    <v-chip label v-if="val.wip && nowActions">{{nowActions.actions}}</v-chip>
+                                    <v-chip label v-if="val.wip && nowActions.state">{{nowActions.state}}</v-chip>
+
+                                    <v-chip label v-if="val.error" color="error">Errored</v-chip>
+
                                 </v-flex>
                             </v-layout>
 
@@ -152,6 +154,15 @@
         hostService, locationsService, userService } from "../_services"
 
     export default {
+        //========================================================================================================
+        // COMPOUNDED
+        //========================================================================================================
+        computed: {
+            nowActions () {
+                return this.$store.state.socketModule.socket.message;
+            },
+        },
+
         data: () => ({
             e1: 0,
             sHost: null,
@@ -184,7 +195,6 @@
                 this.started = true;
                 for (let i in this.checkRes) {
                     if (this.checkRes[i].environment) {
-
                         // Build POST parameters
                         let data = {
                             source_host: this.sHost,
@@ -194,7 +204,10 @@
                         };
                         // Commit new data
                         try {
+                            this.checkRes[i].wipText = "Uploading";
+                            this.checkRes[i].wip = true;
                             let response = (await hostGroupService.hgSend(data));
+                            this.checkRes[i].wip = false;
                             this.checkRes[i].uploaded = true;
                         } catch (e) {
                             console.error(e);
@@ -209,7 +222,10 @@
                         if (!this.checkRes[i].error) {
                             // Commit new data
                             try {
+                                this.checkRes[i].wip = true;
+                                this.checkRes[i].wipText = "Updating";
                                 let response = (await hostGroupService.hgFUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName));
+                                this.checkRes[i].wip = false;
                                 this.checkRes[i].updated = true;
                             } catch (e) {
                                 console.error(e);
@@ -217,10 +233,9 @@
                             }
                         }
                     }
-                    this.checkRes[i].wip = false;
                 }
 
-                // await this.checks()
+                this.started = false;
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.hgList(this.sHost)).data;
@@ -246,7 +261,7 @@
                                 source_hg_id: this.hostGroupSelected[hg],
                                 foremanCheckHG: false,
                                 error: false,
-                                wip: true,
+                                wip: false,
                             };
 
                             let envData = {
@@ -283,7 +298,8 @@
                                 foremanCheckHG: tmp,
                                 foremanTargetId: targetId,
                                 source_hg_id: this.hostGroupSelected[hg],
-                                wip: true,
+                                wip: false,
+                                wipText: "",
                                 hg_link: link,
                             })
                         }
@@ -296,4 +312,47 @@
     }
 </script>
 
-<style></style>
+<style>
+    #particles-js {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .custom-loader {
+        animation: loader 1s infinite;
+        display: flex;
+    }
+    @-moz-keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @-webkit-keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @-o-keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @keyframes loader {
+        from {
+            transform: rotate(0);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>

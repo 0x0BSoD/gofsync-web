@@ -37,15 +37,32 @@
                             User or password invalid.
                         </v-alert>
                         <v-form>
-                            <v-text-field :rules="[rules.required]" prepend-icon="person" name="username" label="Username" type="text" v-model="username"></v-text-field>
-                            <v-text-field :rules="[rules.required]"  id="password" prepend-icon="lock" name="password" label="Password" type="password" v-model="password"></v-text-field>
+                            <v-text-field
+                                    :rules="[rules.required]"
+                                    prepend-icon="person"
+                                    name="username"
+                                    label="Username"
+                                    type="text"
+                                    v-model="username"
+                                    v-on:keyup.enter="login()"
+                            ></v-text-field>
+                            <v-text-field
+                                    :rules="[rules.required]"
+                                    id="password"
+                                    prepend-icon="lock"
+                                    name="password"
+                                    label="Password"
+                                    type="password"
+                                    v-model="password"
+                                    v-on:keyup.enter="login()"
+                            ></v-text-field>
                             <v-checkbox v-model="remember_me" label="Remember me"></v-checkbox>
                         </v-form>
                     </v-card-text>
                     <v-card-actions>
-                        <v-spacer></v-spacer>
 
                         <v-btn
+                                block
                                 :loading="loading"
                                 color="primary"
                                 :disabled="(!username && !password) || loading"
@@ -175,5 +192,4 @@
             transform: rotate(360deg);
         }
     }
-
 </style>

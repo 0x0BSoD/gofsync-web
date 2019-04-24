@@ -2,15 +2,17 @@ import Vue from 'vue'
 import ws from "vue-native-websocket";
 
 import store from "../store";
+import config from "../settings";
 
 Vue.use(
     ws,
-    "ws://localhost:8086/ws",
+    config.ws(),
     {
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 3000,
         store: store,
-        format: 'json'
+        format: 'json',
+        protocol: "wss",
     },
 );

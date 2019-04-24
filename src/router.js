@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import hostgroup from './views/hostgroup/Hostgroup';
+import HosGroup from './views/hostgroup/Hostgroup';
 import Login from './views/Login';
 import Batch from './views/Batch';
 
@@ -11,7 +11,7 @@ export default new Router({
     {
       path: '/',
       name: 'hostgroup',
-      component: hostgroup
+      component: HosGroup
     },
     {
       path: '/login',
