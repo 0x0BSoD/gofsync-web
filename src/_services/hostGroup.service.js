@@ -8,7 +8,7 @@ export const hostGroupService = {
     hgFUpdate,
     hgCheck,
     hgSend,
-    hgUpdate,
+    hgAllList,
 };
 
 // GET ===========================================
@@ -17,6 +17,9 @@ function hg(host, hgId) {
 }
 function hgList(host) {
     return Api().get(`hg/${host}`);
+}
+function hgAllList() {
+    return Api().get("hg");
 }
 function hgFCheck(host, hgId) {
     return Api().get(`hg/foreman/check/${host}/${hgId}`);

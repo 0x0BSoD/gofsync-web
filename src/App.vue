@@ -23,7 +23,7 @@
                         <v-list-tile :to="{name:'batch'}">
                             <v-list-tile-title>Batch</v-list-tile-title>
                         </v-list-tile>
-                        <v-list-tile :disabled="true" :to="{name:'batch'}">
+                        <v-list-tile :to="{name:'jsoneditor'}">
                             <v-list-tile-title>Json editor</v-list-tile-title>
                         </v-list-tile>
                     </v-list>
