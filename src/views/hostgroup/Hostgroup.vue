@@ -160,7 +160,7 @@
                                         <v-flex xs12>
                                             <v-chip color="green" ><h3 >Host Group not exist on host</h3></v-chip>
                                             <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
-                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>expand_less</v-icon></v-btn></p>
+                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>cloud_upload</v-icon></v-btn></p>
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
