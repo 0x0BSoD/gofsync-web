@@ -22,7 +22,14 @@
                 </v-autocomplete>
             </v-flex>
             <v-flex xs2>
-                <v-btn large>upload json</v-btn>
+                <upload-btn
+                        color="default"
+                        large
+                        title="Upload JSON"
+                        accept=".json"
+                        :fileChangedCallback="fileChanged"
+                >
+                </upload-btn>
             </v-flex>
         </v-layout>
 <!-- ============================================= /Top Panel ============================================= -->
@@ -82,44 +89,62 @@
                 scrollable
                 max-width="800px"
         >
-            <v-card>
-                <v-card-title class="headline">Puppet Classes</v-card-title>
-
-                <v-card-text>
-                    <v-container fluid px-4>
-                        <v-text-field
-                                label="Search..."
-                        ></v-text-field>
-                        <v-checkbox
-                                v-for="i in 50"
-                                :key="i"
-                                v-model="checkbox"
-                                :label="`Checkbox ${i}: ${checkbox.toString()}`"
-                        ></v-checkbox>
-                    </v-container>
-                </v-card-text>
-
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-
-                    <v-btn
-                            color="green darken-1"
-                            flat="flat"
-                            @click="dialog = false"
+                    <v-card
+                            class="mx-auto"
                     >
-                        Add
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
+                        <v-sheet class="pa-3 primary lighten-2">
+                            <v-text-field
+                                    v-model="search"
+                                    label="Search Company Directory"
+                                    dark
+                                    flat
+                                    solo-inverted
+                                    hide-details
+                                    clearable
+                                    clear-icon="mdi-close-circle-outline"
+                            ></v-text-field>
+                            <v-checkbox
+                                    v-model="caseSensitive"
+                                    dark
+                                    hide-details
+                                    label="Case sensitive search"
+                            ></v-checkbox>
+                        </v-sheet>
+                        <v-card-text>
+                            <v-treeview
+                                    :items="allPuppetClasses"
+                                    :search="search"
+                                    :filter="filter"
+                                    :open.sync="open"
+                                    open-on-click
+                                    selectable
+                            >
+                            </v-treeview>
+                        </v-card-text>
+                    </v-card>
+
+<!--                <v-card-actions>-->
+<!--                    <v-spacer></v-spacer>-->
+
+<!--                    <v-btn-->
+<!--                            color="green darken-1"-->
+<!--                            flat="flat"-->
+<!--                            @click="dialog = false"-->
+<!--                    >-->
+<!--                        Add-->
+<!--                    </v-btn>-->
+<!--                </v-card-actions>-->
         </v-dialog>
     </v-container>
 </template>
 
 <script>
 
-    import { hostGroupService } from "../_services"
+    import { hostGroupService, pcService } from "../_services"
     import { PuppetMethods } from "./hostgroup/methods"
+    import { Common } from "./methods";
     import _ from 'lodash'
+    import UploadButton from 'vuetify-upload-button';
 
     import 'codemirror/mode/javascript/javascript.js'
     import'codemirror/addon/selection/active-line.js'
@@ -140,10 +165,19 @@
     import'codemirror/addon/fold/xml-fold.js'
     export default {
 
+        components: {
+            'upload-btn': UploadButton
+        },
+
         computed: {
             codemirror() {
                 return this.$refs.myCm.codemirror
-            }
+            },
+            filter () {
+                return this.caseSensitive
+                    ? (item, search, textKey) => item[textKey].indexOf(search) > -1
+                    : undefined
+            },
         },
         //========================================================================================================
         // DATA
@@ -183,12 +217,18 @@
             puppetClasses: [],
             dialog: false,
             checkbox: false,
+            allPuppetClasses: {},
+            search: null,
+            caseSensitive: false,
         }),
 
         //========================================================================================================
         // MOUNTED
         //========================================================================================================
         async mounted () {
+            // User check ==========================================
+            await Common.auth(this);
+
             // Load Hosts ==========================================
             try {
                 if (localStorage.getItem("jsonInput") !== null) {
@@ -197,6 +237,8 @@
                 }
                 this.wip = true;
                 this.hostGroups = (await hostGroupService.hgAllList()).data;
+                this.allPuppetClasses = (await pcService.allPC()).data;
+                console.log(this.allPuppetClasses);
                 this.wip = false;
             } catch (e) {
                 console.error(e.message);
@@ -238,13 +280,28 @@
             },
 
         },
-        methods: {}
+        methods: {
+            async buildPuppetClassTree () {
+            },
+            fileChanged (file) {
+                if (window.File && window.FileReader && window.FileList && window.Blob) {
+                    let reader = new FileReader();
+                    reader.onload = (function(t) {
+                        return function(e) {
+                            t.JSONCode = e.target.result;
+                        };
+                    })(this);
+                    reader.readAsText(file);
+                } else {
+                    console.error('The File APIs are not fully supported in this browser.');
+                }
+            },
+        }
     }
 </script>
 
 <style>
     .vue-codemirror {
-
         /* Firefox */
         height: -moz-calc(100vh - 190px);
         /* WebKit */

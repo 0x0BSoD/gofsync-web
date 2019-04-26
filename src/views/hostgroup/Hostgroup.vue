@@ -232,11 +232,12 @@
 
 <script>
     import { hostGroupService, environmentService,
-              hostService, locationsService, userService } from "../../_services"
+              hostService, locationsService } from "../../_services"
     import Locations from "../../components/hostgroups/locations"
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
     import { PuppetMethods } from "./methods"
+    import {Common} from "../methods";
     // import {mapState} from "vuex";
 
     export default {
@@ -338,6 +339,8 @@
         // MOUNTED
         //========================================================================================================
         async mounted () {
+            // User check ==========================================
+            await Common.auth(this);
 
             // Load Hosts ==========================================
             try {
@@ -351,25 +354,7 @@
                 this.hgErrorMsg = "Backend not reachable or in errored state"
             }
 
-            // User check ==========================================
-            const loggedIn = localStorage.getItem('userData');
-            const token    = this.$cookies.isKey("token");
-            if (token && !!loggedIn) {
-                this.btn_logout = true;
-                this.loggedIn = true;
-                this.userData = JSON.parse(loggedIn);
-                this.username = this.userData.CN[0];
-                this.userGroups = this.userData.OU.join("|");
-                this.$store.dispatch("setUsername", this.username);
-                try {
-                    await userService.refreshjwt();
-                } catch (e) {
-                    // console.log("token is ok");
-                }
-            }
-            else {
-                this.$router.push({name: "login"});
-            }
+
         },
 
         //========================================================================================================
@@ -583,6 +568,7 @@
                 this.pc_count = pcData.PuppetClassesCount;
                 this.ovr_count = pcData.PuppetClassesOverrides;
                 this.pc = pcData.PuppetClasses;
+                PuppetMethods.setMismatch(this);
 
                 this.tHost = old_th;
                 this.sourceLoaded = true;
@@ -616,7 +602,6 @@
                 // fill puppet classes info
                 let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                 this.targPc = pcData.PuppetClasses;
-
 
                 // Build POST parameters
                 let data = {
@@ -690,7 +675,6 @@
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
                 }
-
 
                 // =====================================================================================================
                 this.hgExist = (await hostGroupService.hgCheck(data)).data;

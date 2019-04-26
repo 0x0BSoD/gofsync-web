@@ -152,6 +152,7 @@
 <script>
     import { hostGroupService, environmentService,
         hostService, locationsService, userService } from "../_services"
+    import { Common } from "./methods";
 
     export default {
         //========================================================================================================
@@ -177,11 +178,8 @@
             wipUploading: true,
         }),
         async mounted () {
-            const loggedIn = localStorage.getItem('userData');
-            const token    = this.$cookies.isKey("token");
-            if (!token && !loggedIn) {
-                this.$router.push({name: "login"});
-            }
+            // User check ==========================================
+            await Common.auth(this);
 
             try {
                 this.hosts = (await hostService.hosts()).data;

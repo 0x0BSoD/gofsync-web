@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import HosGroup from './views/hostgroup/Hostgroup';
-import Login from './views/Login';
-import Batch from './views/Batch';
-import JsonEditor from './views/JsonEditor';
+import HosGroup from '../views/hostgroup/Hostgroup';
+import Login from '../views/Login';
+import Batch from '../views/Batch';
+import JsonEditor from '../views/JsonEditor';
 
 Vue.use(Router);
 
