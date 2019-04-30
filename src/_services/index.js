@@ -4,3 +4,4 @@ export * from './host.service';
 export * from './location.service';
 export * from './user.service';
 export * from './puppetclasses.service';
+export * from './smartclasses.service';

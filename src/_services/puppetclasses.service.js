@@ -5,6 +5,6 @@ export const pcService = {
 };
 
 // GET ===========================================
-function allPC() {
-    return Api().get("pc");
+function allPC(host) {
+    return Api().get(`pc/${host}`);
 }

@@ -50,14 +50,57 @@
                         ></v-text-field>
                     </v-flex>
                     <v-flex xs12 mb-3>
-                        <v-btn small @click.stop="dialog = true">add puppet class</v-btn>
+                        <v-btn small :disabled="true" @click.stop="dialog = true">add puppet class</v-btn>
                     </v-flex>
-                    <v-flex xs12
-                        v-for="(val, idx) in puppetClasses"
-                        :key="idx"
-                    >
-                        {{val}}
+
+                    <v-flex xs12>
+                        <v-expansion-panel focusable>
+                            <v-expansion-panel-content
+                                    v-for="(val, idx) in JSONObject.puppet_classes"
+                                    :key="idx"
+                            >
+                                <template v-slot:header>
+                                    <div>{{idx}}</div>
+                                </template>
+                                <v-card>
+                                    <v-card-text class="grey lighten-3">
+                                        <v-card
+                                                v-for="(sc, jdx) in val"
+                                                :key="jdx"
+                                                class="mb-1"
+                                        >
+                                            <v-expansion-panel focusable v-if="sc.smart_classes">
+                                                <v-expansion-panel-content>
+                                                    <template v-slot:header>
+                                                        {{sc.subclass}}
+                                                        <v-spacer></v-spacer>
+                                                        <v-chip class="puppetLabel" v-if="sc.overrides" label>have overrides</v-chip>
+                                                        <v-btn class="puppetLabel" icon @click.stop=""><v-icon>delete</v-icon></v-btn>
+                                                    </template>
+                                                    <v-card>
+                                                        <v-card-actions
+                                                                v-for="(scp, i) in sc.smart_classes"
+                                                                :key="i"
+                                                        >
+                                                            {{scp}}
+                                                            <v-spacer></v-spacer>
+                                                            <v-chip class="puppetLabel" v-if="sc.overrides.includes(scp)" label>have overrides</v-chip>
+                                                            <v-btn class="puppetLabel" icon @click.stop="editDialog(sc.subclass, scp)"><v-icon>edit</v-icon></v-btn>
+                                                            <v-btn class="puppetLabel" icon @click.stop=""><v-icon>delete</v-icon></v-btn>
+                                                        </v-card-actions>
+                                                    </v-card>
+                                                </v-expansion-panel-content>
+                                            </v-expansion-panel>
+                                            <v-card-actions v-else>
+                                                {{sc.subclass}}
+                                            </v-card-actions>
+                                        </v-card>
+                                    </v-card-text>
+                                </v-card>
+                            </v-expansion-panel-content>
+                        </v-expansion-panel>
                     </v-flex>
+
                 </v-layout>
             </v-flex>
             <v-flex xs6>
@@ -72,12 +115,6 @@
                         v-model="JSONCode"
                         :options="cmOptions">
                 </codemirror>
-<!--                <v-textarea-->
-<!--                        box-->
-<!--                        name="input-7-4"-->
-<!--                        label="JSON"-->
-<!--                        value="The Woodman set to work at once, and so sharp was his axe that the tree was soon chopped nearly through."-->
-<!--                ></v-textarea>-->
             </v-flex>
         </v-layout>
 
@@ -115,25 +152,12 @@
                                     :items="allPuppetClasses"
                                     :search="search"
                                     :filter="filter"
-                                    :open.sync="open"
                                     open-on-click
                                     selectable
                             >
                             </v-treeview>
                         </v-card-text>
                     </v-card>
-
-<!--                <v-card-actions>-->
-<!--                    <v-spacer></v-spacer>-->
-
-<!--                    <v-btn-->
-<!--                            color="green darken-1"-->
-<!--                            flat="flat"-->
-<!--                            @click="dialog = false"-->
-<!--                    >-->
-<!--                        Add-->
-<!--                    </v-btn>-->
-<!--                </v-card-actions>-->
         </v-dialog>
     </v-container>
 </template>
@@ -192,7 +216,7 @@
                 name: null,
                 environment: null,
                 parent_id: null,
-                puppet_classes: {},
+                puppet_classes: [],
                 updated: null,
             },
             cmOptions: {
@@ -210,6 +234,7 @@
                 gutters: ["CodeMirror-lint-markers", "CodeMirror-foldgutter", "CodeMirror-linenumbers",],
             },
             JSONCode: "{}",
+            JSONObject: "{}",
             jsonError: false,
             jsonMsg: "",
             hgName: null,
@@ -217,7 +242,7 @@
             puppetClasses: [],
             dialog: false,
             checkbox: false,
-            allPuppetClasses: {},
+            allPuppetClasses: [],
             search: null,
             caseSensitive: false,
         }),
@@ -237,8 +262,7 @@
                 }
                 this.wip = true;
                 this.hostGroups = (await hostGroupService.hgAllList()).data;
-                this.allPuppetClasses = (await pcService.allPC()).data;
-                console.log(this.allPuppetClasses);
+                this.allPuppetClasses = (await pcService.allPC("spb01-puppet.lab.nordigy.ru")).data;
                 this.wip = false;
             } catch (e) {
                 console.error(e.message);
@@ -250,10 +274,22 @@
                 _.debounce(async function (val) {
                     try {
                         let HGObject = JSON.parse(val);
+                        this.JSONObject = HGObject;
                         this.jsonError = false;
                         localStorage.setItem('jsonInput', JSON.stringify(val));
                         this.hgName = HGObject.name;
                         this.envName = HGObject.environment;
+
+                        if (!HGObject.hasOwnProperty("name")) {
+                            this.jsonError = true;
+                            this.jsonMsg = "Name required";
+                        }
+                        if (!HGObject.hasOwnProperty("environment")) {
+                            this.jsonError = true;
+                            this.jsonMsg = "Environment required";
+                        }
+
+
                     } catch (e) {
                         let err_msg =  e.message;
                         let msg = err_msg.split(":");
@@ -281,7 +317,9 @@
 
         },
         methods: {
-            async buildPuppetClassTree () {
+            async editDialog (subc, scp) {
+                console.log(subc);
+                console.log(scp);
             },
             fileChanged (file) {
                 if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -301,6 +339,14 @@
 </script>
 
 <style>
+    .puppetLabel {
+        flex: unset !important;
+    }
+    /*.v-expansion-panel__header {*/
+    /*    padding: 0;*/
+    /*    margin: 0;*/
+    /*}*/
+
     .vue-codemirror {
         /* Firefox */
         height: -moz-calc(100vh - 190px);

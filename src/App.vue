@@ -16,15 +16,18 @@
                                 flat
                                 v-on="on"
                         >
-                            TOOLS
+                            {{menuLabel}}
                         </v-btn>
                     </template>
                     <v-list>
                         <v-list-tile :to="{name:'batch'}">
                             <v-list-tile-title>Batch</v-list-tile-title>
                         </v-list-tile>
-                        <v-list-tile :disabled="true" :to="{name:'jsoneditor'}">
+                        <v-list-tile :to="{name:'jsoneditor'}">
                             <v-list-tile-title>Json editor</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile :to="{name:'locations'}">
+                            <v-list-tile-title>Locations</v-list-tile-title>
                         </v-list-tile>
                     </v-list>
                 </v-menu>
@@ -71,6 +74,7 @@
             return {
                 loggedIn: false,
                 token: false,
+                menuLabel: "Tools",
             }
         },
         async mounted () {
@@ -82,12 +86,30 @@
         },
         watch: {
             "$route": {
-                async handler () {
-                    this.loggedIn = localStorage.getItem('userData');
-                    this.token    = this.$cookies.isKey("token");
-                    if (!this.token && !this.loggedIn) {
-                        this.$router.push({name: "login"});
+                async handler (val) {
+                    console.log(val.name);
+                    switch(val.name) {
+                        case "hostgroup":
+                            this.menuLabel = "hostgroup";
+                            break;
+                        case "batch":
+                            this.menuLabel = "batch";
+                            break;
+                        case "jsoneditor":
+                            this.menuLabel = "json editor";
+                            break;
+                        case "locations":
+                            this.menuLabel = "locations";
+                            break;
+                        default:
+                            this.menuLabel = "Tools";
                     }
+
+                    // this.loggedIn = localStorage.getItem('userData');
+                    // this.token    = this.$cookies.isKey("token");
+                    // if (!this.token && !this.loggedIn) {
+                    //     this.$router.push({name: "login"});
+                    // }
                 }
             },
         },
