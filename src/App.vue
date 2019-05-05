@@ -104,20 +104,14 @@
                         default:
                             this.menuLabel = "Tools";
                     }
-
-                    // this.loggedIn = localStorage.getItem('userData');
-                    // this.token    = this.$cookies.isKey("token");
-                    // if (!this.token && !this.loggedIn) {
-                    //     this.$router.push({name: "login"});
-                    // }
                 }
             },
         },
         methods: {
-            logout () {
+            async logout () {
                 this.loggedIn = false;
                 this.token    = false;
-                this.$store.dispatch("setUsername", "anon");
+                await this.$store.dispatch("setUsername", "anon");
                 localStorage.clear();
                 this.$cookies.remove("token");
                 this.$router.push({name: "login"});

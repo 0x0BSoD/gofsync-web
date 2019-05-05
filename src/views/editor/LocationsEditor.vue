@@ -137,8 +137,8 @@
 </template>
 
 <script>
-    import { Common } from "./methods";
-    import { hostService, locationsService, pcService, SmartClassesService } from "../_services"
+    import { Common } from "../methods";
+    import { hostService, locationsService, pcService, SmartClassesService } from "../../_services"
 
     export default {
 
