@@ -10,7 +10,7 @@
                         <v-autocomplete
                                 v-model="host"
                                 :items="hosts"
-                                label="Host"
+                                label="Classes source Host"
                                 persistent-hint
                                 solo
                         >
@@ -20,6 +20,7 @@
                         <v-autocomplete
                                 v-model="hostGroupId"
                                 :items="hostGroups"
+                                :disabled="!host"
                                 label="Host Group"
                                 persistent-hint
                                 item-text="name"
@@ -43,7 +44,7 @@
                         >
                         </upload-btn>
                     </v-flex>
-                    <v-flex xs4>
+                    <v-flex ml-5 xs5>
                         <v-layout row wrap>
                             <v-flex xs4 mr-3>
                                 <v-text-field
@@ -56,6 +57,9 @@
                                         label="Environment name"
                                         v-model="envName"
                                 ></v-text-field>
+                            </v-flex>
+                            <v-flex xs2>
+                                <v-btn large>save</v-btn>
                             </v-flex>
                         </v-layout>
                     </v-flex>
@@ -89,9 +93,9 @@
                     <v-flex xs12 mb-3>
                         <v-btn
                                 small
-                                @click.stop="dialog = true"
+                                @click.stop="dialogPuppetClasses = true"
                                 :loading="loadingPC"
-                                :disabled="loadingPC || !host"
+                                :disabled="loadingPC || !allPuppetClassesFull"
                         >add puppet class</v-btn>
                     </v-flex>
 <!--================================================================================================================-->
@@ -112,6 +116,7 @@
                                                 v-for="(sc, jdx) in val"
                                                 :key="jdx"
                                                 class="mb-1"
+                                                v-if="sc"
                                         >
                                             <v-expansion-panel focusable v-if="sc.smart_classes" class="pcPanel">
                                                 <v-expansion-panel-content>
@@ -129,7 +134,7 @@
                                                             {{scp}}
                                                             <v-spacer></v-spacer>
                                                             <v-chip class="puppetLabel" v-if="sc.overrides && sc.overrides.includes(scp)" label>have overrides</v-chip>
-                                                            <v-btn class="puppetLabel" color="primary" icon @click.stop="editDialog(sc.subclass, scp)"><v-icon>edit</v-icon></v-btn>
+                                                            <v-btn class="puppetLabel" color="primary" icon @click.stop="editDialog(idx, sc.subclass, scp)"><v-icon>edit</v-icon></v-btn>
                                                         </v-card-actions>
                                                     </v-card>
                                                 </v-expansion-panel-content>
@@ -166,7 +171,36 @@
 
 <!--  ========================================================================================================      -->
         <v-dialog
-                v-model="dialog"
+                v-model="dialogParamEditor"
+                scrollable
+                max-width="600px"
+        >
+            <v-card
+                    class="mx-auto"
+            >
+                <v-card-title primary-title>
+                    <div>
+                        <h3 class="headline mb-0">{{parameterEditTitle}}</h3>
+                        <v-chip label>{{parameterEditType}}</v-chip>
+                    </div>
+                </v-card-title>
+                <v-card-text>
+                    <v-textarea
+                            box
+                            v-model="parameterEditValue"
+                            :label="parameterEditDefaultValue"
+                    >
+                    </v-textarea>
+
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn flat>save</v-btn>
+                    <v-btn flat color="warning">CLEAR OVERRIDE</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <v-dialog
+                v-model="dialogPuppetClasses"
                 scrollable
                 max-width="600px"
         >
@@ -243,7 +277,7 @@
 
 <script>
 
-    import { hostGroupService, pcService, hostService } from "../../_services"
+    import { hostGroupService, pcService, hostService, SmartClassesService } from "../../_services"
     import { EditorMethods } from "../editor/methods"
     import { PuppetMethods } from "../hostgroup/methods"
     import { Common } from "../methods";
@@ -321,7 +355,8 @@
             hgName: null,
             envName: null,
             puppetClasses: [],
-            dialog: false,
+            dialogPuppetClasses: false,
+            dialogParamEditor: false,
             checkbox: false,
             allPuppetClasses: [],
             allPuppetClassesFull: [],
@@ -333,6 +368,10 @@
             tab: 0,
             pcNotify: false,
             pcNotifyMsg: null,
+            parameterEditTitle: null,
+            parameterEditType: null,
+            parameterEditValue: null,
+            parameterEditDefaultValue: null,
         }),
 
         //========================================================================================================
@@ -346,8 +385,23 @@
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
+                if (localStorage.getItem("lastHost") !== null) {
+                    this.host =  localStorage.getItem('lastHost');
+                }
+                if (localStorage.getItem("lastTab") !== null) {
+                    this.tab =  localStorage.getItem('lastTab');
+                }
                 if (localStorage.getItem("jsonInput") !== null) {
                     this.JSONCode = JSON.parse(localStorage.getItem('jsonInput'));
+                    this.JSONObject = JSON.parse(this.JSONCode);
+                    this.loadingPC = true;
+                    this.allPuppetClassesFull = (await pcService.allPC(this.host)).data;
+                    this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
+                    this.search = null;
+                    EditorMethods.resetPC(this);
+                    EditorMethods.checkPC(this);
+                    EditorMethods.sortPC(this);
+                    this.loadingPC = false;
                 }
                 this.hostGroups = (await hostGroupService.hgAllList()).data;
                 this.wip = false;
@@ -361,12 +415,18 @@
         // WATCH
         //========================================================================================================
         watch: {
+            tab: {
+              handler (val) {
+                  localStorage.setItem('lastTab', val);
+              }
+            },
             host: {
                 async handler (val) {
                     this.loadingPC = true;
                     this.allPuppetClassesFull = (await pcService.allPC(val)).data;
                     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
                     this.search = null;
+                    localStorage.setItem('lastHost', val);
                     this.loadingPC = false;
                 }
             },
@@ -386,11 +446,19 @@
                     }
                 }
             },
+            JSONObject: {
+                handler () {
+                    EditorMethods.resetPC(this);
+                    EditorMethods.checkPC(this);
+                    EditorMethods.sortPC(this);
+                    // this.JSONCode = JSON.stringify(val, " ", "  ");
+                }
+            },
             JSONCode:
                 _.debounce(async function (val) {
-                    this.search = null;
-                    this.loadingPC = true;
-                    this.allPuppetClasses = {};
+                    // this.search = null;
+                    // this.loadingPC = true;
+                    // this.allPuppetClasses = {};
                     try {
                         let HGObject = JSON.parse(val);
                         this.JSONObject = HGObject;
@@ -410,6 +478,7 @@
 
                         EditorMethods.resetPC(this);
                         EditorMethods.checkPC(this);
+                        EditorMethods.sortPC(this);
 
                         this.loadingPC = false;
                     } catch (e) {
@@ -427,14 +496,10 @@
                     try {
                         this.search = null;
                         this.hostGroup = (await hostGroupService.hg("spb01-puppet.lab.nordigy.ru", val)).data;
+                        this.JSONObject = this.hostGroup;
                         let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                         this.puppetClasses = pcData.PuppetClasses;
 
-                        this.JSONCode = JSON.stringify(this.hostGroup, " ", "  ");
-                        this.hgName = this.hostGroup.name;
-                        this.envName = this.hostGroup.environment;
-
-                        this.JSONObject = JSON.parse(this.JSONCode);
                         this.loadingPC = false;
                     } catch (e) {
                         console.error(e);
@@ -450,58 +515,89 @@
         methods: {
             addPuppetClass (data) {
                 this.pcNotify = false;
-                let pc = this.JSONObject.puppet_classes;
-                if (pc.hasOwnProperty(data.Class)) {
+                if (this.JSONObject.puppet_classes.hasOwnProperty(data.Class)) {
                     if (data.Parameters) {
-                        pc[data.Class].push({
+                        this.JSONObject.puppet_classes[data.Class].push({
                             "subclass": data.SubClass,
                             "smart_classes": data.Parameters.map(item => item.Name),
                         });
                     } else {
-                        pc[data.Class].push({
+                        this.JSONObject.puppet_classes[data.Class].push({
                             "subclass": data.SubClass,
                         });
                     }
                     data.InHostGroup = true;
                 } else {
                     if (data.Parameters) {
-                        pc[data.Class]=([{
+                        this.JSONObject.puppet_classes[data.Class]=([{
                             "subclass": data.SubClass,
                             "smart_classes": data.Parameters.map(item => item.Name),
                         }]);
                     } else {
-                        pc[data.Class]=([{
+                        this.JSONObject.puppet_classes[data.Class]=([{
                             "subclass": data.SubClass,
                         }]);
                     }
                     data.InHostGroup = true;
                 }
+
+                EditorMethods.sortPC(this);
                 this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
                 this.pcNotifyMsg = `${data.Class} => ${data.SubClass} Added`;
                 this.pcNotify = true;
             },
-            async editDialog (subc, scp) {
-                console.log(subc);
-                console.log(scp);
+            async editDialog (_class, subClass, parameter) {
+                this.parameterEditTitle = null;
+                this.parameterEditValue = null;
+                this.parameterEditType = null;
+                this.parameterEditDefaultValue = null;
+
+                this.parameterEditTitle = `${subClass} => ${parameter}`;
+                this.parameterEditValue = null;
+
+                for (let i in this.JSONObject.puppet_classes[_class]) {
+                    if (this.JSONObject.puppet_classes[_class][i].hasOwnProperty("overrides")) {
+                        for (let j in this.JSONObject.puppet_classes[_class][i]["overrides"]) {
+                            if (this.JSONObject.puppet_classes[_class][i]["overrides"][j]["parameter"] === parameter) {
+                                console.log(this.JSONObject.puppet_classes[_class][i]["overrides"][j]);
+                                this.parameterEditValue = this.JSONObject.puppet_classes[_class][i]["overrides"][j]["value"];
+                                try {
+                                    let _id = this.JSONObject.puppet_classes[_class][i]["overrides"][j]["smart_class_id"];
+                                    let dump = JSON.parse((await SmartClassesService.getById(_id)).data["Dump"]);
+                                    this.parameterEditType = dump["parameter_type"];
+                                    this.parameterEditDefaultValue = `Default: ${dump["default_value"]!=="" ? dump["default_value"] :"NOPE"}`;
+                                }catch (e) {
+                                    this.parameterEditType = "NOPE";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                this.dialogParamEditor = true;
             },
-            rmPC (_class, subc) {
+            rmPC (_class, subClass) {
                 this.pcNotify = false;
-                let hgObj = this.JSONObject;
-                if (hgObj.puppet_classes[_class]) {
-                    if (hgObj.puppet_classes[_class].length !== 0) {
-                        for (let i in hgObj.puppet_classes[_class]) {
-                            if (hgObj.puppet_classes[_class][i]["subclass"] === subc) {
-                                console.info(delete hgObj.puppet_classes[_class][i]);
+                if (this.JSONObject.puppet_classes[_class]) {
+                    if (this.JSONObject.puppet_classes[_class].length !== 0) {
+                        for (let i in this.JSONObject.puppet_classes[_class]) {
+                            if (this.JSONObject.puppet_classes[_class][i]["subclass"] === subClass) {
+                                console.info(delete this.JSONObject.puppet_classes[_class][i]);
                             }
                         }
                     } else {
-                        console.info(delete hgObj.puppet_classes[_class]);
+                        console.info(delete this.JSONObject.puppet_classes[_class]);
                     }
 
                 }
-                this.JSONCode = JSON.stringify(Common.pruneEmpty(hgObj), " ", "  ");
-                this.JSONObject = JSON.parse(this.JSONCode);
-                this.pcNotifyMsg = `${_class} => ${subc} Removed`;
+
+                EditorMethods.resetPC(this);
+                EditorMethods.checkPC(this);
+                EditorMethods.sortPC(this);
+                this.JSONObject = Common.pruneEmpty(this.JSONObject);
+                this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+
+                this.pcNotifyMsg = `${_class} => ${subClass} Removed`;
                 this.pcNotify = true;
             },
             fileChanged (file) {

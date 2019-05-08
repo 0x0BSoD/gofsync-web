@@ -83,8 +83,17 @@
                 <!--     =====================================================================================================       -->
                 <v-stepper-content step="4">
                     <v-card>
-                        <v-card-title class="headline font-weight-regular blue-grey white--text">Checks</v-card-title>
-                        <v-card-text v-for="(val, idx) in checkRes" :key="idx">
+                        <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">Checking</v-card-title>
+                        <v-layout row wrap v-if="!checked">
+                            <v-flex xs12 class="text-sm-center">
+                                <v-chip color="font-weight-regular">{{checkingHost}}</v-chip>
+                            </v-flex>
+                            <v-flex xs12 class="text-sm-center">
+                                <v-chip color="font-weight-regular blue-grey white--text">{{checkingSWE}}</v-chip>
+                            </v-flex>
+                        </v-layout>
+                        <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks Result</v-card-title>
+                        <v-card-text v-if="checked" v-for="(val, idx) in checkRes" :key="idx">
                             <v-layout v-if="started">
 
                                 <v-flex xs3>{{val.tHost}}</v-flex>
@@ -176,6 +185,9 @@
             checkRes: [],
             started: false,
             wipUploading: true,
+            checkingHost: null,
+            checkingSWE: null,
+            checked: false,
         }),
         async mounted () {
             // User check ==========================================
@@ -240,19 +252,22 @@
             },
             async checks() {
                 this.started = false;
-                this.wip = true;
+                this.checked = false;
                 this.checkRes = {};
                 let res = [];
+
                 for (let hg in this.hostGroupSelected) {
                     let hostGroup = {};
                     try {
                         hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupSelected[hg])).data;
+                        this.checkingSWE = hostGroup.name;
                     } catch (e) {
                         this.wip = false;
                         return ;
                     }
                     for (let target in this.tHost) {
                         if (this.tHost[target] !== this.sHost) {
+                            this.checkingHost = this.tHost[target];
                             let hgData = {
                                 source_host: this.sHost,
                                 target_host: this.tHost[target],
@@ -303,7 +318,7 @@
                         }
                     }
                 }
-                this.wip = false;
+                this.checked = true;
                 this.checkRes = res;
             },
         }
