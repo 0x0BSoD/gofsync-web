@@ -12,7 +12,7 @@
                         <v-item>
                             <v-card>
                                 <v-card-title class="pr-0 pl-3 pt-0 pb-0">
-                                    <h4>{{n.host}}</h4>
+                                    <h4 @click="setHost(n.host)">{{n.host}}</h4>
                                     <v-spacer></v-spacer>
                                     <v-btn icon flat><a target="_blank" :rel="n.host" :href="`https://${n.host}`"><v-icon>link</v-icon></a></v-btn>
                                 </v-card-title>
@@ -41,7 +41,11 @@
         ],
         async mounted () {},
         watch: {},
-        methods: {}
+        methods: {
+            async setHost (host) {
+                await this.$store.dispatch("setHost", host);
+            }
+        }
     }
 </script>
 

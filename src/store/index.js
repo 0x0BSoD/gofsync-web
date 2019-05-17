@@ -3,6 +3,7 @@ import Vuex from "vuex";
 
 import socketModule from "./modules/socketModule";
 import userModule from "./modules/userModule";
+import hostModule from "./modules/hostModule";
 
 Vue.use(Vuex);
 
@@ -11,5 +12,6 @@ export default new Vuex.Store({
   modules: {
     socketModule,
     userModule,
+    hostModule,
   },
 });

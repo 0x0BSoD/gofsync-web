@@ -122,7 +122,7 @@
                                 </v-layout>
                             </v-card-text>
                         </v-flex>
-                        <v-flex xs6 v-if="existData" pt-3>
+                        <v-flex xs6 v-if="existData && !hgError" pt-3>
                             <v-layout row wrap>
                                 <v-flex xs12 v-if="foremanCheckHG">
                                     <v-layout row wrap class="text-xs-center">
@@ -180,9 +180,9 @@
         </v-layout>
 <!--    ======================================== /Middle menu - HG control========================================    -->
 
-        <HGDiff :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
+        <HGDiff v-if="!hgError"  :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
 
-        <v-layout v-if="sourceLoaded" row>
+        <v-layout v-if="sourceLoaded  && !hgError" row>
             <v-flex xs12 class="text-xs-center">
                 <v-btn v-if="!showPC" @click="showPC = !showPC"  round color="primary" dark>Show puppet classes
                     <v-icon right dark>expand_more</v-icon></v-btn>
@@ -204,7 +204,7 @@
         </v-layout>
 <!--    ============================================ /HostGroups ============================================    -->
 
-        <div v-if="showPC">
+        <div v-if="showPC" >
             <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
                 <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
                 <v-flex xs12 class="text-xs-center"><h4>Last update: {{hostGroup.updated}}</h4></v-flex>
@@ -238,7 +238,7 @@
     import HGDiff from "../../components/hostgroups/hgdiff"
     import { PuppetMethods } from "./methods"
     import {Common} from "../methods";
-    // import {mapState} from "vuex";
+    import {mapGetters} from "vuex";
 
     export default {
         //========================================================================================================
@@ -257,6 +257,9 @@
             nowActions () {
                 return this.$store.state.socketModule.socket.message;
             },
+            ...mapGetters({
+                host: "Host",
+            }),
         },
 
         //========================================================================================================
@@ -361,6 +364,11 @@
         // WATCH
         //========================================================================================================
         watch: {
+            host: {
+              handler (val) {
+                  this.sHost = val;
+              }
+            },
             socket: {
                 async handler (val) {
                     console.log(val);
@@ -505,8 +513,16 @@
                         this.envExist = (await environmentService.envCheck(envData)).data !== -1;
 
                         this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
-                        let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
-                        this.foremanCheckHG = fchg.error != "not found";
+                        try {
+                            let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                            this.foremanCheckHG = fchg.error != "not found";
+                        } catch (e) {
+                            console.error(e);
+                            this.wip = false;
+                            this.hgError = true;
+                            this.hgErrorMsg = `${this.tHost} not available`;
+                        }
+
 
                         if (this.foremanCheckHG) {
                             let targetId = null;

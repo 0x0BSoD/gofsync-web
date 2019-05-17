@@ -160,7 +160,7 @@
 
 <script>
     import { hostGroupService, environmentService,
-        hostService, locationsService, userService } from "../_services"
+        hostService } from "../_services"
     import { Common } from "./methods";
 
     export default {
