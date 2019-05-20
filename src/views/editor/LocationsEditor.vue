@@ -44,7 +44,7 @@
                                 :key="idx"
                             >
                                 <template v-slot:header>
-                                    <div>{{idx}}</div>
+                                    <div>{{val.puppet_class}}</div>
                                 </template>
                                 <v-card>
                                     <v-card-text>
@@ -53,7 +53,7 @@
                                             <v-container grid-list-md>
                                                 <v-layout wrap>
                                                     <v-flex
-                                                            v-for="(param, i) in val"
+                                                            v-for="(param, i) in val.parameters"
                                                             :key="i"
                                                             xs12
                                                             md4
@@ -63,8 +63,16 @@
                                                         >
                                                             <v-card-title primary-title>
                                                                 <div>
-                                                                    <h3 class="headline mb-0">{{ param.parameter }}</h3>
-                                                                    <v-chip label> {{ param.type }} </v-chip>
+                                                                    <v-layout row>
+                                                                        <v-flex>
+                                                                            <v-chip label> {{ param.type }} </v-chip>
+                                                                        </v-flex>
+                                                                        <v-flex>
+                                                                            <h3 class="headline mb-0">{{ param.name }}</h3>
+                                                                        </v-flex>
+                                                                    </v-layout>
+
+                                                                    <strong>default: </strong>{{param.default_value || "no default"}}
                                                                 </div>
                                                             </v-card-title>
                                                             <v-card-text>
@@ -94,45 +102,45 @@
                 </v-layout>
 
         <!--  ========================================================================================================      -->
-        <v-dialog
-                v-model="dialog"
-                scrollable
-                max-width="800px"
-        >
-            <v-card
-                    class="mx-auto"
-            >
-                <v-sheet class="pa-3 primary lighten-2">
-                    <v-text-field
-                            v-model="search"
-                            label="Search"
-                            dark
-                            flat
-                            solo-inverted
-                            hide-details
-                            clearable
-                            clear-icon="mdi-close-circle-outline"
-                    ></v-text-field>
-                    <v-checkbox
-                            v-model="caseSensitive"
-                            dark
-                            hide-details
-                            label="Case sensitive search"
-                    ></v-checkbox>
-                </v-sheet>
-                <v-card-text>
-                    <v-treeview
-                            v-model="selectedPC"
-                            :items="allPuppetClasses"
-                            :search="search"
-                            :filter="filter"
-                            open-on-click
-                            selectable
-                    >
-                    </v-treeview>
-                </v-card-text>
-            </v-card>
-        </v-dialog>
+<!--        <v-dialog-->
+<!--                v-model="dialog"-->
+<!--                scrollable-->
+<!--                max-width="800px"-->
+<!--        >-->
+<!--            <v-card-->
+<!--                    class="mx-auto"-->
+<!--            >-->
+<!--                <v-sheet class="pa-3 primary lighten-2">-->
+<!--                    <v-text-field-->
+<!--                            v-model="search"-->
+<!--                            label="Search"-->
+<!--                            dark-->
+<!--                            flat-->
+<!--                            solo-inverted-->
+<!--                            hide-details-->
+<!--                            clearable-->
+<!--                            clear-icon="mdi-close-circle-outline"-->
+<!--                    ></v-text-field>-->
+<!--                    <v-checkbox-->
+<!--                            v-model="caseSensitive"-->
+<!--                            dark-->
+<!--                            hide-details-->
+<!--                            label="Case sensitive search"-->
+<!--                    ></v-checkbox>-->
+<!--                </v-sheet>-->
+<!--                <v-card-text>-->
+<!--                    <v-treeview-->
+<!--                            v-model="selectedPC"-->
+<!--                            :items="allPuppetClasses"-->
+<!--                            :search="search"-->
+<!--                            :filter="filter"-->
+<!--                            open-on-click-->
+<!--                            selectable-->
+<!--                    >-->
+<!--                    </v-treeview>-->
+<!--                </v-card-text>-->
+<!--            </v-card>-->
+<!--        </v-dialog>-->
 </v-container>
 </template>
 
@@ -160,7 +168,7 @@
             location: null,
             hosts: [],
             host: null,
-            overrides: {},
+            overrides: [],
             overridesIDs: [],
             allPuppetClasses: [],
             wip: false,
@@ -238,27 +246,27 @@
                     this.pcSync = false;
                     let tmp = (await locationsService.getOverrides(val, this.host)).data;
                     tmp.sort((a, b) => a.puppet_class > b.puppet_class);
-
-                    let res = {};
-                    for (let i in tmp) {
-                        res[tmp[i].puppet_class] = [];
-                    }
-
-                    for (let i in tmp) {
-                        let id = checkByName(this.allPuppetClasses, tmp[i].puppet_class, tmp[i].smart_class_name);
-
-                        this.selectedPC.push(id);
-                        this.overridesIDs.push(id);
-
-                        res[tmp[i].puppet_class].push({
-                            parameter: tmp[i].smart_class_name,
-                            type: tmp[i].type,
-                            value: tmp[i].value,
-                            foreman_sc_id: tmp[i].sc_foreman_id,
-                            foreman_ovr_id: tmp[i].ovr_foreman_id,
-                        });
-                    }
-                    this.overrides = res;
+                    this.overrides = tmp;
+                    // let res = {};
+                    // for (let i in tmp) {
+                    //     res[tmp[i].puppet_class] = [];
+                    // }
+                    //
+                    // for (let i in tmp) {
+                    //     let id = checkByName(this.allPuppetClasses, tmp[i].puppet_class, tmp[i].smart_class_name);
+                    //
+                    //     this.selectedPC.push(id);
+                    //     this.overridesIDs.push(id);
+                    //
+                    //     res[tmp[i].puppet_class].push({
+                    //         parameter: tmp[i].smart_class_name,
+                    //         type: tmp[i].type,
+                    //         value: tmp[i].value,
+                    //         foreman_sc_id: tmp[i].sc_foreman_id,
+                    //         foreman_ovr_id: tmp[i].ovr_foreman_id,
+                    //     });
+                    // }
+                    // this.overrides = res;
                     this.pcSync = true;
                 }
             },

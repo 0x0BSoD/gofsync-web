@@ -100,13 +100,17 @@ function compare(source_pc, target_pc) {
                                         if (target_subclasses[gdx].hasOwnProperty("smart_classes")) {
 
                                             for (let edx in source_subclasses[gdx]["smart_classes"]) {
-                                                let parameter = source_subclasses[gdx]["smart_classes"][edx];
-                                                if (target_subclasses[gdx]["smart_classes"].includes(parameter)) {
-                                                } else {
-                                                    let res = `${gdx}::${parameter}`;
-                                                    console.info(`We don't have the smart class parameter ${parameter} in ${gdx}`);
-                                                    result.smartClassesParameterMissing.push(res);
-                                                }
+                                                let parameter_1 = source_subclasses[gdx]["smart_classes"][edx]["name"];
+                                                let parameter_2 = target_subclasses[gdx]["smart_classes"][edx]["name"];
+
+                                                console.info(parameter_1);
+                                                console.info(parameter_2);
+                                                // if (target_subclasses[gdx]["smart_classes"].includes(parameter)) {
+                                                // } else {
+                                                //     let res = `${gdx}::${parameter}`;
+                                                //     console.info(`We don't have the smart class parameter ${parameter} in ${gdx}`);
+                                                //     result.smartClassesParameterMissing.push(res);
+                                                // }
                                             }
 
                                         } else {
