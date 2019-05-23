@@ -1,7 +1,7 @@
 <template>
     <v-app>
         <v-content>
-            <v-toolbar app dense>
+            <v-toolbar app dense v-if="showToolBar">
                 <v-btn :to="{name:'hostgroup'}" icon flat class="hidden-xs-only">
                     <v-icon>sync</v-icon>
                 </v-btn>
@@ -20,6 +20,9 @@
                         </v-btn>
                     </template>
                     <v-list>
+                        <v-list-tile :to="{name:'hostgroup'}">
+                            <v-list-tile-title>HostGroup</v-list-tile-title>
+                        </v-list-tile>
                         <v-list-tile :to="{name:'batch'}">
                             <v-list-tile-title>Batch</v-list-tile-title>
                         </v-list-tile>
@@ -75,19 +78,36 @@
                 loggedIn: false,
                 token: false,
                 menuLabel: "Tools",
+                showToolBar: true,
             }
         },
         async mounted () {
-            this.loggedIn = localStorage.getItem('userData');
+            this.showToolBar = !(this.$route.name === "login" || this.$route.name === "error");
+            let userData = localStorage.getItem('userData');
             this.token    = this.$cookies.isKey("token");
-            if (!this.token && !this.loggedIn) {
+            if (this.token && userData) {
+                this.loggedIn = true;
+            } else {
                 this.$router.push({name: "login"});
             }
         },
         watch: {
+            username: {
+                handler () {
+                    this.showToolBar = !(this.$route.name === "login" || this.$route.name === "error");
+                    let userData = localStorage.getItem('userData');
+                    this.token    = this.$cookies.isKey("token");
+                    if (this.token && userData) {
+                        this.loggedIn = true;
+                        this.menuLabel = "hostgroup";
+                    } else {
+                        this.$router.push({name: "login"});
+                    }
+                }
+            },
             "$route": {
                 async handler (val) {
-                    console.log(val.name);
+                    this.showToolBar = !(val.name === "login" || val.name === "error");
                     switch(val.name) {
                         case "hostgroup":
                             this.menuLabel = "hostgroup";

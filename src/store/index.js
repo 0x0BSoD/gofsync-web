@@ -8,10 +8,10 @@ import hostModule from "./modules/hostModule";
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-  strict: true,
-  modules: {
-    socketModule,
-    userModule,
-    hostModule,
-  },
+    strict: true,
+    modules: {
+        socketModule,
+        userModule,
+        hostModule,
+    },
 });

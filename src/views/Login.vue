@@ -118,7 +118,8 @@
                     if (this.remember_me) {
                         exp = "24h";
                     }
-                    this.$router.push({name: "hostgroup"});
+                    await this.$store.dispatch("setUsername", userData.CN[0]);
+                    this.$router.push({name: "app"});
                 } catch (err) {
                     this.error = true;
                     console.error(err);

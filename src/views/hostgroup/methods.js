@@ -1,3 +1,4 @@
+import _ from 'lodash'
 
 export const PuppetMethods = {
     parse,
@@ -84,65 +85,61 @@ function compare(source_pc, target_pc) {
 
                 let source_smart_classes = source_pc[idx];
                 let target_smart_classes = target_pc[idx];
-
                 for (let jdx in source_smart_classes) {
-                    if (source_smart_classes.hasOwnProperty(jdx)) {
-                        if (target_smart_classes.hasOwnProperty(jdx)) {
+                    if (target_smart_classes.hasOwnProperty(jdx)) {
+                        for (let gdx in source_smart_classes[jdx]) {
+                            if (target_smart_classes[jdx].hasOwnProperty(gdx)) {
+                                console.log(target_smart_classes[jdx][gdx]);
+                                console.log(source_smart_classes[jdx][gdx]);
+                                console.log(_.isEqual(source_smart_classes[jdx][gdx], target_smart_classes[jdx][gdx]));
 
-                            let source_subclasses = buildSubclassObject(source_smart_classes[jdx]);
-                            let target_subclasses = buildSubclassObject(target_smart_classes[jdx]);
-
-
-                            for (let gdx in source_subclasses) {
-                                if (target_subclasses.hasOwnProperty(gdx)) {
-                                    // Smart Class parameters===================================================================
-                                    if (source_subclasses[gdx].hasOwnProperty("smart_classes")) {
-                                        if (target_subclasses[gdx].hasOwnProperty("smart_classes")) {
-
-                                            for (let edx in source_subclasses[gdx]["smart_classes"]) {
-                                                let parameter_1 = source_subclasses[gdx]["smart_classes"][edx]["name"];
-                                                let parameter_2 = target_subclasses[gdx]["smart_classes"][edx]["name"];
-
-                                                console.info(parameter_1);
-                                                console.info(parameter_2);
-                                                // if (target_subclasses[gdx]["smart_classes"].includes(parameter)) {
-                                                // } else {
-                                                //     let res = `${gdx}::${parameter}`;
-                                                //     console.info(`We don't have the smart class parameter ${parameter} in ${gdx}`);
-                                                //     result.smartClassesParameterMissing.push(res);
-                                                // }
-                                            }
-
-                                        } else {
-                                            console.info("We don't have a smart class parameters at all in ", source_smart_classes[jdx]["subclass"]);
-                                            result.smartClassesParameterMissing.push(source_smart_classes[jdx]["subclass"]);
-                                        }
-                                    }
-                                    // Parameters Overrides ====================================================================
-                                    if (source_subclasses[gdx].hasOwnProperty("overrides")) {
-                                        if (target_subclasses[gdx].hasOwnProperty("overrides")) {
-                                            let source_ovr = source_subclasses[gdx]["overrides"];
-                                            let target_ovr = target_subclasses[gdx]["overrides"];
-                                            for (let kdx in source_ovr) {
-                                                if (target_ovr.hasOwnProperty(kdx)) {
-                                                    if (source_ovr[kdx] === target_ovr[kdx]) {
-
-                                                    } else {
-                                                        console.info(`Override parameter ${kdx} in ${gdx} mismatch`);
-                                                        result.overridesMismatch.push(`${gdx}::${kdx}`);
-                                                    }
-                                                } else {
-                                                    console.info(`We don't have the override parameter ${kdx} in ${gdx}`);
-                                                    result.overridesMissing.push(`${gdx}::${kdx}`);
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    console.info(`We don't have the smart class ${gdx} in ${idx}`);
-                                    result.smartClassesMissing.push(gdx);
-                                }
-
+                //                     // Smart Class parameters===================================================================
+                //                     if (source_subclasses[gdx].hasOwnProperty("smart_classes")) {
+                //                         if (target_subclasses[gdx].hasOwnProperty("smart_classes")) {
+                //
+                //                             for (let edx in source_subclasses[gdx]["smart_classes"]) {
+                //                                 let parameter_1 = source_subclasses[gdx]["smart_classes"][edx]["name"];
+                //                                 let parameter_2 = target_subclasses[gdx]["smart_classes"][edx]["name"];
+                //
+                //                                 console.info(parameter_1);
+                //                                 console.info(parameter_2);
+                //                                 // if (target_subclasses[gdx]["smart_classes"].includes(parameter)) {
+                //                                 // } else {
+                //                                 //     let res = `${gdx}::${parameter}`;
+                //                                 //     console.info(`We don't have the smart class parameter ${parameter} in ${gdx}`);
+                //                                 //     result.smartClassesParameterMissing.push(res);
+                //                                 // }
+                //                             }
+                //
+                //                         } else {
+                //                             console.info("We don't have a smart class parameters at all in ", source_smart_classes[jdx]["subclass"]);
+                //                             result.smartClassesParameterMissing.push(source_smart_classes[jdx]["subclass"]);
+                //                         }
+                //                     }
+                //                     // Parameters Overrides ====================================================================
+                //                     if (source_subclasses[gdx].hasOwnProperty("overrides")) {
+                //                         if (target_subclasses[gdx].hasOwnProperty("overrides")) {
+                //                             let source_ovr = source_subclasses[gdx]["overrides"];
+                //                             let target_ovr = target_subclasses[gdx]["overrides"];
+                //                             for (let kdx in source_ovr) {
+                //                                 if (target_ovr.hasOwnProperty(kdx)) {
+                //                                     if (source_ovr[kdx] === target_ovr[kdx]) {
+                //
+                //                                     } else {
+                //                                         console.info(`Override parameter ${kdx} in ${gdx} mismatch`);
+                //                                         result.overridesMismatch.push(`${gdx}::${kdx}`);
+                //                                     }
+                //                                 } else {
+                //                                     console.info(`We don't have the override parameter ${kdx} in ${gdx}`);
+                //                                     result.overridesMissing.push(`${gdx}::${kdx}`);
+                //                                 }
+                //                             }
+                //                         }
+                //                     }
+                //                 } else {
+                //                     console.info(`We don't have the smart class ${gdx} in ${idx}`);
+                //                     result.smartClassesMissing.push(gdx);
+                //                 }
                             }
                         }
                     }
@@ -156,24 +153,24 @@ function compare(source_pc, target_pc) {
     return result;
 }
 
-function buildSubclassObject(sc) {
-    let result = {};
-    result[sc["subclass"]] = {};
-    if (sc.hasOwnProperty("smart_classes")) {
-        result[sc["subclass"]]["smart_classes"] = sc["smart_classes"];
-    }
-    if (sc.hasOwnProperty("overrides")) {
-        result[sc["subclass"]]["overrides"] = {};
-        for (let idx in sc["overrides"]) {
-            result[sc["subclass"]]["overrides"][sc["overrides"][idx]["parameter"]] = sc["overrides"][idx]["value"]
-        }
-    }
-    return result;
-}
+// function buildSubclassObject(sc) {
+//     let result = {};
+//     result[sc["subclass"]] = {};
+//     if (sc.hasOwnProperty("smart_classes")) {
+//         result[sc["subclass"]]["smart_classes"] = sc["smart_classes"];
+//     }
+//     if (sc.hasOwnProperty("overrides")) {
+//         result[sc["subclass"]]["overrides"] = {};
+//         for (let idx in sc["overrides"]) {
+//             result[sc["subclass"]]["overrides"][sc["overrides"][idx]["parameter"]] = sc["overrides"][idx]["value"]
+//         }
+//     }
+//     return result;
+// }
 
-function setMismatch(t) {
-    let td = PuppetMethods.compare(t.pc, t.targPc);
-    let sd = PuppetMethods.compare(t.targPc, t.pc);
+function setMismatch(t, source, target) {
+    let td = PuppetMethods.compare(source, target);
+    let sd = PuppetMethods.compare(target, source);
 
     if (td.puppetClassesMissing.length > 0         ||
         td.smartClassesMissing.length > 0          ||

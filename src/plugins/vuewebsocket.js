@@ -8,8 +8,8 @@ Vue.use(
     ws,
     config.ws(),
     {
-        reconnection: true,
-        reconnectionAttempts: 5,
+        reconnection: false,
+        reconnectionAttempts: 1,
         reconnectionDelay: 3000,
         store: store,
         format: 'json',

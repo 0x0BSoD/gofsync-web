@@ -5,13 +5,14 @@ import Login from '../views/Login';
 import Batch from '../views/Batch';
 import JsonEditor from '../views/editor/JsonEditor';
 import Locations from '../views/editor/LocationsEditor';
+import Error from '../views/Error';
 
 Vue.use(Router);
 
-export default new Router({
+const router = new Router({
     routes: [
         {
-            path: '/',
+            path: '/hostgroup',
             name: 'hostgroup',
             component: HosGroup
         },
@@ -35,5 +36,28 @@ export default new Router({
             name: 'locations',
             component: Locations
         },
+        {
+            path: '/error',
+            name: 'error',
+            component: Error
+        },
+        {
+            path: '*',
+            name: "app",
+            redirect: 'hostgroup',
+        }
     ]
-})
+});
+
+// router.beforeEach((to, from, next) => {
+//     if (from.name === 'error') {
+//     } else {
+//         router.push('error');
+//     }
+//     return next;
+//     console.log("TO: ", to);
+//     console.log("FROM: ", from);
+// });
+
+
+export default router;

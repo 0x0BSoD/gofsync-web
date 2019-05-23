@@ -40,7 +40,7 @@
                                 large
                                 title="load JSON"
                                 accept=".json"
-                                :fileChangedCallback="fileChanged"
+                                @file-update="fileChanged"
                         >
                         </upload-btn>
                     </v-flex>
