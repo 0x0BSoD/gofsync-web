@@ -1,7 +1,7 @@
 <template>
     <v-app>
         <v-content>
-            <v-toolbar app dense>
+            <v-toolbar app dense v-if="showToolBar">
                 <v-btn :to="{name:'hostgroup'}" icon flat class="hidden-xs-only">
                     <v-icon>sync</v-icon>
                 </v-btn>
@@ -16,15 +16,21 @@
                                 flat
                                 v-on="on"
                         >
-                            TOOLS
+                            {{menuLabel}}
                         </v-btn>
                     </template>
                     <v-list>
+                        <v-list-tile :to="{name:'hostgroup'}">
+                            <v-list-tile-title>HostGroup</v-list-tile-title>
+                        </v-list-tile>
                         <v-list-tile :to="{name:'batch'}">
                             <v-list-tile-title>Batch</v-list-tile-title>
                         </v-list-tile>
-                        <v-list-tile :disabled="true" :to="{name:'batch'}">
+                        <v-list-tile :disabled="true" :to="{name:'jsoneditor'}">
                             <v-list-tile-title>Json editor</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile :disabled="true" :to="{name:'locations'}">
+                            <v-list-tile-title>Locations</v-list-tile-title>
                         </v-list-tile>
                     </v-list>
                 </v-menu>
@@ -71,31 +77,61 @@
             return {
                 loggedIn: false,
                 token: false,
+                menuLabel: "Tools",
+                showToolBar: true,
             }
         },
         async mounted () {
-            this.loggedIn = localStorage.getItem('userData');
+            this.showToolBar = !(this.$route.name === "login" || this.$route.name === "error");
+            let userData = localStorage.getItem('userData');
             this.token    = this.$cookies.isKey("token");
-            if (!this.token && !this.loggedIn) {
+            if (this.token && userData) {
+                this.loggedIn = true;
+            } else {
                 this.$router.push({name: "login"});
             }
         },
         watch: {
-            "$route": {
-                async handler () {
-                    this.loggedIn = localStorage.getItem('userData');
+            username: {
+                handler () {
+                    this.showToolBar = !(this.$route.name === "login" || this.$route.name === "error");
+                    let userData = localStorage.getItem('userData');
                     this.token    = this.$cookies.isKey("token");
-                    if (!this.token && !this.loggedIn) {
+                    if (this.token && userData) {
+                        this.loggedIn = true;
+                        this.menuLabel = "hostgroup";
+                    } else {
                         this.$router.push({name: "login"});
+                    }
+                }
+            },
+            "$route": {
+                async handler (val) {
+                    this.showToolBar = !(val.name === "login" || val.name === "error");
+                    switch(val.name) {
+                        case "hostgroup":
+                            this.menuLabel = "hostgroup";
+                            break;
+                        case "batch":
+                            this.menuLabel = "batch";
+                            break;
+                        case "jsoneditor":
+                            this.menuLabel = "json editor";
+                            break;
+                        case "locations":
+                            this.menuLabel = "locations";
+                            break;
+                        default:
+                            this.menuLabel = "Tools";
                     }
                 }
             },
         },
         methods: {
-            logout () {
+            async logout () {
                 this.loggedIn = false;
                 this.token    = false;
-                this.$store.dispatch("setUsername", "anon");
+                await this.$store.dispatch("setUsername", "anon");
                 localStorage.clear();
                 this.$cookies.remove("token");
                 this.$router.push({name: "login"});

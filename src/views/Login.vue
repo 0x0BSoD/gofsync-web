@@ -44,7 +44,7 @@
                                     label="Username"
                                     type="text"
                                     v-model="username"
-                                    v-on:keyup.enter="login()"
+                                    v-on:keyup.enter="next()"
                             ></v-text-field>
                             <v-text-field
                                     :rules="[rules.required]"
@@ -53,6 +53,7 @@
                                     name="password"
                                     label="Password"
                                     type="password"
+                                    ref="password"
                                     v-model="password"
                                     v-on:keyup.enter="login()"
                             ></v-text-field>
@@ -117,7 +118,8 @@
                     if (this.remember_me) {
                         exp = "24h";
                     }
-                    this.$router.push({name: "hostgroup"});
+                    await this.$store.dispatch("setUsername", userData.CN[0]);
+                    this.$router.push({name: "app"});
                 } catch (err) {
                     this.error = true;
                     console.error(err);
@@ -125,6 +127,9 @@
                     this.loading = false;
                 }
             },
+            next () {
+                this.$nextTick(() => this.$refs.password.focus())
+            }
         }
     }
 

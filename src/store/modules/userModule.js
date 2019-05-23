@@ -1,7 +1,7 @@
 export default {
     state: {
         isLogged: false,
-        username: "anon",
+        username: "",
     },
     mutations: {
         setUsername (state, username) {

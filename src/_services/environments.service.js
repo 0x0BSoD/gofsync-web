@@ -1,15 +1,19 @@
 import Api from "./Api";
 
 export const environmentService = {
-    envList,
-    envCheck,
+    List,
+    Check,
+    Update,
 };
 
 // GET ===========================================
-function envList(host) {
+function List(host) {
     return Api().get(`env/${host}`);
 }
 // POST ===========================================
-function envCheck(data) {
+function Check(data) {
     return Api().post("env/check", data)
+}
+function Update(host) {
+    return Api().post(`env/${host}`);
 }

@@ -35,7 +35,7 @@
                                         v-for="(sc, l) in subClass.smart_classes"
                                         :key="l"
                                 >
-                                    {{sc}}
+                                    {{sc.name}}
                                 </v-chip>
                             </div>
                         </v-flex>
@@ -46,7 +46,7 @@
                                         :key="l"
                                 >
                                     <v-label>Parameter: </v-label> {{ovr.parameter}}
-                                    <pre><code>{{ovr.value}}</code></pre>
+                                    <pre><code class="pa-1">{{ovr.value}}</code></pre>
                                 </div>
                             </div>
                         </v-flex>

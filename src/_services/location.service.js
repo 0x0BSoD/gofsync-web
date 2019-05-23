@@ -1,10 +1,20 @@
 import Api from "./Api";
 
 export const locationsService = {
-    locList,
+    List,
+    Overrides,
+    Update,
 };
 
 // GET ===========================================
-function locList() {
+function List() {
     return Api().get(`loc`);
+}
+function Overrides(locName, host) {
+    return Api().get(`loc/overrides/${host}/${locName}`);
+}
+
+// GET ===========================================
+function Update(host) {
+    return Api().post(`loc/${host}`);
 }

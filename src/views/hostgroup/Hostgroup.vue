@@ -43,7 +43,7 @@
 <!--    ============================================ /Progress ============================================    -->
 
 <!--    ============================================ Top menu - selects =========================================    -->
-        <v-layout wrap row class="text-xs-center">
+        <v-layout wrap row class="text-xs-center" v-if="!wip">
             <v-flex xs6>
                 <v-layout wrap row>
                     <v-flex xs6 pr-2>
@@ -101,7 +101,7 @@
         </v-layout>
 <!--    ============================================ /Top menu - selects =========================================    -->
 
-        <Locations v-if="!sHost" :locations="locations"/>
+        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />
 
 <!--    ======================================== Middle menu - HG control========================================    -->
         <v-layout row wrap v-if="hostGroup.id">
@@ -122,7 +122,7 @@
                                 </v-layout>
                             </v-card-text>
                         </v-flex>
-                        <v-flex xs6 v-if="existData" pt-3>
+                        <v-flex xs6 v-if="existData && !hgError" pt-3>
                             <v-layout row wrap>
                                 <v-flex xs12 v-if="foremanCheckHG">
                                     <v-layout row wrap class="text-xs-center">
@@ -180,9 +180,9 @@
         </v-layout>
 <!--    ======================================== /Middle menu - HG control========================================    -->
 
-        <HGDiff :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
+        <HGDiff v-if="!hgError"  :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
 
-        <v-layout v-if="sourceLoaded" row>
+        <v-layout v-if="sourceLoaded  && !hgError" row>
             <v-flex xs12 class="text-xs-center">
                 <v-btn v-if="!showPC" @click="showPC = !showPC"  round color="primary" dark>Show puppet classes
                     <v-icon right dark>expand_more</v-icon></v-btn>
@@ -204,7 +204,7 @@
         </v-layout>
 <!--    ============================================ /HostGroups ============================================    -->
 
-        <div v-if="showPC">
+        <div v-if="showPC" >
             <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
                 <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
                 <v-flex xs12 class="text-xs-center"><h4>Last update: {{hostGroup.updated}}</h4></v-flex>
@@ -232,23 +232,15 @@
 
 <script>
     import { hostGroupService, environmentService,
-              hostService, locationsService, userService } from "../../_services"
+              hostService, locationsService } from "../../_services"
     import Locations from "../../components/hostgroups/locations"
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
     import { PuppetMethods } from "./methods"
-    // import {mapState} from "vuex";
+    import {Common} from "../methods";
+    import {mapGetters} from "vuex";
 
     export default {
-        //========================================================================================================
-        // COMPOUNDED
-        //========================================================================================================
-        computed: {
-            nowActions () {
-                return this.$store.state.socketModule.socket.message;
-            },
-        },
-
         //========================================================================================================
         // COMPONENTS
         //========================================================================================================
@@ -256,6 +248,18 @@
             Locations,
             HGInfo,
             HGDiff
+        },
+
+        //========================================================================================================
+        // COMPOUNDED
+        //========================================================================================================
+        computed: {
+            nowActions () {
+                return this.$store.state.socketModule.socket.message;
+            },
+            ...mapGetters({
+                host: "Host",
+            }),
         },
 
         //========================================================================================================
@@ -338,12 +342,14 @@
         // MOUNTED
         //========================================================================================================
         async mounted () {
+            // User check ==========================================
+            await Common.auth(this);
 
             // Load Hosts ==========================================
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
-                this.locations =  (await locationsService.locList()).data;
+                this.locations =  (await locationsService.List()).data;
                 this.wip = false;
             } catch (e) {
                 this.wip = false;
@@ -351,31 +357,30 @@
                 this.hgErrorMsg = "Backend not reachable or in errored state"
             }
 
-            // User check ==========================================
-            const loggedIn = localStorage.getItem('userData');
-            const token    = this.$cookies.isKey("token");
-            if (token && !!loggedIn) {
-                this.btn_logout = true;
-                this.loggedIn = true;
-                this.userData = JSON.parse(loggedIn);
-                this.username = this.userData.CN[0];
-                this.userGroups = this.userData.OU.join("|");
-                this.$store.dispatch("setUsername", this.username);
-                try {
-                    await userService.refreshjwt();
-                } catch (e) {
-                    // console.log("token is ok");
-                }
-            }
-            else {
-                this.$router.push({name: "login"});
-            }
+            // if (this.$route.query.hasOwnProperty("source")
+            //     && this.hosts.indexOf(this.$route.query.source) !== -1) {
+            //     this.sHost = this.$route.query.source;
+            // }
+            // if (this.$route.query.hasOwnProperty("env")) {
+            //     this.env = this.$route.query.env;
+            // }
+            // if (this.$route.query.hasOwnProperty("hg")) {
+            //     this.hostGroupId = this.$route.query.hg;
+            // }
+            // if (this.$route.query.hasOwnProperty("target")) {
+            //     this.tHost = this.$route.query.target;
+            // }
         },
 
         //========================================================================================================
         // WATCH
         //========================================================================================================
         watch: {
+            host: {
+              handler (val) {
+                  this.sHost = val;
+              }
+            },
             socket: {
                 async handler (val) {
                     console.log(val);
@@ -399,7 +404,7 @@
                         puppet_classes: {},
                         updated: null,
                     };
-                    this.env = "any";
+                    // this.env = "any";
                     this.pc = {};
                     this.targPc = {};
                     this.targetLoaded = false;
@@ -409,7 +414,7 @@
                     this.hostGroups = (await hostGroupService.hgList(val)).data;
                     this.hostGroupsFull = (await hostGroupService.hgList(val)).data;
 
-                    let tmpEnv = (await environmentService.envList(val)).data;
+                    let tmpEnv = (await environmentService.List(val)).data;
                     let reg = new RegExp('[0-9]');
                     let result = [];
                     for (let env in tmpEnv) {
@@ -424,6 +429,12 @@
                     }
                     this.Environments = result;
                     this.Environments.push("any");
+
+                    // if (this.$route.query.hasOwnProperty("source")) {
+                    //     this.$router.replace({query:{source: this.sHost}});
+                    // } else {
+                    //     this.$router.push({query:{"source": this.sHost}});
+                    // }
                 }
             },
             env: {
@@ -461,6 +472,18 @@
                         this.hostGroups = parsedHG;
                     }
 
+                    if (this.$route.query.hasOwnProperty("env")) {
+                        this.$route.query.env = this.env;
+                    } else {
+                        this.$router.push({
+                            query: {
+                                "source": this.sHost,
+                                "env": this.env,
+                            }
+                        });
+                    }
+
+
                 }
             },
             hostGroupId: {
@@ -495,6 +518,13 @@
                         this.sourceLoaded = true;
                         this.wip = false;
                     }
+                    // this.$router.push({
+                    //     query: {
+                    //         "source": this.sHost,
+                    //         "env": this.env,
+                    //         "hg": val,
+                    //     }
+                    // });
                 }
             },
             tHost: {
@@ -517,11 +547,19 @@
                             env: this.hostGroup.environment
                         };
 
-                        this.envExist = (await environmentService.envCheck(envData)).data !== -1;
+                        this.envExist = (await environmentService.Check(envData)).data !== -1;
 
                         this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
-                        let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
-                        this.foremanCheckHG = fchg.error != "not found";
+                        try {
+                            let foremanCheck = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                            this.foremanCheckHG = foremanCheck.id !== -1;
+                        } catch (e) {
+                            console.error(e);
+                            this.wip = false;
+                            this.hgError = true;
+                            this.hgErrorMsg = `${this.tHost} not available`;
+                        }
+
 
                         if (this.foremanCheckHG) {
                             let targetId = null;
@@ -531,22 +569,36 @@
                                     if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                                 }
                             }
+
                             this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
-                            // fill puppet classes info
-                            let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                            this.targPc = pcData.PuppetClasses;
+                            let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                            let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                            this.targPc = targetPCData.PuppetClasses;
+
                             this.targetLoaded = true;
-                            PuppetMethods.setMismatch(this);
+
+                            try {
+                                PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                            } catch (e) {
+                                console.error(e);
+                                this.wip = false;
+                            }
 
                             let name = this.hostGroup.name.replace(/\./g, "-");
                             this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
                         }
-
-
                         this.wip = false;
                         this.existData = true;
                     }
+                    // this.$router.push({
+                    //     query: {
+                    //         "source": this.sHost,
+                    //         "env": this.env,
+                    //         "hg": val,
+                    //         "target": this.tHost,
+                    //     }
+                    // });
                 }
             }
         },
@@ -555,6 +607,12 @@
         // METHODS
         //========================================================================================================
         methods: {
+            async envUpdated () {
+                console.info('not implemented');
+            },
+            async locUpdated () {
+                this.locations =  (await locationsService.List()).data;
+            },
             async updateSourceHG () {
                 this.wip = true;
                 let old_th = this.tHost;
@@ -579,14 +637,23 @@
                     }
                 }
 
-                let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
-                this.pc_count = pcData.PuppetClassesCount;
-                this.ovr_count = pcData.PuppetClassesOverrides;
-                this.pc = pcData.PuppetClasses;
 
-                this.tHost = old_th;
-                this.sourceLoaded = true;
-                this.wip = false;
+                let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                this.pc_count = sourcePCData.PuppetClassesCount;
+                this.ovr_count = sourcePCData.PuppetClassesOverrides;
+                this.pc = sourcePCData.PuppetClasses;
+                try {
+                    if (this.tHost) {
+                        let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                        PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                    }
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    this.tHost = old_th;
+                    this.sourceLoaded = true;
+                    this.wip = false;
+                }
             },
 
             async updateTargetHG () {
@@ -617,7 +684,6 @@
                 let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                 this.targPc = pcData.PuppetClasses;
 
-
                 // Build POST parameters
                 let data = {
                     source_host: this.sHost,
@@ -638,11 +704,16 @@
                     }
                     this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
                     // fill puppet classes info
-                    let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                    this.targPc = pcData.PuppetClasses;
+                    let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                    let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                    this.targPc = targetPCData.PuppetClasses;
                     this.targetLoaded = true;
-                    PuppetMethods.setMismatch(this);
 
+                    try {
+                            PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                    } catch (e) {
+                        console.error(e);
+                    }
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
@@ -691,7 +762,6 @@
                     this.hgErrorMsg = e.message;
                 }
 
-
                 // =====================================================================================================
                 this.hgExist = (await hostGroupService.hgCheck(data)).data;
                 let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
@@ -706,10 +776,16 @@
                     }
                     this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
                     // fill puppet classes info
-                    let pcData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                    this.targPc = pcData.PuppetClasses;
+x
+                    let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                    let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                    this.targPc = targetPCData.PuppetClasses;
                     this.targetLoaded = true;
-                    PuppetMethods.setMismatch(this);
+                    try {
+                        PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                    } catch (e) {
+                        console.error(e);
+                    }
 
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;

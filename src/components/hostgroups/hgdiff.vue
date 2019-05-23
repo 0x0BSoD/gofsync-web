@@ -1,10 +1,12 @@
 <template>
     <v-container>
 
+        <!-- ================================ Whe have both diffs ================================== -->
         <v-card v-if="sourceDiff && targetDiff">
 
             <v-card-text>
                 <v-layout row wrap class="text-xs-center">
+
                     <v-flex xs6>
                         <h3 class="pb-2 display-1">Not in source</h3>
 
@@ -32,6 +34,7 @@
                             {{val}}
                         </v-chip>
                     </v-flex>
+
                     <v-flex xs6>
                         <h3 class="pb-2 display-1">Not in target</h3>
 
@@ -60,12 +63,19 @@
                         </v-chip>
 
                         <h3 class="headline" v-if="targetDiff.overridesMissing.length > 0">Overrides</h3>
-                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>
+                        <v-chip
+                                color="blue lighten-2"
+                                v-if="targetDiff.overridesMissing.length > 0"
+                                v-for="(val, id) in targetDiff.overridesMissing" :key="id">
+                            {{val}}
+                        </v-chip>
+<!--                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>-->
                     </v-flex>
+
                     <v-flex xs12 class="pt-2">
                         <h3 class="headline" v-if="targetDiff.overridesMismatch.length > 0">Overrides mismatch</h3>
                         <v-chip
-                                color="blue lighten-2"
+                                color="blue lighten-1"
                                 v-if="targetDiff.overridesMismatch.length > 0"
                                 v-for="(val, id) in targetDiff.overridesMismatch" :key="id">
                             {{val}}
@@ -75,9 +85,11 @@
             </v-card-text>
         </v-card>
 
+        <!-- ================================ Whe have the one of diffs ================================== -->
         <v-card v-else-if="sourceDiff || targetDiff">
             <v-card-text>
                 <v-layout row wrap  class="text-xs-center">
+
                     <v-flex xs12 v-if="sourceDiff">
                         <h3 class="pb-2 display-1">Not in source</h3>
 
@@ -105,6 +117,7 @@
                             {{val}}
                         </v-chip>
                     </v-flex>
+
                     <v-flex xs12 v-if="targetDiff">
                         <h3 class="pb-2 display-1">Not in target</h3>
 
@@ -132,9 +145,10 @@
                             {{val}}
                         </v-chip>
 
-                        <h3 class="headline" v-if="targetDiff.overridesMissing.length > 0">Overrides</h3>
-                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>
+<!--                        <h3 class="headline" v-if="targetDiff.overridesMissing.length > 0">Overrides</h3>-->
+<!--                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>-->
                     </v-flex>
+
                     <v-flex xs12 class="pt-2">
                         <h3 class="headline" v-if="targetDiff.overridesMismatch.length > 0">Overrides mismatch</h3>
                         <v-chip
@@ -157,20 +171,8 @@
             "sourceDiff",
             "targetDiff"
         ],
-        async mounted () {
-        },
-        watch: {
-            sourceDiff: {
-                handler (val) {
-                    // console.log(val);
-                },
-            },
-            targetDiff: {
-                handler (val) {
-                    // console.log(val);
-                },
-            },
-        },
+        mounted () {},
+        watch: {},
         methods: {}
     }
 </script>

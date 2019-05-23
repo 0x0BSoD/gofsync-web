@@ -83,15 +83,24 @@
                 <!--     =====================================================================================================       -->
                 <v-stepper-content step="4">
                     <v-card>
-                        <v-card-title class="headline font-weight-regular blue-grey white--text">Checks</v-card-title>
-                        <v-card-text v-for="(val, idx) in checkRes" :key="idx">
+                        <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">Checking</v-card-title>
+                        <v-layout row wrap v-if="!checked">
+                            <v-flex xs12 class="text-sm-center">
+                                <v-chip color="font-weight-regular">{{checkingHost}}</v-chip>
+                            </v-flex>
+                            <v-flex xs12 class="text-sm-center">
+                                <v-chip color="font-weight-regular blue-grey white--text">{{checkingSWE}}</v-chip>
+                            </v-flex>
+                        </v-layout>
+                        <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks Result</v-card-title>
+                        <v-card-text v-if="checked" v-for="(val, idx) in checkRes" :key="idx">
                             <v-layout v-if="started">
 
                                 <v-flex xs3>{{val.tHost}}</v-flex>
                                 <v-flex xs3>{{val.hgName}}</v-flex>
                                 <v-flex xs6>
 
-                                    <v-chip label color="primary" text-color="white" v-if="val.wip">
+                                    <v-chip label color="primary" text-color="white" v-if="val.wip && !val.error">
                                         <span class="custom-loader">
                                             <v-icon light>cached</v-icon>
                                         </span>
@@ -108,8 +117,8 @@
                                         <v-icon left>done</v-icon>Updated
                                     </v-chip>
 
-                                    <v-chip label v-if="val.wip && nowActions">{{nowActions.actions}}</v-chip>
-                                    <v-chip label v-if="val.wip && nowActions.state">{{nowActions.state}}</v-chip>
+                                    <v-chip label v-if="val.wip && nowActions && !val.error">{{nowActions.actions}}</v-chip>
+                                    <v-chip label v-if="val.wip && nowActions.state && !val.error">{{nowActions.state}}</v-chip>
 
                                     <v-chip label v-if="val.error" color="error">Errored</v-chip>
 
@@ -128,12 +137,13 @@
                                    </v-chip>
 
                                    <v-chip label v-if="val.environment === -1">Env not exist, will be skipped</v-chip>
-                                   <v-tooltip bottom v-if="val.foremanCheckHG">
+                                   <v-tooltip bottom v-if="val.foremanCheckHG && !val.error">
                                        <template v-slot:activator="{ on }">
                                            <v-btn icon small><a target="_blank" v-on="on" :rel="val.hgName" :href="val.hg_link"><v-icon>link</v-icon></a></v-btn>
                                        </template>
                                        <span>{{val.hgName}} link</span>
                                    </v-tooltip>
+                                   <v-chip label v-else color="error">Errored</v-chip>
                                </v-flex>
                            </v-layout>
                         </v-card-text>
@@ -150,8 +160,8 @@
 </template>
 
 <script>
-    import { hostGroupService, environmentService,
-        hostService, locationsService, userService } from "../_services"
+    import { hostGroupService, environmentService, hostService } from "../_services"
+    import { Common } from "./methods";
 
     export default {
         //========================================================================================================
@@ -175,13 +185,13 @@
             checkRes: [],
             started: false,
             wipUploading: true,
+            checkingHost: null,
+            checkingSWE: null,
+            checked: false,
         }),
         async mounted () {
-            const loggedIn = localStorage.getItem('userData');
-            const token    = this.$cookies.isKey("token");
-            if (!token && !loggedIn) {
-                this.$router.push({name: "login"});
-            }
+            // User check ==========================================
+            await Common.auth(this);
 
             try {
                 this.hosts = (await hostService.hosts()).data;
@@ -206,7 +216,7 @@
                         try {
                             this.checkRes[i].wipText = "Uploading";
                             this.checkRes[i].wip = true;
-                            let response = (await hostGroupService.hgSend(data));
+                            await hostGroupService.hgSend(data);
                             this.checkRes[i].wip = false;
                             this.checkRes[i].uploaded = true;
                         } catch (e) {
@@ -224,7 +234,7 @@
                             try {
                                 this.checkRes[i].wip = true;
                                 this.checkRes[i].wipText = "Updating";
-                                let response = (await hostGroupService.hgFUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName));
+                                await hostGroupService.hgFUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName);
                                 this.checkRes[i].wip = false;
                                 this.checkRes[i].updated = true;
                             } catch (e) {
@@ -242,19 +252,22 @@
             },
             async checks() {
                 this.started = false;
-                this.wip = true;
+                this.checked = false;
                 this.checkRes = {};
                 let res = [];
+
                 for (let hg in this.hostGroupSelected) {
                     let hostGroup = {};
                     try {
                         hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupSelected[hg])).data;
+                        this.checkingSWE = hostGroup.name;
                     } catch (e) {
                         this.wip = false;
                         return ;
                     }
                     for (let target in this.tHost) {
                         if (this.tHost[target] !== this.sHost) {
+                            this.checkingHost = this.tHost[target];
                             let hgData = {
                                 source_host: this.sHost,
                                 target_host: this.tHost[target],
@@ -268,7 +281,7 @@
                                 host: this.tHost[target],
                                 env: hostGroup.environment
                             };
-                            let envExist = (await environmentService.envCheck(envData)).data;
+                            let envExist = (await environmentService.Check(envData)).data;
                             let hgExist = (await hostGroupService.hgCheck(hgData)).data;
                             let fchg = (await hostGroupService.hgFCheck(this.tHost[target], hostGroup.name)).data;
                             let tmp = fchg.error != "not found";
@@ -305,7 +318,7 @@
                         }
                     }
                 }
-                this.wip = false;
+                this.checked = true;
                 this.checkRes = res;
             },
         }
