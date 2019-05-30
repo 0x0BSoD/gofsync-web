@@ -51,6 +51,8 @@
                                 v-model="sHost"
                                 :items="hosts"
                                 label="Source Host"
+                                item-text="name"
+                                item-value="name"
                                 persistent-hint
                         >
                         </v-autocomplete>
@@ -355,6 +357,7 @@
                 this.wip = false;
                 this.hgError = true;
                 this.hgErrorMsg = "Backend not reachable or in errored state"
+                this.$router.push({name: "error"});
             }
 
             // if (this.$route.query.hasOwnProperty("source")
@@ -411,8 +414,8 @@
                     this.sourceLoaded = false;
 
                     // Load source info =================================
-                    this.hostGroups = (await hostGroupService.hgList(val)).data;
-                    this.hostGroupsFull = (await hostGroupService.hgList(val)).data;
+                    this.hostGroups = (await hostGroupService.List(val)).data;
+                    this.hostGroupsFull = (await hostGroupService.List(val)).data;
 
                     let tmpEnv = (await environmentService.List(val)).data;
                     let reg = new RegExp('[0-9]');
@@ -498,7 +501,7 @@
                             this.hgExist = null;
                             this.envExist = null;
 
-                            this.hostGroup = (await hostGroupService.hg(this.sHost, val)).data;
+                            this.hostGroup = (await hostGroupService.Get(this.sHost, val)).data;
                             this.pc = {};
                         } catch (e) {
                             console.error(e);
@@ -549,9 +552,9 @@
 
                         this.envExist = (await environmentService.Check(envData)).data !== -1;
 
-                        this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
+                        this.hgExist = (await hostGroupService.Check(hgData)).data;
                         try {
-                            let foremanCheck = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                            let foremanCheck = (await hostGroupService.FCheck(this.tHost, this.hostGroup.name)).data;
                             this.foremanCheckHG = foremanCheck.id !== -1;
                         } catch (e) {
                             console.error(e);
@@ -563,14 +566,14 @@
 
                         if (this.foremanCheckHG) {
                             let targetId = null;
-                            let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                            let targetHgs = (await hostGroupService.List(this.tHost)).data;
                             for (let i in targetHgs) {
                                 if (targetHgs.hasOwnProperty(i)) {
                                     if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                                 }
                             }
 
-                            this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                            this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                             let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                             let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                             this.targPc = targetPCData.PuppetClasses;
@@ -618,13 +621,13 @@
                 let old_th = this.tHost;
 
                 try {
-                    await hostGroupService.hgFUpdate(this.sHost, this.hostGroup.name);
+                    await hostGroupService.Update(this.sHost, this.hostGroup.name);
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
                     this.envExist = null;
 
-                    this.hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupId)).data;
+                    this.hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
@@ -659,16 +662,16 @@
             async updateTargetHG () {
                 this.wip = true;
                 try {
-                    await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name);
+                    await hostGroupService.FUpdate(this.tHost, this.hostGroup.name);
 
                     let targetId = null;
-                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
                         if (targetHgs.hasOwnProperty(i)) {
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
-                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
                 } catch (e) {
@@ -691,18 +694,18 @@
                     source_hg_id: this.hostGroupId,
                     db_update: this.updateDB,
                 };
-                this.hgExist = (await hostGroupService.hgCheck(data)).data;
-                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.hgExist = (await hostGroupService.Check(data)).data;
+                let fchg = (await hostGroupService.FCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
                 if (this.foremanCheckHG) {
                     let targetId = null;
-                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
                         if (targetHgs.hasOwnProperty(i)) {
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
-                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     // fill puppet classes info
                     let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                     let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
@@ -741,14 +744,14 @@
                 try {
                     this.wip = true;
                     this.wipMessage = "Uploading to target host ...";
-                    let response = (await hostGroupService.hgSend(data));
+                    let response = (await hostGroupService.Send(data));
                     if (response.status === 200) {
                     }
                     this.wip = false;
 
                     this.wip = true;
                     this.wipMessage = "Updating data ...";
-                    let response2 = (await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name));
+                    let response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
                     if (response2.status === 200) {
                         this.hgDone = true;
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
@@ -763,18 +766,18 @@
                 }
 
                 // =====================================================================================================
-                this.hgExist = (await hostGroupService.hgCheck(data)).data;
-                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.hgExist = (await hostGroupService.Check(data)).data;
+                let fchg = (await hostGroupService.FCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
                 if (this.foremanCheckHG) {
                     let targetId = null;
-                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
                         if (targetHgs.hasOwnProperty(i)) {
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
-                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     // fill puppet classes info
 x
                     let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);

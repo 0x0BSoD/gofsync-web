@@ -1,42 +1,42 @@
 import Api from "./Api";
 
 export const hostGroupService = {
-    hg,
-    hgList,
-    hgFCheck,
-    // hgFGet,
-    hgFUpdate,
-    hgCheck,
-    hgSend,
-    hgAllList,
+    Get,
+    List,
+    FCheck,
+    Update,
+    FUpdate,
+    Check,
+    Send,
+    AllList,
 };
 
 // GET ===========================================
-function hg(host, hgId) {
+function Get(host, hgId) {
     return Api().get(`hg/${host}/${hgId}`);
 }
-function hgList(host) {
+function List(host) {
     return Api().get(`hg/${host}`);
 }
-function hgAllList() {
+function AllList() {
     return Api().get("hg");
 }
-function hgFCheck(host, hgId) {
+function FCheck(host, hgId) {
     return Api().get(`hg/foreman/check/${host}/${hgId}`);
 }
-function hgFGet(host, hgId) {
-    return Api().get(`hg/foreman/get/${host}/${hgId}`);
-}
-function hgFUpdate(host, hgId) {
+// function FGet(host, hgId) {
+//     return Api().get(`hg/foreman/get/${host}/${hgId}`);
+// }
+function FUpdate(host, hgId) {
     return Api().get(`hg/foreman/update/${host}/${hgId}`);
 }
 // POST ===========================================
-function hgCheck(data) {
-    return Api().post("/hg/check", data)
+function Check(data) {
+    return Api().post("/hg/check", data);
 }
-function hgSend(data) {
-    return Api().post("/hg/upload", data)
+function Send(data) {
+    return Api().post("/hg/upload", data);
 }
-function hgUpdate(data) {
-    return Api().post("/hg/update", data)
+function Update(host) {
+    return Api().post(`/hg/update/${host}`);
 }

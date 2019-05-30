@@ -10,6 +10,7 @@ import Error from '../views/Error';
 Vue.use(Router);
 
 const router = new Router({
+    mode: 'history',
     routes: [
         {
             path: '/hostgroup',
@@ -48,16 +49,5 @@ const router = new Router({
         }
     ]
 });
-
-// router.beforeEach((to, from, next) => {
-//     if (from.name === 'error') {
-//     } else {
-//         router.push('error');
-//     }
-//     return next;
-//     console.log("TO: ", to);
-//     console.log("FROM: ", from);
-// });
-
 
 export default router;

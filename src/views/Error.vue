@@ -10,6 +10,19 @@
 </template>
 
 <script>
+    import { hostService } from '../_services';
+    export default {
+        name: 'error',
+        data: () => ({}),
+        async mounted() {
+            // Load Hosts ==========================================
+            try {
+                await hostService.hosts();
+                this.$router.push({name: "app"});
+            } catch (e) {
+            }
+        },
+    }
 </script>
 
 <style scoped>
