@@ -95,6 +95,8 @@
                                 label="Target Host"
                                 persistent-hint
                                 :disabled="!sHost"
+                                item-text="name"
+                                item-value="name"
                         >
                         </v-autocomplete>
                     </v-flex>
@@ -195,13 +197,97 @@
 
 <!--    ============================================ HostGroups ============================================    -->
         <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
-            <v-flex xs12>
-                <v-btn
-                        v-for="(val, i) in hostGroups"
-                        :key="i"
-                        v-if = "val.name !== 'SWE'"
-                        @click="setHG(val.id)"
-                >{{val.name}}</v-btn>
+            <v-flex xs12 v-if="hostGroups.length > 0">
+                <v-btn-toggle v-model="toggle_status" class="mb-2">
+                    <v-btn flat dark color="success">Pro</v-btn>
+                    <v-btn flat dark color="primary">Dev</v-btn>
+                    <v-btn flat dark color="warning">To remove</v-btn>
+                    <v-btn flat>w/o state</v-btn>
+                </v-btn-toggle>
+                <br/>
+                <div v-if="toggle_status === 0">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status === 'pro'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === 'pro'" color="success">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+                <div v-else-if="toggle_status === 1">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status === 'dev'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === 'dev'" color="primary">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+                <div v-else-if="toggle_status === 2">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status === '_toremove'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+                <div v-else-if="toggle_status === 3">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                    </v-btn>
+                </div>
+                <div v-else>
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === 'pro'" color="success">trip_origin</v-icon>
+                        <v-icon right v-if = "val.status === 'dev'" color="primary">trip_origin</v-icon>
+                        <v-icon right v-if = "val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+
+
+
+
+
+<!--                <br/>-->
+<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="primary">Dev</v-chip>-->
+<!--                <br/>-->
+<!--                <v-btn-->
+<!--                        v-for="(val, i) in hostGroups"-->
+<!--                        :key="i"-->
+<!--                        v-if = "val.name !== 'SWE' && val.status === 'dev'"-->
+<!--                        @click="setHG(val.id)"-->
+<!--                >{{val.name}}</v-btn>-->
+<!--                <br/>-->
+<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">To remove</v-chip>-->
+<!--                <br/>-->
+<!--                <v-btn-->
+<!--                        v-for="(val, i) in hostGroups"-->
+<!--                        :key="i"-->
+<!--                        v-if = "val.name !== 'SWE' && val.status === '_toremove'"-->
+<!--                        @click="setHG(val.id)"-->
+<!--                >{{val.name}}</v-btn>-->
+<!--                <br/>-->
+<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">w/o state</v-chip>-->
+<!--                <br/>-->
+<!--                <v-btn-->
+<!--                        v-for="(val, i) in hostGroups"-->
+<!--                        :key="i"-->
+<!--                        v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"-->
+<!--                        @click="setHG(val.id)"-->
+<!--                >{{val.name}}</v-btn>-->
             </v-flex>
         </v-layout>
 <!--    ============================================ /HostGroups ============================================    -->
@@ -326,6 +412,7 @@
             foremanCheckHG: false,
             link: false,
             targetDiff: false,
+            toggle_status: null,
         }),
 
         //========================================================================================================
@@ -610,10 +697,8 @@
         // METHODS
         //========================================================================================================
         methods: {
-            async envUpdated () {
-                console.info('not implemented');
-            },
             async locUpdated () {
+                console.log("locUpdated");
                 this.locations =  (await locationsService.List()).data;
             },
             async updateSourceHG () {

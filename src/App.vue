@@ -2,7 +2,7 @@
     <v-app>
         <v-content>
             <v-toolbar app dense v-if="showToolBar">
-                <v-btn :to="{name:'hostgroup'}" icon flat class="hidden-xs-only">
+                <v-btn @click="emitReset()" icon flat class="hidden-xs-only">
                     <v-icon>sync</v-icon>
                 </v-btn>
                 <v-toolbar-title class="headline text-uppercase">
@@ -128,6 +128,9 @@
             },
         },
         methods: {
+            emitReset() {
+                this.$emit('a123');
+            },
             async logout () {
                 this.loggedIn = false;
                 this.token    = false;
