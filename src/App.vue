@@ -2,38 +2,58 @@
     <v-app>
         <v-content>
             <v-toolbar app dense v-if="showToolBar">
-                <v-btn @click="emitReset()" icon flat class="hidden-xs-only">
+                <v-btn  :to="{name:'index'}" icon flat class="hidden-xs-only">
                     <v-icon>sync</v-icon>
                 </v-btn>
                 <v-toolbar-title class="headline text-uppercase">
                     <span>go</span>
                     <span class="font-weight-light">Fsync</span>
                 </v-toolbar-title>
-                <v-menu offset-y>
-                    <template v-slot:activator="{ on }">
-                        <v-btn
-                                :disabled="!loggedIn"
-                                flat
-                                v-on="on"
-                        >
-                            {{menuLabel}}
-                        </v-btn>
-                    </template>
-                    <v-list>
-                        <v-list-tile :to="{name:'hostgroup'}">
-                            <v-list-tile-title>HostGroup</v-list-tile-title>
-                        </v-list-tile>
-                        <v-list-tile :to="{name:'batch'}">
-                            <v-list-tile-title>Batch</v-list-tile-title>
-                        </v-list-tile>
-                        <v-list-tile :disabled="true" :to="{name:'jsoneditor'}">
-                            <v-list-tile-title>Json editor</v-list-tile-title>
-                        </v-list-tile>
-                        <v-list-tile :disabled="true" :to="{name:'locations'}">
-                            <v-list-tile-title>Locations</v-list-tile-title>
-                        </v-list-tile>
-                    </v-list>
-                </v-menu>
+                <v-btn
+                        class="hidden-xs-only"
+                        :disabled="!loggedIn"
+                        flat
+                        :to="{name:'hostgroup'}"
+                >
+                    hostgroup
+                </v-btn>
+                <v-btn
+                        class="hidden-xs-only"
+                        :disabled="!loggedIn"
+                        flat
+                        :to="{name:'batch'}"
+                >
+                    batch
+                </v-btn>
+
+<!--                <v-menu offset-y>-->
+<!--                    <template v-slot:activator="{ on }">-->
+<!--                        <v-btn-->
+<!--                                :disabled="!loggedIn"-->
+<!--                                flat-->
+<!--                                icon-->
+<!--                                v-on="on"-->
+<!--                        >-->
+<!--                            <v-icon>-->
+<!--                                more_vert-->
+<!--                            </v-icon>-->
+<!--                        </v-btn>-->
+<!--                    </template>-->
+<!--                    <v-list>-->
+<!--                        <v-list-tile :to="{name:'hostgroup'}">-->
+<!--                            <v-list-tile-title>HostGroup</v-list-tile-title>-->
+<!--                        </v-list-tile>-->
+<!--                        <v-list-tile :to="{name:'batch'}">-->
+<!--                            <v-list-tile-title>Batch</v-list-tile-title>-->
+<!--                        </v-list-tile>-->
+<!--                        <v-list-tile :disabled="true" :to="{name:'jsoneditor'}">-->
+<!--                            <v-list-tile-title>Json editor</v-list-tile-title>-->
+<!--                        </v-list-tile>-->
+<!--                        <v-list-tile :disabled="true" :to="{name:'locations'}">-->
+<!--                            <v-list-tile-title>Locations</v-list-tile-title>-->
+<!--                        </v-list-tile>-->
+<!--                    </v-list>-->
+<!--                </v-menu>-->
 
 
                 <v-spacer></v-spacer>
@@ -128,9 +148,6 @@
             },
         },
         methods: {
-            emitReset() {
-                this.$emit('a123');
-            },
             async logout () {
                 this.loggedIn = false;
                 this.token    = false;

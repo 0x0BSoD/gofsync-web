@@ -105,7 +105,7 @@
         </v-layout>
 <!--    ============================================ /Top menu - selects =========================================    -->
 
-        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />
+<!--        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />-->
 
 <!--    ======================================== Middle menu - HG control========================================    -->
         <v-layout row wrap v-if="hostGroup.id">
@@ -447,10 +447,10 @@
                 this.$router.push({name: "error"});
             }
 
-            // if (this.$route.query.hasOwnProperty("source")
-            //     && this.hosts.indexOf(this.$route.query.source) !== -1) {
-            //     this.sHost = this.$route.query.source;
-            // }
+            if (this.$route.query.hasOwnProperty("source")
+                && PuppetMethods.inHosts(this.hosts, this.$route.query.source)) {
+                this.sHost = this.$route.query.source;
+            }
             // if (this.$route.query.hasOwnProperty("env")) {
             //     this.env = this.$route.query.env;
             // }
@@ -829,6 +829,7 @@
                 try {
                     this.wip = true;
                     this.wipMessage = "Uploading to target host ...";
+                    await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     let response = (await hostGroupService.Send(data));
                     if (response.status === 200) {
                     }

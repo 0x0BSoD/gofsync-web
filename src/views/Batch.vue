@@ -30,6 +30,8 @@
                                     prepend-icon="computer"
                                     v-model="sHost"
                                     :items="hosts"
+                                    item-text="name"
+                                    item-value="name"
                             ></v-autocomplete>
                         </v-card-text>
                     </v-card>
@@ -76,6 +78,8 @@
                                     multiple
                                     v-model="tHost"
                                     :items="hosts"
+                                    item-text="name"
+                                    item-value="name"
                             ></v-autocomplete>
                         </v-card-text>
                     </v-card>
@@ -232,13 +236,17 @@
                         let data = {
                             source_host: this.sHost,
                             target_host: this.checkRes[i].tHost,
-                            source_hg_id: this.checkRes[i].source_hg_id,
+                            source_hg_id: this.checkRes[i].source_hg_id.hgId,
                             db_update: true,
                         };
                         // Commit new data
                         try {
                             this.checkRes[i].wipText = "Uploading";
                             this.checkRes[i].wip = true;
+                            if (!this.checkRes[i].source_hg_id.updated) {
+                                await hostGroupService.FUpdate(this.checkRes[i].sHost, this.checkRes[i].hgName);
+                                this.checkRes[i].source_hg_id.updated = true;
+                            }
                             await hostGroupService.Send(data);
                             this.checkRes[i].wip = false;
                             this.checkRes[i].uploaded = true;
@@ -295,7 +303,7 @@
                             let hgData = {
                                 source_host: this.sHost,
                                 target_host: this.tHost[target],
-                                source_hg_id: this.hostGroupSelected[hg],
+                                source_hg_id: {"hgId": this.hostGroupSelected[hg], "updated": false},
                                 foremanCheckHG: false,
                                 error: false,
                                 wip: false,
@@ -334,7 +342,7 @@
                                 updated: false,
                                 foremanCheckHG: tmp,
                                 foremanTargetId: targetId,
-                                source_hg_id: this.hostGroupSelected[hg],
+                                source_hg_id: {"hgId": this.hostGroupSelected[hg], "updated": false},
                                 wip: false,
                                 wipText: "",
                                 hg_link: link,
