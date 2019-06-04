@@ -36,7 +36,7 @@
                         >
                             User or password invalid.
                         </v-alert>
-                        <v-form>
+                        <v-form autocomplete="yes">
                             <v-text-field
                                     :rules="[rules.required]"
                                     prepend-icon="person"

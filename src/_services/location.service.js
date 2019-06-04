@@ -14,7 +14,7 @@ function Overrides(locName, host) {
     return Api().get(`loc/overrides/${host}/${locName}`);
 }
 
-// GET ===========================================
+// POST ===========================================
 function Update(host) {
     return Api().post(`loc/${host}`);
 }

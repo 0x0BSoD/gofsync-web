@@ -13,7 +13,7 @@
                         <v-item>
                             <v-card>
                                 <v-card-title class="pr-0 pl-3 pt-0 pb-0">
-                                    <h4 @click="setHost(n.host)">{{n.host}}</h4>
+                                    <v-btn flat small :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}</v-btn>
                                     <v-spacer></v-spacer>
                                     <v-chip v-if="n.env === 'stage'" small color="success">STAGE</v-chip>
                                     <v-chip v-if="n.env === 'prod'" small color="warning">PROD</v-chip>
@@ -117,7 +117,8 @@
 
     import { FingerprintSpinner } from 'epic-spinners'
     import { environmentService, locationsService,
-             hostGroupService, pcService } from "../../_services"
+        hostGroupService, pcService } from "../_services"
+    import {Common} from "./methods"
 
     export default {
 
@@ -131,6 +132,7 @@
         },
 
         data: () => ({
+            locations: [],
             wip: false,
             wipMessage: false,
             dialog: false,
@@ -141,10 +143,12 @@
             FingerprintSpinner
         },
 
-        props: [
-            "locations"
-        ],
-        async mounted () {},
+        async mounted () {
+            // User check ==========================================
+            await Common.auth(this);
+
+            this.locations =  (await locationsService.List()).data;
+        },
         watch: {},
         methods: {
             async setHost (host) {

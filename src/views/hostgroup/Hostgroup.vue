@@ -51,6 +51,8 @@
                                 v-model="sHost"
                                 :items="hosts"
                                 label="Source Host"
+                                item-text="name"
+                                item-value="name"
                                 persistent-hint
                         >
                         </v-autocomplete>
@@ -93,6 +95,8 @@
                                 label="Target Host"
                                 persistent-hint
                                 :disabled="!sHost"
+                                item-text="name"
+                                item-value="name"
                         >
                         </v-autocomplete>
                     </v-flex>
@@ -101,7 +105,7 @@
         </v-layout>
 <!--    ============================================ /Top menu - selects =========================================    -->
 
-        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />
+<!--        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />-->
 
 <!--    ======================================== Middle menu - HG control========================================    -->
         <v-layout row wrap v-if="hostGroup.id">
@@ -193,13 +197,97 @@
 
 <!--    ============================================ HostGroups ============================================    -->
         <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
-            <v-flex xs12>
-                <v-btn
-                        v-for="(val, i) in hostGroups"
-                        :key="i"
-                        v-if = "val.name !== 'SWE'"
-                        @click="setHG(val.id)"
-                >{{val.name}}</v-btn>
+            <v-flex xs12 v-if="hostGroups.length > 0">
+                <v-btn-toggle v-model="toggle_status" class="mb-2">
+                    <v-btn flat dark color="success">Pro</v-btn>
+                    <v-btn flat dark color="primary">Dev</v-btn>
+                    <v-btn flat dark color="warning">To remove</v-btn>
+                    <v-btn flat>w/o state</v-btn>
+                </v-btn-toggle>
+                <br/>
+                <div v-if="toggle_status === 0">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status === 'pro'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === 'pro'" color="success">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+                <div v-else-if="toggle_status === 1">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status === 'dev'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === 'dev'" color="primary">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+                <div v-else-if="toggle_status === 2">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status === '_toremove'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+                <div v-else-if="toggle_status === 3">
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                    </v-btn>
+                </div>
+                <div v-else>
+                    <v-btn
+                            v-for="(val, i) in hostGroups"
+                            :key="i"
+                            v-if = "val.name !== 'SWE'"
+                            @click="setHG(val.id)">
+                        {{val.name}}
+                        <v-icon right v-if = "val.status === 'pro'" color="success">trip_origin</v-icon>
+                        <v-icon right v-if = "val.status === 'dev'" color="primary">trip_origin</v-icon>
+                        <v-icon right v-if = "val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                    </v-btn>
+                </div>
+
+
+
+
+
+<!--                <br/>-->
+<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="primary">Dev</v-chip>-->
+<!--                <br/>-->
+<!--                <v-btn-->
+<!--                        v-for="(val, i) in hostGroups"-->
+<!--                        :key="i"-->
+<!--                        v-if = "val.name !== 'SWE' && val.status === 'dev'"-->
+<!--                        @click="setHG(val.id)"-->
+<!--                >{{val.name}}</v-btn>-->
+<!--                <br/>-->
+<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">To remove</v-chip>-->
+<!--                <br/>-->
+<!--                <v-btn-->
+<!--                        v-for="(val, i) in hostGroups"-->
+<!--                        :key="i"-->
+<!--                        v-if = "val.name !== 'SWE' && val.status === '_toremove'"-->
+<!--                        @click="setHG(val.id)"-->
+<!--                >{{val.name}}</v-btn>-->
+<!--                <br/>-->
+<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">w/o state</v-chip>-->
+<!--                <br/>-->
+<!--                <v-btn-->
+<!--                        v-for="(val, i) in hostGroups"-->
+<!--                        :key="i"-->
+<!--                        v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"-->
+<!--                        @click="setHG(val.id)"-->
+<!--                >{{val.name}}</v-btn>-->
             </v-flex>
         </v-layout>
 <!--    ============================================ /HostGroups ============================================    -->
@@ -324,6 +412,7 @@
             foremanCheckHG: false,
             link: false,
             targetDiff: false,
+            toggle_status: null,
         }),
 
         //========================================================================================================
@@ -355,12 +444,13 @@
                 this.wip = false;
                 this.hgError = true;
                 this.hgErrorMsg = "Backend not reachable or in errored state"
+                this.$router.push({name: "error"});
             }
 
-            // if (this.$route.query.hasOwnProperty("source")
-            //     && this.hosts.indexOf(this.$route.query.source) !== -1) {
-            //     this.sHost = this.$route.query.source;
-            // }
+            if (this.$route.query.hasOwnProperty("source")
+                && PuppetMethods.inHosts(this.hosts, this.$route.query.source)) {
+                this.sHost = this.$route.query.source;
+            }
             // if (this.$route.query.hasOwnProperty("env")) {
             //     this.env = this.$route.query.env;
             // }
@@ -411,8 +501,8 @@
                     this.sourceLoaded = false;
 
                     // Load source info =================================
-                    this.hostGroups = (await hostGroupService.hgList(val)).data;
-                    this.hostGroupsFull = (await hostGroupService.hgList(val)).data;
+                    this.hostGroups = (await hostGroupService.List(val)).data;
+                    this.hostGroupsFull = (await hostGroupService.List(val)).data;
 
                     let tmpEnv = (await environmentService.List(val)).data;
                     let reg = new RegExp('[0-9]');
@@ -498,7 +588,7 @@
                             this.hgExist = null;
                             this.envExist = null;
 
-                            this.hostGroup = (await hostGroupService.hg(this.sHost, val)).data;
+                            this.hostGroup = (await hostGroupService.Get(this.sHost, val)).data;
                             this.pc = {};
                         } catch (e) {
                             console.error(e);
@@ -549,9 +639,9 @@
 
                         this.envExist = (await environmentService.Check(envData)).data !== -1;
 
-                        this.hgExist = (await hostGroupService.hgCheck(hgData)).data;
+                        this.hgExist = (await hostGroupService.Check(hgData)).data;
                         try {
-                            let foremanCheck = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                            let foremanCheck = (await hostGroupService.FCheck(this.tHost, this.hostGroup.name)).data;
                             this.foremanCheckHG = foremanCheck.id !== -1;
                         } catch (e) {
                             console.error(e);
@@ -563,14 +653,14 @@
 
                         if (this.foremanCheckHG) {
                             let targetId = null;
-                            let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                            let targetHgs = (await hostGroupService.List(this.tHost)).data;
                             for (let i in targetHgs) {
                                 if (targetHgs.hasOwnProperty(i)) {
                                     if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                                 }
                             }
 
-                            this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                            this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                             let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                             let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                             this.targPc = targetPCData.PuppetClasses;
@@ -607,10 +697,8 @@
         // METHODS
         //========================================================================================================
         methods: {
-            async envUpdated () {
-                console.info('not implemented');
-            },
             async locUpdated () {
+                console.log("locUpdated");
                 this.locations =  (await locationsService.List()).data;
             },
             async updateSourceHG () {
@@ -618,13 +706,13 @@
                 let old_th = this.tHost;
 
                 try {
-                    await hostGroupService.hgFUpdate(this.sHost, this.hostGroup.name);
+                    await hostGroupService.Update(this.sHost, this.hostGroup.name);
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
                     this.envExist = null;
 
-                    this.hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupId)).data;
+                    this.hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
@@ -659,16 +747,16 @@
             async updateTargetHG () {
                 this.wip = true;
                 try {
-                    await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name);
+                    await hostGroupService.FUpdate(this.tHost, this.hostGroup.name);
 
                     let targetId = null;
-                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
                         if (targetHgs.hasOwnProperty(i)) {
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
-                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
                 } catch (e) {
@@ -691,18 +779,18 @@
                     source_hg_id: this.hostGroupId,
                     db_update: this.updateDB,
                 };
-                this.hgExist = (await hostGroupService.hgCheck(data)).data;
-                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.hgExist = (await hostGroupService.Check(data)).data;
+                let fchg = (await hostGroupService.FCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
                 if (this.foremanCheckHG) {
                     let targetId = null;
-                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
                         if (targetHgs.hasOwnProperty(i)) {
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
-                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     // fill puppet classes info
                     let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                     let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
@@ -741,14 +829,15 @@
                 try {
                     this.wip = true;
                     this.wipMessage = "Uploading to target host ...";
-                    let response = (await hostGroupService.hgSend(data));
+                    await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
+                    let response = (await hostGroupService.Send(data));
                     if (response.status === 200) {
                     }
                     this.wip = false;
 
                     this.wip = true;
                     this.wipMessage = "Updating data ...";
-                    let response2 = (await hostGroupService.hgFUpdate(this.tHost, this.hostGroup.name));
+                    let response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
                     if (response2.status === 200) {
                         this.hgDone = true;
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
@@ -763,18 +852,18 @@
                 }
 
                 // =====================================================================================================
-                this.hgExist = (await hostGroupService.hgCheck(data)).data;
-                let fchg = (await hostGroupService.hgFCheck(this.tHost, this.hostGroup.name)).data;
+                this.hgExist = (await hostGroupService.Check(data)).data;
+                let fchg = (await hostGroupService.FCheck(this.tHost, this.hostGroup.name)).data;
                 this.foremanCheckHG = fchg.error != "not found";
                 if (this.foremanCheckHG) {
                     let targetId = null;
-                    let targetHgs = (await hostGroupService.hgList(this.tHost)).data;
+                    let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
                         if (targetHgs.hasOwnProperty(i)) {
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
-                    this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                    this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     // fill puppet classes info
 x
                     let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);

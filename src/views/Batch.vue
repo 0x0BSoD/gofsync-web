@@ -1,6 +1,6 @@
 <template>
     <v-container>
-        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+<!--        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>-->
         <v-stepper v-model="e1">
             <v-stepper-header>
                 <v-stepper-step :complete="e1 > 1" step="1">Source</v-stepper-step>
@@ -30,11 +30,15 @@
                                     prepend-icon="computer"
                                     v-model="sHost"
                                     :items="hosts"
+                                    item-text="name"
+                                    item-value="name"
                             ></v-autocomplete>
                         </v-card-text>
                     </v-card>
 
-                    <v-btn color="primary" :disabled="!sHost" @click="e1 = 2; getHostGroups()" flat>next</v-btn>
+                    <v-card-actions>
+                        <v-btn color="primary" :disabled="!sHost" @click="e1 = 2; getHostGroups()" flat>next</v-btn>
+                    </v-card-actions>
 
                 </v-stepper-content>
                 <!--     =====================================================================================================       -->
@@ -56,8 +60,10 @@
                         </v-card-text>
                     </v-card>
 
-                    <v-btn flat color="warning" @click="e1 = 1" >back</v-btn>
-                    <v-btn flat color="primary" :disabled="hostGroupSelected.length===0" @click="e1 = 3" >next</v-btn>
+                    <v-card-actions>
+                        <v-btn flat color="warning" @click="e1 = 1" >back</v-btn>
+                        <v-btn flat color="primary" :disabled="hostGroupSelected.length===0" @click="e1 = 3" >next</v-btn>
+                    </v-card-actions>
 
                 </v-stepper-content>
                 <!--     =====================================================================================================       -->
@@ -72,12 +78,16 @@
                                     multiple
                                     v-model="tHost"
                                     :items="hosts"
+                                    item-text="name"
+                                    item-value="name"
                             ></v-autocomplete>
                         </v-card-text>
                     </v-card>
 
-                    <v-btn flat color="warning" @click="e1 = 2" >back</v-btn>
-                    <v-btn flat color="primary" :disabled="tHost.length===0" @click="e1 = 4; checks()" >next</v-btn>
+                    <v-card-actions>
+                        <v-btn flat color="warning" @click="e1 = 2" >back</v-btn>
+                        <v-btn flat color="primary" :disabled="tHost.length===0" @click="e1 = 4; checks()" >next</v-btn>
+                    </v-card-actions>
 
                 </v-stepper-content>
                 <!--     =====================================================================================================       -->
@@ -85,11 +95,19 @@
                     <v-card>
                         <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">Checking</v-card-title>
                         <v-layout row wrap v-if="!checked">
-                            <v-flex xs12 class="text-sm-center">
+                            <v-flex xs12 class="text-sm-center mt-3">
                                 <v-chip color="font-weight-regular">{{checkingHost}}</v-chip>
                             </v-flex>
-                            <v-flex xs12 class="text-sm-center">
+                            <v-flex xs12 class="text-sm-center mb-3">
                                 <v-chip color="font-weight-regular blue-grey white--text">{{checkingSWE}}</v-chip>
+                            </v-flex>
+                            <v-flex xs12 class="text-sm-center mt-3 mb-3">
+                                <fingerprint-spinner
+                                        class="spinner"
+                                        :animation-duration="1500"
+                                        :size="64"
+                                        color="#314549"
+                                />
                             </v-flex>
                         </v-layout>
                         <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks Result</v-card-title>
@@ -98,6 +116,7 @@
 
                                 <v-flex xs3>{{val.tHost}}</v-flex>
                                 <v-flex xs3>{{val.hgName}}</v-flex>
+
                                 <v-flex xs6>
 
                                     <v-chip label color="primary" text-color="white" v-if="val.wip && !val.error">
@@ -149,8 +168,11 @@
                         </v-card-text>
                     </v-card>
 
-                    <v-btn v-if="!wip" flat color="warning" @click="e1 = 3" >back</v-btn>
-                    <v-btn v-if="!wip" flat color="success" :disabled="started" @click="startJob()" >upload</v-btn>
+                    <v-card-actions>
+                        <v-btn v-if="!wip" flat color="warning" @click="e1 = 3" >back</v-btn>
+                        <v-btn v-if="!wip" flat color="success" :disabled="started" @click="startJob()" >upload</v-btn>
+                    </v-card-actions>
+
 
                 </v-stepper-content>
             </v-stepper-items>
@@ -162,6 +184,7 @@
 <script>
     import { hostGroupService, environmentService, hostService } from "../_services"
     import { Common } from "./methods";
+    import { FingerprintSpinner } from 'epic-spinners'
 
     export default {
         //========================================================================================================
@@ -171,6 +194,10 @@
             nowActions () {
                 return this.$store.state.socketModule.socket.message;
             },
+        },
+
+        components: {
+            FingerprintSpinner
         },
 
         data: () => ({
@@ -209,14 +236,18 @@
                         let data = {
                             source_host: this.sHost,
                             target_host: this.checkRes[i].tHost,
-                            source_hg_id: this.checkRes[i].source_hg_id,
+                            source_hg_id: this.checkRes[i].source_hg_id.hgId,
                             db_update: true,
                         };
                         // Commit new data
                         try {
                             this.checkRes[i].wipText = "Uploading";
                             this.checkRes[i].wip = true;
-                            await hostGroupService.hgSend(data);
+                            if (!this.checkRes[i].source_hg_id.updated) {
+                                await hostGroupService.FUpdate(this.checkRes[i].sHost, this.checkRes[i].hgName);
+                                this.checkRes[i].source_hg_id.updated = true;
+                            }
+                            await hostGroupService.Send(data);
                             this.checkRes[i].wip = false;
                             this.checkRes[i].uploaded = true;
                         } catch (e) {
@@ -234,7 +265,7 @@
                             try {
                                 this.checkRes[i].wip = true;
                                 this.checkRes[i].wipText = "Updating";
-                                await hostGroupService.hgFUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName);
+                                await hostGroupService.FUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName);
                                 this.checkRes[i].wip = false;
                                 this.checkRes[i].updated = true;
                             } catch (e) {
@@ -248,18 +279,19 @@
                 this.started = false;
             },
             async getHostGroups() {
-                this.hostGroups = (await hostGroupService.hgList(this.sHost)).data;
+                this.hostGroups = (await hostGroupService.List(this.sHost)).data;
             },
             async checks() {
                 this.started = false;
                 this.checked = false;
                 this.checkRes = {};
+                this.wip = true;
                 let res = [];
 
                 for (let hg in this.hostGroupSelected) {
                     let hostGroup = {};
                     try {
-                        hostGroup = (await hostGroupService.hg(this.sHost, this.hostGroupSelected[hg])).data;
+                        hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
                         this.checkingSWE = hostGroup.name;
                     } catch (e) {
                         this.wip = false;
@@ -271,7 +303,7 @@
                             let hgData = {
                                 source_host: this.sHost,
                                 target_host: this.tHost[target],
-                                source_hg_id: this.hostGroupSelected[hg],
+                                source_hg_id: {"hgId": this.hostGroupSelected[hg], "updated": false},
                                 foremanCheckHG: false,
                                 error: false,
                                 wip: false,
@@ -282,18 +314,18 @@
                                 env: hostGroup.environment
                             };
                             let envExist = (await environmentService.Check(envData)).data;
-                            let hgExist = (await hostGroupService.hgCheck(hgData)).data;
-                            let fchg = (await hostGroupService.hgFCheck(this.tHost[target], hostGroup.name)).data;
+                            let hgExist = (await hostGroupService.Check(hgData)).data;
+                            let fchg = (await hostGroupService.FCheck(this.tHost[target], hostGroup.name)).data;
                             let tmp = fchg.error != "not found";
                             let targetId = null;
                             let link = null;
                             if (tmp) {
-                                let targetHgs = (await hostGroupService.hgList(this.tHost[target])).data;
+                                let targetHgs = (await hostGroupService.List(this.tHost[target])).data;
                                 for (let j in targetHgs) {
                                     if (targetHgs.hasOwnProperty(j)) {
                                         if (targetHgs[j].name === hostGroup.name) {
                                             targetId = targetHgs[j].id;
-                                            this.targetHostGroup = (await hostGroupService.hg(this.tHost, targetId)).data;
+                                            this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                                             let name = hostGroup.name.replace(/\./g, "-");
                                             link = `https://${this.tHost[target]}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
                                         }
@@ -310,7 +342,7 @@
                                 updated: false,
                                 foremanCheckHG: tmp,
                                 foremanTargetId: targetId,
-                                source_hg_id: this.hostGroupSelected[hg],
+                                source_hg_id: {"hgId": this.hostGroupSelected[hg], "updated": false},
                                 wip: false,
                                 wipText: "",
                                 hg_link: link,
@@ -320,6 +352,7 @@
                 }
                 this.checked = true;
                 this.checkRes = res;
+                this.wip = false;
             },
         }
     }

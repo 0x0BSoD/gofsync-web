@@ -6,10 +6,12 @@ import Batch from '../views/Batch';
 import JsonEditor from '../views/editor/JsonEditor';
 import Locations from '../views/editor/LocationsEditor';
 import Error from '../views/Error';
+import Index from '../views/Index';
 
 Vue.use(Router);
 
 const router = new Router({
+    mode: 'history',
     routes: [
         {
             path: '/hostgroup',
@@ -42,22 +44,15 @@ const router = new Router({
             component: Error
         },
         {
+            path: '/',
+            name: 'index',
+            component: Index
+        },
+        {
             path: '*',
-            name: "app",
-            redirect: 'hostgroup',
+            redirect: 'index',
         }
     ]
 });
-
-// router.beforeEach((to, from, next) => {
-//     if (from.name === 'error') {
-//     } else {
-//         router.push('error');
-//     }
-//     return next;
-//     console.log("TO: ", to);
-//     console.log("FROM: ", from);
-// });
-
 
 export default router;
