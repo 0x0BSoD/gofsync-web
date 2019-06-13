@@ -11,3 +11,4 @@ RUN npm run build
 # STEP 2
 FROM scratch
 COPY --from=JSbuilder /tmp/vue-app/dist /srv/
+RUN ls -la /srv

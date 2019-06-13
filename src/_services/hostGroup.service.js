@@ -8,6 +8,7 @@ export const hostGroupService = {
     FUpdate,
     Check,
     Send,
+    Create,
     AllList,
 };
 
@@ -39,4 +40,7 @@ function Send(data) {
 }
 function Update(host) {
     return Api().post(`/hg/update/${host}`);
+}
+function Create(data, host) {
+    return Api().post(`/hg/create/${host}`, data);
 }

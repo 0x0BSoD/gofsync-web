@@ -42,6 +42,9 @@
                                             <v-list-tile  @click="updateHG(n.host)" >
                                                 <v-list-tile-title>update hostgroups</v-list-tile-title>
                                             </v-list-tile>
+                                            <v-list-tile  @click="showSweDialog(n.host)" >
+                                                <v-list-tile-title>hosts by HG</v-list-tile-title>
+                                            </v-list-tile>
                                         </v-list>
                                     </v-menu>
                                 </v-card-title>
@@ -60,7 +63,93 @@
             </v-container>
         </v-item-group>
 
+        <v-dialog
+            v-model="sweHosts"
+            max-width="800"
+        >
+            <v-card>
+                <v-toolbar dark color="#7ac2ff">
+                    <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
+                <v-card-text>
+                    <v-layout wrap row>
+<!--                        <v-flex xs2 pr-2>-->
+<!--                            <v-switch-->
+<!--                                    v-model="allHosts"-->
+<!--                                    :label="`allHosts: ${allHosts.toString()}`"-->
+<!--                            ></v-switch>-->
+<!--                        </v-flex>-->
+                        <v-flex xs6 pr-2>
+                            <v-autocomplete
+                                    v-if="allHosts"
+                                    v-model="hostGroup"
+                                    :items="hostGroups"
+                                    label="Host Group"
+                                    persistent-hint
+                                    item-text="name"
+                            >
+                                <template slot="item" slot-scope="data">
+                                    <v-list-tile-content>
+                                        <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
+                                    </v-list-tile-content>
+                                </template>
+                            </v-autocomplete>
+                            <v-autocomplete
+                                    v-else
+                                    v-model="hostGroup"
+                                    :items="hostGroups"
+                                    label="Host Group"
+                                    persistent-hint
+                                    item-value="foreman_id"
+                                    item-text="name"
+                            >
+                                <template slot="item" slot-scope="data">
+                                    <v-list-tile-content>
+                                        <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
+                                    </v-list-tile-content>
+                                </template>
+                            </v-autocomplete>
+                        </v-flex>
+<!--                        <v-flex xs3 pr-2>-->
+<!--                            <v-autocomplete-->
+<!--                                v-model="HGChanged"-->
+<!--                                :items="HGChangedExamples"-->
+<!--                                label="Last Changed"-->
+<!--                                :disabled="!allHosts"-->
+<!--                                persistent-hint-->
+<!--                            >-->
 
+<!--                            </v-autocomplete>-->
+<!--                        </v-flex>-->
+                        <v-flex xs3 pr-2 class="text-sm-center">
+                            <v-btn
+                                    :loading="loading"
+                                    :disabled="loading"
+                                    large
+                                    @click="loadHosts()"
+                            >
+                                load
+                            </v-btn>
+
+                        </v-flex>
+
+                        <v-flex xs12
+
+                        >
+                            <ol>
+                                <li
+                                        v-for="(v, k) in hosts"
+                                        :key="k"
+                                >
+                                    {{v.name}} <v-chip>{{ (v.last_report)}}</v-chip>
+                                </li>
+                            </ol>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
 
         <v-dialog
                 v-model="dialog"
@@ -117,7 +206,7 @@
 
     import { FingerprintSpinner } from 'epic-spinners'
     import { environmentService, locationsService,
-        hostGroupService, pcService } from "../_services"
+             hostGroupService, pcService, hostService } from "../_services"
     import {Common} from "./methods"
 
     export default {
@@ -133,10 +222,25 @@
 
         data: () => ({
             locations: [],
+            hostGroups: [],
             wip: false,
             wipMessage: false,
             dialog: false,
+            sweHosts: false,
+            allHosts: false,
+            hostGroup: null,
+            HGChanged: null,
+            selHost: null,
+            HGChangedExamples: [
+                "Today",
+                "Yesterday",
+                "Yesterday",
+                ">2 days ago",
+                "10 May,2019"
+            ],
+            loading: false,
             dialogTitle: "",
+            hosts: [],
         }),
 
         components: {
@@ -151,6 +255,39 @@
         },
         watch: {},
         methods: {
+            async showSweDialog (host) {
+                this.dialogTitle = host;
+                this.hosts = [];
+                this.hostGroups = (await hostGroupService.List(host)).data;
+                this.selHost = host;
+                this.sweHosts = true;
+            },
+            async loadHosts () {
+                this.loading = true;
+                try {
+                    if (!this.allHosts) {
+                        this.hosts = (await hostService.ClientHosts(this.selHost, this.hostGroup, this.HGChanged)).data;
+                        for (let i in this.hosts) {
+                            let localDate = new Date(this.hosts[i].last_report);
+                            this.hosts[i].last_report = localDate.toLocaleString();
+                        }
+                    } else {
+                        this.hosts = (await hostService.ClientHostsAll(this.hostGroup, this.HGChanged)).data;
+                        for (let i in this.hosts) {
+                            let localDate = new Date(this.hosts[i].last_report);
+                            this.hosts[i].last_report = localDate.toLocaleString();
+                        }
+                    }
+
+                } catch (e) {
+                    console.info(e.message);
+                    if (e.message === "Request failed with status code 404") {
+                        this.hosts[0] = "Nothing found";
+                    }
+                } finally {
+                    this.loading = false;
+                }
+            },
             async setHost (host) {
                 await this.$store.dispatch("setHost", host);
             },
