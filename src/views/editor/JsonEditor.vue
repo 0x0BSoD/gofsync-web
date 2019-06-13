@@ -5,12 +5,28 @@
 <!-- ============================================= Top Panel ============================================= -->
         <v-layout row wrap>
             <v-flex xs12>
+                <v-alert
+                        v-model="hgError"
+                        dismissible
+                        type="error"
+                >
+                    {{hgErrorMsg}}
+                </v-alert>
+                <v-alert
+                        v-model="hgDone"
+                        dismissible
+                        type="success"
+                >
+                    {{hgDoneMsg}}
+                </v-alert>
                 <v-layout row wrap>
                     <v-flex xs2 mr-2 mt-1>
                         <v-autocomplete
                                 v-model="host"
                                 :items="hosts"
                                 label="Classes source Host"
+                                item-text="name"
+                                item-value="name"
                                 persistent-hint
                                 solo
                         >
@@ -59,7 +75,12 @@
                                 ></v-text-field>
                             </v-flex>
                             <v-flex xs2>
-                                <v-btn large>save</v-btn>
+                                <v-btn
+                                        large
+                                        @click="save()"
+                                        :loading="creatingHG"
+                                        :disabled="creatingHG"
+                                >save</v-btn>
                             </v-flex>
                         </v-layout>
                     </v-flex>
@@ -71,9 +92,9 @@
                     fixed-tabs
                     v-model="tab"
                 >
-                    <v-tab>
-                        Visual
-                    </v-tab>
+<!--                    <v-tab>-->
+<!--                        Visual-->
+<!--                    </v-tab>-->
                     <v-tab>
                         JSON
                     </v-tab>
@@ -101,55 +122,55 @@
 <!--================================================================================================================-->
 
 
-                    <v-flex xs12 v-if="tab === 0">
-                        <v-expansion-panel focusable>
-                            <v-expansion-panel-content
-                                    v-for="(val, idx) in JSONObject.puppet_classes"
-                                    :key="idx"
-                            >
-                                <template v-slot:header>
-                                    <div>{{idx}}</div>
-                                </template>
-                                <v-card>
-                                    <v-card-text class="grey lighten-3">
-                                        <v-card
-                                                v-for="(sc, jdx) in val"
-                                                :key="jdx"
-                                                class="mb-1"
-                                                v-if="sc"
-                                        >
-                                            <v-expansion-panel focusable v-if="sc.smart_classes" class="pcPanel">
-                                                <v-expansion-panel-content>
-                                                    <template v-slot:header>
-                                                        {{sc.subclass}}
-                                                        <v-spacer></v-spacer>
-                                                        <v-chip class="puppetLabel" v-if="sc.overrides" label>have overrides</v-chip>
-                                                        <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>
-                                                    </template>
-                                                    <v-card>
-                                                        <v-card-actions
-                                                                v-for="(scp, i) in sc.smart_classes"
-                                                                :key="i"
-                                                        >
-                                                            {{scp}}
-                                                            <v-spacer></v-spacer>
-                                                            <v-chip class="puppetLabel" v-if="sc.overrides && sc.overrides.includes(scp)" label>have overrides</v-chip>
-                                                            <v-btn class="puppetLabel" color="primary" icon @click.stop="editDialog(idx, sc.subclass, scp)"><v-icon>edit</v-icon></v-btn>
-                                                        </v-card-actions>
-                                                    </v-card>
-                                                </v-expansion-panel-content>
-                                            </v-expansion-panel>
-                                            <v-card-actions v-else>
-                                                {{sc.subclass}}
-                                                <v-spacer></v-spacer>
-                                                <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>
-                                            </v-card-actions>
-                                        </v-card>
-                                    </v-card-text>
-                                </v-card>
-                            </v-expansion-panel-content>
-                        </v-expansion-panel>
-                    </v-flex>
+<!--                    <v-flex xs12 v-if="tab === 0">-->
+<!--                        <v-expansion-panel focusable>-->
+<!--                            <v-expansion-panel-content-->
+<!--                                    v-for="(val, idx) in JSONObject.puppet_classes"-->
+<!--                                    :key="idx"-->
+<!--                            >-->
+<!--                                <template v-slot:header>-->
+<!--                                    <div>{{idx}}</div>-->
+<!--                                </template>-->
+<!--                                <v-card>-->
+<!--                                    <v-card-text class="grey lighten-3">-->
+<!--                                        <v-card-->
+<!--                                                v-for="(sc, jdx) in val"-->
+<!--                                                :key="jdx"-->
+<!--                                                class="mb-1"-->
+<!--                                                v-if="sc"-->
+<!--                                        >-->
+<!--                                            <v-expansion-panel focusable v-if="sc.smart_classes" class="pcPanel">-->
+<!--                                                <v-expansion-panel-content>-->
+<!--                                                    <template v-slot:header>-->
+<!--                                                        {{sc.subclass}}-->
+<!--                                                        <v-spacer></v-spacer>-->
+<!--                                                        <v-chip class="puppetLabel" v-if="sc.overrides" label>have overrides</v-chip>-->
+<!--                                                        <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>-->
+<!--                                                    </template>-->
+<!--                                                    <v-card>-->
+<!--                                                        <v-card-actions-->
+<!--                                                                v-for="(scp, i) in sc.smart_classes"-->
+<!--                                                                :key="i"-->
+<!--                                                        >-->
+<!--                                                            {{scp}}-->
+<!--                                                            <v-spacer></v-spacer>-->
+<!--                                                            <v-chip class="puppetLabel" v-if="sc.overrides && sc.overrides.includes(scp)" label>have overrides</v-chip>-->
+<!--                                                            <v-btn class="puppetLabel" color="primary" icon @click.stop="editDialog(idx, sc.subclass, scp)"><v-icon>edit</v-icon></v-btn>-->
+<!--                                                        </v-card-actions>-->
+<!--                                                    </v-card>-->
+<!--                                                </v-expansion-panel-content>-->
+<!--                                            </v-expansion-panel>-->
+<!--                                            <v-card-actions v-else>-->
+<!--                                                {{sc.subclass}}-->
+<!--                                                <v-spacer></v-spacer>-->
+<!--                                                <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>-->
+<!--                                            </v-card-actions>-->
+<!--                                        </v-card>-->
+<!--                                    </v-card-text>-->
+<!--                                </v-card>-->
+<!--                            </v-expansion-panel-content>-->
+<!--                        </v-expansion-panel>-->
+<!--                    </v-flex>-->
 
                 </v-layout>
 
@@ -296,6 +317,7 @@
     import 'codemirror/addon/fold/indent-fold.js'
     import 'codemirror/addon/fold/markdown-fold.js'
     import 'codemirror/addon/fold/xml-fold.js'
+    import Hostgroup from "../hostgroup/Hostgroup";
     export default {
         //========================================================================================================
         // COMPONENTS
@@ -322,6 +344,10 @@
         // DATA
         //========================================================================================================
         data: () => ({
+            hgError: false,
+            hgErrorMsg: null,
+            hgDone: false,
+            hgDoneMsg: null,
             hostGroupId: null,
             hostGroups: [],
             wip: false,
@@ -363,9 +389,11 @@
             search: null,
             caseSensitive: false,
             host: null,
+            SourceName: null,
             hosts: [],
             loadingPC: false,
-            tab: 0,
+            tab: 1,
+            creatingHG: false,
             pcNotify: false,
             pcNotifyMsg: null,
             parameterEditTitle: null,
@@ -385,25 +413,25 @@
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
-                if (localStorage.getItem("lastHost") !== null) {
-                    this.host =  localStorage.getItem('lastHost');
-                }
-                if (localStorage.getItem("lastTab") !== null) {
-                    this.tab =  localStorage.getItem('lastTab');
-                }
-                if (localStorage.getItem("jsonInput") !== null) {
-                    this.JSONCode = JSON.parse(localStorage.getItem('jsonInput'));
-                    this.JSONObject = JSON.parse(this.JSONCode);
-                    this.loadingPC = true;
-                    this.allPuppetClassesFull = (await pcService.allPC(this.host)).data;
-                    this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
-                    this.search = null;
-                    EditorMethods.resetPC(this);
-                    EditorMethods.checkPC(this);
-                    EditorMethods.sortPC(this);
-                    this.loadingPC = false;
-                }
-                this.hostGroups = (await hostGroupService.hgAllList()).data;
+                // if (localStorage.getItem("lastHost") !== null) {
+                //     this.host =  localStorage.getItem('lastHost');
+                // }
+                // if (localStorage.getItem("lastTab") !== null) {
+                //     this.tab =  localStorage.getItem('lastTab');
+                // }
+                // if (localStorage.getItem("jsonInput") !== null) {
+                //     this.JSONCode = JSON.parse(localStorage.getItem('jsonInput'));
+                //     this.JSONObject = JSON.parse(this.JSONCode);
+                //     this.loadingPC = true;
+                //     this.allPuppetClassesFull = (await pcService.All(this.host)).data;
+                //     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
+                //     this.search = null;
+                //     EditorMethods.resetPC(this);
+                //     EditorMethods.checkPC(this);
+                //     EditorMethods.sortPC(this);
+                //     this.loadingPC = false;
+                // }
+                this.hostGroups = (await hostGroupService.AllList()).data;
                 this.wip = false;
             } catch (e) {
                 console.error(e.message);
@@ -423,7 +451,7 @@
             host: {
                 async handler (val) {
                     this.loadingPC = true;
-                    this.allPuppetClassesFull = (await pcService.allPC(val)).data;
+                    this.allPuppetClassesFull = (await pcService.All(val)).data;
                     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
                     this.search = null;
                     localStorage.setItem('lastHost', val);
@@ -447,11 +475,11 @@
                 }
             },
             JSONObject: {
-                handler () {
+                handler (val) {
                     EditorMethods.resetPC(this);
                     EditorMethods.checkPC(this);
                     EditorMethods.sortPC(this);
-                    // this.JSONCode = JSON.stringify(val, " ", "  ");
+                    this.JSONCode = JSON.stringify(val, " ", "  ");
                 }
             },
             JSONCode:
@@ -495,7 +523,8 @@
                     this.loadingPC = true;
                     try {
                         this.search = null;
-                        this.hostGroup = (await hostGroupService.hg("spb01-puppet.lab.nordigy.ru", val)).data;
+                        this.hostGroup = (await hostGroupService.Get(this.host, val)).data;
+                        this.SourceName = this.hostGroup.name;
                         this.JSONObject = this.hostGroup;
                         let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                         this.puppetClasses = pcData.PuppetClasses;
@@ -513,6 +542,23 @@
         // METHODS
         //========================================================================================================
         methods: {
+            async save () {
+                this.hgError = false;
+                this.hgDone = false;
+                this.creatingHG = true;
+                this.JSONObject["source_name"] = this.SourceName;
+                try {
+                    await hostGroupService.Create(this.JSONObject, this.host);
+                    this.hgDone = true;
+                    this.hgDoneMsg = `${this.JSONObject.name} Created`
+                } catch (e) {
+                    this.hgError = true;
+                    console.info(e);
+                    this.hgErrorMsg = e;
+                } finally {
+                    this.creatingHG = false;
+                }
+            },
             addPuppetClass (data) {
                 this.pcNotify = false;
                 if (this.JSONObject.puppet_classes.hasOwnProperty(data.Class)) {
