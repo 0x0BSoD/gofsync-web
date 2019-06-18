@@ -62,16 +62,20 @@
                     </v-flex>
                     <v-flex ml-5 xs5>
                         <v-layout row wrap>
-                            <v-flex xs4 mr-3>
+                            <v-flex xs4 mr-3 mt-1>
                                 <v-text-field
+                                        solo
                                         label="Host Group name"
                                         v-model="hgName"
+                                        :disabled="tab === 1"
                                 ></v-text-field>
                             </v-flex>
-                            <v-flex xs4>
+                            <v-flex xs4 mt-1>
                                 <v-text-field
+                                        solo
                                         label="Environment name"
                                         v-model="envName"
+                                        :disabled="tab === 1"
                                 ></v-text-field>
                             </v-flex>
                             <v-flex xs2>
@@ -92,9 +96,9 @@
                     fixed-tabs
                     v-model="tab"
                 >
-<!--                    <v-tab>-->
-<!--                        Visual-->
-<!--                    </v-tab>-->
+                    <v-tab>
+                        Visual
+                    </v-tab>
                     <v-tab>
                         JSON
                     </v-tab>
@@ -122,55 +126,55 @@
 <!--================================================================================================================-->
 
 
-<!--                    <v-flex xs12 v-if="tab === 0">-->
-<!--                        <v-expansion-panel focusable>-->
-<!--                            <v-expansion-panel-content-->
-<!--                                    v-for="(val, idx) in JSONObject.puppet_classes"-->
-<!--                                    :key="idx"-->
-<!--                            >-->
-<!--                                <template v-slot:header>-->
-<!--                                    <div>{{idx}}</div>-->
-<!--                                </template>-->
-<!--                                <v-card>-->
-<!--                                    <v-card-text class="grey lighten-3">-->
-<!--                                        <v-card-->
-<!--                                                v-for="(sc, jdx) in val"-->
-<!--                                                :key="jdx"-->
-<!--                                                class="mb-1"-->
-<!--                                                v-if="sc"-->
-<!--                                        >-->
-<!--                                            <v-expansion-panel focusable v-if="sc.smart_classes" class="pcPanel">-->
-<!--                                                <v-expansion-panel-content>-->
-<!--                                                    <template v-slot:header>-->
-<!--                                                        {{sc.subclass}}-->
-<!--                                                        <v-spacer></v-spacer>-->
-<!--                                                        <v-chip class="puppetLabel" v-if="sc.overrides" label>have overrides</v-chip>-->
-<!--                                                        <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>-->
-<!--                                                    </template>-->
-<!--                                                    <v-card>-->
-<!--                                                        <v-card-actions-->
-<!--                                                                v-for="(scp, i) in sc.smart_classes"-->
-<!--                                                                :key="i"-->
-<!--                                                        >-->
-<!--                                                            {{scp}}-->
-<!--                                                            <v-spacer></v-spacer>-->
-<!--                                                            <v-chip class="puppetLabel" v-if="sc.overrides && sc.overrides.includes(scp)" label>have overrides</v-chip>-->
-<!--                                                            <v-btn class="puppetLabel" color="primary" icon @click.stop="editDialog(idx, sc.subclass, scp)"><v-icon>edit</v-icon></v-btn>-->
-<!--                                                        </v-card-actions>-->
-<!--                                                    </v-card>-->
-<!--                                                </v-expansion-panel-content>-->
-<!--                                            </v-expansion-panel>-->
-<!--                                            <v-card-actions v-else>-->
-<!--                                                {{sc.subclass}}-->
-<!--                                                <v-spacer></v-spacer>-->
-<!--                                                <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>-->
-<!--                                            </v-card-actions>-->
-<!--                                        </v-card>-->
-<!--                                    </v-card-text>-->
-<!--                                </v-card>-->
-<!--                            </v-expansion-panel-content>-->
-<!--                        </v-expansion-panel>-->
-<!--                    </v-flex>-->
+                    <v-flex xs12 v-if="tab === 0">
+                        <v-expansion-panel focusable>
+                            <v-expansion-panel-content
+                                    v-for="(val, idx) in JSONObject.puppet_classes"
+                                    :key="idx"
+                            >
+                                <template v-slot:header>
+                                    <div>{{idx}}</div>
+                                </template>
+                                <v-card>
+                                    <v-card-text class=" grey lighten-3">
+                                        <v-card
+                                                v-for="(sc, jdx) in val"
+                                                :key="jdx"
+                                                class="mb-1"
+                                                v-if="sc"
+                                        >
+                                            <v-expansion-panel focusable v-if="sc.smart_classes" class="pcPanel">
+                                                <v-expansion-panel-content>
+                                                    <template v-slot:header>
+                                                        {{sc.subclass}}
+                                                        <v-spacer></v-spacer>
+                                                        <v-chip class="puppetLabel" v-if="sc.overrides" label>have overrides</v-chip>
+                                                        <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>
+                                                    </template>
+                                                    <v-card>
+                                                        <v-card-actions
+                                                                v-for="(scp, i) in sc.smart_classes"
+                                                                :key="i"
+                                                        >
+                                                            {{scp.name}}
+                                                            <v-spacer></v-spacer>
+                                                            <v-chip class="puppetLabel" v-if="labelCheck(sc.overrides, scp.name)" label>override</v-chip>
+                                                            <v-btn class="puppetLabel" color="ml-2 primary" icon @click.stop="editDialog(idx, sc.subclass, scp.name)"><v-icon>edit</v-icon></v-btn>
+                                                        </v-card-actions>
+                                                    </v-card>
+                                                </v-expansion-panel-content>
+                                            </v-expansion-panel>
+                                            <v-card-actions v-else class="pt-3 pb-3">
+                                                {{sc.subclass}}
+                                                <v-spacer></v-spacer>
+                                                <v-btn class="puppetLabel" color="warning" icon @click.stop="rmPC(idx, sc.subclass)"><v-icon>delete</v-icon></v-btn>
+                                            </v-card-actions>
+                                        </v-card>
+                                    </v-card-text>
+                                </v-card>
+                            </v-expansion-panel-content>
+                        </v-expansion-panel>
+                    </v-flex>
 
                 </v-layout>
 
@@ -215,8 +219,10 @@
 
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn flat>save</v-btn>
-                    <v-btn flat color="warning">CLEAR OVERRIDE</v-btn>
+                    <v-btn color="success" @click="storeOverride()" flat>save</v-btn>
+                    <v-btn flat @click="dialogParamEditor = false">cancel</v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn flat :disabled="!parameterEditValue" color="warning">CLEAR OVERRIDE</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -344,6 +350,8 @@
         // DATA
         //========================================================================================================
         data: () => ({
+            class: null,
+            dump: null,
             hgError: false,
             hgErrorMsg: null,
             hgDone: false,
@@ -413,24 +421,6 @@
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
-                // if (localStorage.getItem("lastHost") !== null) {
-                //     this.host =  localStorage.getItem('lastHost');
-                // }
-                // if (localStorage.getItem("lastTab") !== null) {
-                //     this.tab =  localStorage.getItem('lastTab');
-                // }
-                // if (localStorage.getItem("jsonInput") !== null) {
-                //     this.JSONCode = JSON.parse(localStorage.getItem('jsonInput'));
-                //     this.JSONObject = JSON.parse(this.JSONCode);
-                //     this.loadingPC = true;
-                //     this.allPuppetClassesFull = (await pcService.All(this.host)).data;
-                //     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
-                //     this.search = null;
-                //     EditorMethods.resetPC(this);
-                //     EditorMethods.checkPC(this);
-                //     EditorMethods.sortPC(this);
-                //     this.loadingPC = false;
-                // }
                 this.hostGroups = (await hostGroupService.AllList()).data;
                 this.wip = false;
             } catch (e) {
@@ -448,16 +438,6 @@
                   localStorage.setItem('lastTab', val);
               }
             },
-            host: {
-                async handler (val) {
-                    this.loadingPC = true;
-                    this.allPuppetClassesFull = (await pcService.All(val)).data;
-                    this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
-                    this.search = null;
-                    localStorage.setItem('lastHost', val);
-                    this.loadingPC = false;
-                }
-            },
             search: {
                 async handler (val) {
                     if (this.search) {
@@ -474,22 +454,11 @@
                     }
                 }
             },
-            JSONObject: {
-                handler (val) {
-                    EditorMethods.resetPC(this);
-                    EditorMethods.checkPC(this);
-                    EditorMethods.sortPC(this);
-                    this.JSONCode = JSON.stringify(val, " ", "  ");
-                }
-            },
             JSONCode:
                 _.debounce(async function (val) {
-                    // this.search = null;
-                    // this.loadingPC = true;
-                    // this.allPuppetClasses = {};
                     try {
                         let HGObject = JSON.parse(val);
-                        this.JSONObject = HGObject;
+                        // this.JSONObject = HGObject;
                         this.jsonError = false;
                         localStorage.setItem('jsonInput', JSON.stringify(val));
                         this.hgName = HGObject.name;
@@ -503,16 +472,10 @@
                             this.jsonError = true;
                             this.jsonMsg = "Environment required";
                         }
-
-                        EditorMethods.resetPC(this);
-                        EditorMethods.checkPC(this);
-                        EditorMethods.sortPC(this);
-
-                        this.loadingPC = false;
                     } catch (e) {
                         let err_msg =  e.message;
                         let msg = err_msg.split(":");
-                        console.log("Error in JSON ", msg);
+                        console.info("Error in JSON ", msg);
                         this.jsonError = true;
                         this.jsonMsg = msg[1];
                     }
@@ -528,7 +491,10 @@
                         this.JSONObject = this.hostGroup;
                         let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                         this.puppetClasses = pcData.PuppetClasses;
-
+                        this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+                        EditorMethods.resetPC(this);
+                        EditorMethods.checkPC(this);
+                        EditorMethods.sortPC(this);
                         this.loadingPC = false;
                     } catch (e) {
                         console.error(e);
@@ -542,10 +508,35 @@
         // METHODS
         //========================================================================================================
         methods: {
+            storeOverride () {
+                console.log(this.parameterEditTitle);
+                console.log(this.parameterEditValue);
+                console.log(this.dump);
+
+                let _subclass = this.parameterEditTitle.split("=>")[0].trim();
+                let _parameter = this.parameterEditTitle.split("=>")[1].trim();
+                let _class = this.JSONObject.puppet_classes[this.class];
+
+                for (let i in _class) {
+                    if (_class[i]["subclass"] === _subclass) {
+                        if (_class[i].hasOwnProperty("overrides")) {
+                            for (let j in _class[i]["overrides"]) {
+                                if (_class[i]["overrides"][j]["parameter"] === _parameter) {
+                                    console.log(_class[i]["overrides"][j]);
+                                }
+                            }
+                        } else {
+                            console.log("new");
+                        }
+                    }
+                }
+
+            },
             async save () {
                 this.hgError = false;
                 this.hgDone = false;
                 this.creatingHG = true;
+                this.JSONObject = JSON.parse(this.JSONCode);
                 this.JSONObject["source_name"] = this.SourceName;
                 try {
                     await hostGroupService.Create(this.JSONObject, this.host);
@@ -593,8 +584,7 @@
                 this.pcNotify = true;
             },
             async editDialog (_class, subClass, parameter) {
-                this.parameterEditTitle = null;
-                this.parameterEditValue = null;
+
                 this.parameterEditType = null;
                 this.parameterEditDefaultValue = null;
 
@@ -605,13 +595,35 @@
                     if (this.JSONObject.puppet_classes[_class][i].hasOwnProperty("overrides")) {
                         for (let j in this.JSONObject.puppet_classes[_class][i]["overrides"]) {
                             if (this.JSONObject.puppet_classes[_class][i]["overrides"][j]["parameter"] === parameter) {
-                                console.log(this.JSONObject.puppet_classes[_class][i]["overrides"][j]);
                                 this.parameterEditValue = this.JSONObject.puppet_classes[_class][i]["overrides"][j]["value"];
                                 try {
                                     let _id = this.JSONObject.puppet_classes[_class][i]["overrides"][j]["smart_class_id"];
                                     let dump = JSON.parse((await SmartClassesService.getById(_id)).data["Dump"]);
+                                    this.dump = dump;
+                                    this.class = _class;
                                     this.parameterEditType = dump["parameter_type"];
                                     this.parameterEditDefaultValue = `Default: ${dump["default_value"]!=="" ? dump["default_value"] :"NOPE"}`;
+                                    this.dialogParamEditor = true;
+                                    return ;
+                                }catch (e) {
+                                    this.parameterEditType = "NOPE";
+                                }
+                            }
+                        }
+                    }
+                    if (this.JSONObject.puppet_classes[_class][i].hasOwnProperty("smart_classes")) {
+                        for (let j in this.JSONObject.puppet_classes[_class][i]["smart_classes"]) {
+                            if (this.JSONObject.puppet_classes[_class][i]["smart_classes"][j]["name"] === parameter) {
+                                // this.parameterEditValue = this.JSONObject.puppet_classes[_class][i]["overrides"][j]["value"];
+                                try {
+                                    let _id = this.JSONObject.puppet_classes[_class][i]["smart_classes"][j]["id"];
+                                    let dump = JSON.parse((await SmartClassesService.getById(_id)).data["Dump"]);
+                                    this.dump = dump;
+                                    this.class = _class;
+                                    this.parameterEditType = dump["parameter_type"];
+                                    this.parameterEditDefaultValue = `Default: ${dump["default_value"]!=="" ? dump["default_value"] :"NOPE"}`;
+                                    this.dialogParamEditor = true;
+                                    return ;
                                 }catch (e) {
                                     this.parameterEditType = "NOPE";
                                 }
@@ -620,7 +632,6 @@
                     }
                 }
 
-                this.dialogParamEditor = true;
             },
             rmPC (_class, subClass) {
                 this.pcNotify = false;
@@ -659,6 +670,14 @@
                     console.error('The File APIs are not fully supported in this browser.');
                 }
             },
+            labelCheck (item, name) {
+                for (let i in item) {
+                    if (item[i].parameter === name) {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
     }
 </script>
