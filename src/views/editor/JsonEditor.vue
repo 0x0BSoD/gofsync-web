@@ -96,9 +96,9 @@
                     fixed-tabs
                     v-model="tab"
                 >
-                    <v-tab>
-                        Visual
-                    </v-tab>
+<!--                    <v-tab>-->
+<!--                        Visual-->
+<!--                    </v-tab>-->
                     <v-tab>
                         JSON
                     </v-tab>
@@ -117,6 +117,7 @@
         <v-layout row wrap>
                     <v-flex xs12 mb-3>
                         <v-btn
+                                v-if="host"
                                 small
                                 @click.stop="dialogPuppetClasses = true"
                                 :loading="loadingPC"
@@ -262,18 +263,18 @@
                                 :key="k"
                             >
                                 <v-card-text
-                                        v-if="!lval.InHostGroup"
+                                        v-if="!lval.in_host_group"
                                 >
                                     <v-layout row>
                                         <v-flex xs10>
-                                            {{lval.SubClass}}
+                                            {{lval.sub_class}}
                                         </v-flex>
                                         <v-flex xs2>
                                             <v-tooltip bottom>
                                                 <template v-slot:activator="{ on }">
                                                     <v-btn small color="primary" v-on="on" @click="addPuppetClass(lval)">add</v-btn>
                                                 </template>
-                                                <span>{{lval.SubClass}}</span>
+                                                <span>{{lval.sub_class}}</span>
                                             </v-tooltip>
 
                                         </v-flex>
@@ -323,7 +324,6 @@
     import 'codemirror/addon/fold/indent-fold.js'
     import 'codemirror/addon/fold/markdown-fold.js'
     import 'codemirror/addon/fold/xml-fold.js'
-    import Hostgroup from "../hostgroup/Hostgroup";
     export default {
         //========================================================================================================
         // COMPONENTS
@@ -435,8 +435,21 @@
         watch: {
             tab: {
               handler (val) {
-                  localStorage.setItem('lastTab', val);
+                  if (val === 0) {
+                      this.JSONObject = JSON.parse(this.JSONCode);
+                  } else {
+                      this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+                  }
               }
+            },
+            host: {
+                async handler (val) {
+                    this.loadingPC = true;
+                    this.allPuppetClassesFull = (await pcService.All(val)).data;
+                    this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
+                    this.search = null;
+                    this.loadingPC = false;
+                }
             },
             search: {
                 async handler (val) {
@@ -454,13 +467,21 @@
                     }
                 }
             },
-            JSONCode:
-                _.debounce(async function (val) {
+            hgName: {
+                async handler (val) {
+                    this.JSONObject.name = val;
+                }
+            },
+            envName: {
+                async handler (val) {
+                    this.JSONObject.environment = val;
+                }
+            },
+            JSONCode: {
+                async handler (val) {
                     try {
                         let HGObject = JSON.parse(val);
-                        // this.JSONObject = HGObject;
                         this.jsonError = false;
-                        localStorage.setItem('jsonInput', JSON.stringify(val));
                         this.hgName = HGObject.name;
                         this.envName = HGObject.environment;
 
@@ -473,13 +494,14 @@
                             this.jsonMsg = "Environment required";
                         }
                     } catch (e) {
-                        let err_msg =  e.message;
+                        let err_msg = e.message;
                         let msg = err_msg.split(":");
                         console.info("Error in JSON ", msg);
                         this.jsonError = true;
                         this.jsonMsg = msg[1];
                     }
-                }, 1000),
+                }
+            },
             hostGroupId: {
                 async handler (val) {
                     this.allPuppetClasses = {};
@@ -530,7 +552,6 @@
                         }
                     }
                 }
-
             },
             async save () {
                 this.hgError = false;
@@ -544,35 +565,35 @@
                     this.hgDoneMsg = `${this.JSONObject.name} Created`
                 } catch (e) {
                     this.hgError = true;
-                    console.info(e);
-                    this.hgErrorMsg = e;
+                    console.info(e.response);
+                    this.hgErrorMsg = e.response.data;
                 } finally {
                     this.creatingHG = false;
                 }
             },
             addPuppetClass (data) {
                 this.pcNotify = false;
-                if (this.JSONObject.puppet_classes.hasOwnProperty(data.Class)) {
-                    if (data.Parameters) {
-                        this.JSONObject.puppet_classes[data.Class].push({
-                            "subclass": data.SubClass,
-                            "smart_classes": data.Parameters.map(item => item.Name),
+                if (this.JSONObject.puppet_classes.hasOwnProperty(data.class)) {
+                    if (data.parameters) {
+                        this.JSONObject.puppet_classes[data.class].push({
+                            "subclass": data.sub_class,
+                            "smart_classes": data.parameters.map(item => { return {"name": item.name, "foreman_id": item.foreman_id, "id": item.id}}),
                         });
                     } else {
-                        this.JSONObject.puppet_classes[data.Class].push({
-                            "subclass": data.SubClass,
+                        this.JSONObject.puppet_classes[data.class].push({
+                            "subclass": data.sub_class,
                         });
                     }
-                    data.InHostGroup = true;
+                    data.in_host_group = true;
                 } else {
-                    if (data.Parameters) {
-                        this.JSONObject.puppet_classes[data.Class]=([{
-                            "subclass": data.SubClass,
-                            "smart_classes": data.Parameters.map(item => item.Name),
+                    if (data.parameters) {
+                        this.JSONObject.puppet_classes[data.class]=([{
+                            "subclass": data.sub_class,
+                            "smart_classes": data.parameters.map(item => { return {"name": item.name, "foreman_id": item.foreman_id, "id": item.id}}),
                         }]);
                     } else {
-                        this.JSONObject.puppet_classes[data.Class]=([{
-                            "subclass": data.SubClass,
+                        this.JSONObject.puppet_classes[data.class]=([{
+                            "subclass": data.sub_class,
                         }]);
                     }
                     data.InHostGroup = true;
