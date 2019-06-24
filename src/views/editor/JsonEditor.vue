@@ -596,12 +596,12 @@
                             "subclass": data.sub_class,
                         }]);
                     }
-                    data.InHostGroup = true;
+                    data.in_host_group = true;
                 }
 
                 EditorMethods.sortPC(this);
                 this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
-                this.pcNotifyMsg = `${data.Class} => ${data.SubClass} Added`;
+                this.pcNotifyMsg = `${data.class} => ${data.sub_class} Added`;
                 this.pcNotify = true;
             },
             async editDialog (_class, subClass, parameter) {
