@@ -78,12 +78,20 @@
                                         :disabled="tab === 1"
                                 ></v-text-field>
                             </v-flex>
-                            <v-flex xs2>
+                            <v-flex xs2 v-if="existingHG">
                                 <v-btn
                                         large
                                         @click="save()"
                                         :loading="creatingHG"
-                                        :disabled="creatingHG"
+                                        :disabled="creatingHG || !hgName"
+                                >update</v-btn>
+                            </v-flex>
+                            <v-flex xs2 v-else>
+                                <v-btn
+                                        large
+                                        @click="save()"
+                                        :loading="creatingHG"
+                                        :disabled="creatingHG || !hgName"
                                 >save</v-btn>
                             </v-flex>
                         </v-layout>
@@ -96,9 +104,9 @@
                     fixed-tabs
                     v-model="tab"
                 >
-<!--                    <v-tab>-->
-<!--                        Visual-->
-<!--                    </v-tab>-->
+                    <v-tab>
+                        Visual
+                    </v-tab>
                     <v-tab>
                         JSON
                     </v-tab>
@@ -402,6 +410,7 @@
             loadingPC: false,
             tab: 1,
             creatingHG: false,
+            existingHG: false,
             pcNotify: false,
             pcNotifyMsg: null,
             parameterEditTitle: null,
@@ -421,7 +430,7 @@
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
-                this.hostGroups = (await hostGroupService.AllList()).data;
+                // this.hostGroups = (await hostGroupService.AllList()).data;
                 this.wip = false;
             } catch (e) {
                 console.error(e.message);
@@ -445,6 +454,7 @@
             host: {
                 async handler (val) {
                     this.loadingPC = true;
+                    this.hostGroups = (await hostGroupService.List(val)).data;
                     this.allPuppetClassesFull = (await pcService.All(val)).data;
                     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
                     this.search = null;
@@ -470,6 +480,14 @@
             hgName: {
                 async handler (val) {
                     this.JSONObject.name = val;
+                    _.delay(async function(t) {
+                        t.creatingHG = true;
+                        let fchg = (await hostGroupService.FCheck(t.host, t.hostGroup.name)).data;
+                        console.info(fchg);
+                        t.existingHG = fchg.id !== -1;
+                        t.creatingHG = false;
+                    }, 1000, this);
+
                 }
             },
             envName: {
@@ -561,6 +579,9 @@
                 this.JSONObject["source_name"] = this.SourceName;
                 try {
                     await hostGroupService.Create(this.JSONObject, this.host);
+                    let response = (await hostGroupService.FUpdate(this.host, this.hostGroup.name)).data;
+                    this.hostGroups = (await hostGroupService.List(this.host)).data;
+                    this.JSONCode = JSON.stringify(response, " ", "  ");
                     this.hgDone = true;
                     this.hgDoneMsg = `${this.JSONObject.name} Created`
                 } catch (e) {

@@ -865,7 +865,6 @@
                     }
                     this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     // fill puppet classes info
-x
                     let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
                     let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                     this.targPc = targetPCData.PuppetClasses;
