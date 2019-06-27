@@ -418,14 +418,6 @@
         //========================================================================================================
         // SOCKET
         //========================================================================================================
-        // socket: {
-        //     connect: function () {
-        //         console.log("Socket server: Connected");
-        //     },
-        //     disconnect: function () {
-        //         console.log("Socket server: Disconnected");
-        //     },
-        // },
 
         //========================================================================================================
         // MOUNTED
@@ -433,7 +425,6 @@
         async mounted () {
             // User check ==========================================
             await Common.auth(this);
-
             // Load Hosts ==========================================
             try {
                 this.wip = true;
@@ -451,15 +442,6 @@
                 && PuppetMethods.inHosts(this.hosts, this.$route.query.source)) {
                 this.sHost = this.$route.query.source;
             }
-            // if (this.$route.query.hasOwnProperty("env")) {
-            //     this.env = this.$route.query.env;
-            // }
-            // if (this.$route.query.hasOwnProperty("hg")) {
-            //     this.hostGroupId = this.$route.query.hg;
-            // }
-            // if (this.$route.query.hasOwnProperty("target")) {
-            //     this.tHost = this.$route.query.target;
-            // }
         },
 
         //========================================================================================================
@@ -519,12 +501,6 @@
                     }
                     this.Environments = result;
                     this.Environments.push("any");
-
-                    // if (this.$route.query.hasOwnProperty("source")) {
-                    //     this.$router.replace({query:{source: this.sHost}});
-                    // } else {
-                    //     this.$router.push({query:{"source": this.sHost}});
-                    // }
                 }
             },
             env: {
@@ -681,14 +657,6 @@
                         this.wip = false;
                         this.existData = true;
                     }
-                    // this.$router.push({
-                    //     query: {
-                    //         "source": this.sHost,
-                    //         "env": this.env,
-                    //         "hg": val,
-                    //         "target": this.tHost,
-                    //     }
-                    // });
                 }
             }
         },
@@ -706,7 +674,8 @@
                 let old_th = this.tHost;
 
                 try {
-                    await hostGroupService.Update(this.sHost, this.hostGroup.name);
+                    this.$connect();
+                    await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
@@ -716,6 +685,7 @@
                     this.pc = {};
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
+                    this.$disconnect();
                 } catch (e) {
                     console.error(e);
                     this.wip = false;

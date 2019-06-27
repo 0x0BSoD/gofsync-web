@@ -107,16 +107,34 @@
                                     <v-layout row wrap>
                                         <v-flex xs3>{{swe.tHost}}</v-flex>
                                         <v-flex xs1>{{swe.hgName}}</v-flex>
-                                        <v-flex xs2><v-chip label>{{swe.environment.name}}</v-chip></v-flex>
+                                        <v-flex xs2>
+                                            <v-chip label v-if="swe.environment.targetId === -1" color="red">{{swe.environment.name}}</v-chip>
+                                            <v-chip label v-else color="success">{{swe.environment.name}}</v-chip>
+                                        </v-flex>
                                         <v-flex xs5>
                                             <v-btn flat v-if="swe.process.checkInProgress">
                                                 Checking <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
                                             </v-btn>
+                                            <div v-else-if="swe.process.loadingInProgress">
+                                                <v-btn flat v-if="swe.foreman.targetId">
+                                                    Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                </v-btn>
+                                                <v-btn flat v-else>
+                                                    Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                </v-btn>
+                                                <v-chip label v-if="WSActions">{{WSActions}}</v-chip>
+                                                <v-chip label v-if="WSState">{{WSState}}</v-chip>
+                                            </div>
+                                            <div v-else-if="swe.process.done">
+                                                <v-chip label v-if="swe.foreman.targetId" color="success">Updated</v-chip>
+                                                <v-chip label v-else color="success">Uploaded</v-chip>
+                                            </div>
                                             <div v-else>
-                                                <v-chip label v-if="swe.foreman.targetId !== -1">Exist on host</v-chip>
+                                                <v-chip label v-if="swe.foreman.targetId">Exist on host</v-chip>
+                                                <v-chip label v-if="swe.environment.targetId === -1">No SWE on host</v-chip>
                                             </div>
                                         </v-flex>
-                                        <v-flex xs1><v-btn v-if="swe.hg_link" icon flat><a target="_blank" :rel="swe.hgName" :href="swe.hg_link"><v-icon>link</v-icon></a></v-btn></v-flex>
+                                        <v-flex xs1><v-btn v-if="swe.hg_link" icon flat><a target="_blank" :rel="swe.hgName" :href="swe.hg_link"><v-icon>open_in_new</v-icon></a></v-btn></v-flex>
                                     </v-layout>
                                 </v-card-text>
                             </v-card>
@@ -171,67 +189,52 @@
             checkingSWE: null,
             checkResArray: [],
             checked: false,
+            WSState: false,
+            WSActions: false,
         }),
         async mounted () {
             // User check ==========================================
             await Common.auth(this);
-
+            this.$connect();
             try {
                 this.hosts = (await hostService.hosts()).data;
             } catch (e) {
                 console.error(e);
             }
         },
-        watch: {},
+        watch: {
+            hostGroupSelected: {
+                async handler (val) {
+                    console.log(val);
+                }
+            },
+            nowActions: {
+                async handler (val) {
+                    let data = (await val);
+                    if (data.hasOwnProperty("done")) {
+                        for (let i in this.checkRes[data.tHost]) {
+                            if (data.hgName === this.checkRes[data.tHost][i].hgName) {
+                                this.checkRes[data.tHost][i].process.done = data.done;
+                                this.checkRes[data.tHost][i].process.loadingInProgress = data.in_progress;
+                            }
+                        }
+                        this.$forceUpdate();
+                    } else {
+                        try {
+                            this.WSActions = val.action;
+                            this.WSState = val.state
+                        } catch (e) {
+                            this.WSActions = false;
+                            this.WSState = false;
+                        }
+                    }
+                }
+            },
+        },
         methods: {
             async startJob () {
                 this.started = true;
-                for (let i in this.checkRes) {
-                    if (this.checkRes[i].environment) {
-                        // Build POST parameters
-                        let data = {
-                            source_host: this.sHost,
-                            target_host: this.checkRes[i].tHost,
-                            source_hg_id: this.checkRes[i].source_hg_id.hgId,
-                            db_update: true,
-                        };
-                        // Commit new data
-                        try {
-                            this.checkRes[i].wipText = "Uploading";
-                            this.checkRes[i].wip = true;
-                            if (!this.checkRes[i].source_hg_id.updated) {
-                                await hostGroupService.FUpdate(this.checkRes[i].sHost, this.checkRes[i].hgName);
-                                this.checkRes[i].source_hg_id.updated = true;
-                            }
-                            await hostGroupService.Send(data);
-                            this.checkRes[i].wip = false;
-                            this.checkRes[i].uploaded = true;
-                        } catch (e) {
-                            console.error(e);
-                            this.checkRes[i].error = true;
-                        }
-                    }
-                    // this.checkRes[i].wip = false;
-                }
-
-                for (let i in this.checkRes) {
-                    if (this.checkRes[i].environment) {
-                        if (!this.checkRes[i].error) {
-                            // Commit new data
-                            try {
-                                this.checkRes[i].wip = true;
-                                this.checkRes[i].wipText = "Updating";
-                                await hostGroupService.FUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName);
-                                this.checkRes[i].wip = false;
-                                this.checkRes[i].updated = true;
-                            } catch (e) {
-                                console.error(e);
-                                this.checkRes[i].error = true;
-                            }
-                        }
-                    }
-                }
-
+                await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
             },
             async getHostGroups() {
@@ -262,6 +265,7 @@
                                 id: hostGroup.id,
                                 hgName: hostGroup.name,
                                 tHost: this.tHost[target],
+                                sHost: this.sHost,
                                 environment: {
                                     name: hostGroup.environment,
                                     targetId: null,
@@ -269,13 +273,12 @@
                                 hg_link: null,
                                 foreman: {
                                     targetId: null,
-                                    sourceId: hostGroup.foreman_id,
+                                    sourceId: hostGroup.id,
                                 },
                                 process: {
                                     checkInProgress: true,
                                     loadingInProgress: false,
-                                    uploaded: false,
-                                    updated: false,
+                                    done: false,
                                 },
                                 ws: {
                                     state: true,
@@ -296,7 +299,7 @@
                             host: target,
                             env: this.checkRes[target][i].environment.name
                         };
-                        this.checkRes[target][i].environment.targetId = (await environmentService.Check(envData)).data;
+                        this.checkRes[target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
                         let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes[target][i].hgName)).data;
                         if (foremanStatus.id !== -1) {
                             this.checkRes[target][i].foreman.targetId = foremanStatus.id;
