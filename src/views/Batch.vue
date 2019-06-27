@@ -94,77 +94,50 @@
                 <v-stepper-content step="4">
                     <v-card>
                         <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">Checking</v-card-title>
-                        <v-layout row wrap v-if="!checked">
-                            <v-flex xs12 class="text-sm-center mt-3">
-                                <v-chip color="font-weight-regular">{{checkingHost}}</v-chip>
-                            </v-flex>
-                            <v-flex xs12 class="text-sm-center mb-3">
-                                <v-chip color="font-weight-regular blue-grey white--text">{{checkingSWE}}</v-chip>
-                            </v-flex>
-                            <v-flex xs12 class="text-sm-center mt-3 mb-3">
-                                <fingerprint-spinner
-                                        class="spinner"
-                                        :animation-duration="1500"
-                                        :size="64"
-                                        color="#314549"
-                                />
-                            </v-flex>
-                        </v-layout>
                         <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks Result</v-card-title>
-                        <v-card-text v-if="checked" v-for="(val, idx) in checkRes" :key="idx">
-                            <v-layout v-if="started">
-
-                                <v-flex xs3>{{val.tHost}}</v-flex>
-                                <v-flex xs3>{{val.hgName}}</v-flex>
-
-                                <v-flex xs6>
-
-                                    <v-chip label color="primary" text-color="white" v-if="val.wip && !val.error">
-                                        <span class="custom-loader">
-                                            <v-icon light>cached</v-icon>
-                                        </span>
-                                        {{val.wipText}}
-                                    </v-chip>
-                                    <v-chip label color="primary" text-color="white" v-else-if="!val.wip">
-                                        <v-icon left>watch_later</v-icon>Idle
-                                    </v-chip>
-
-                                    <v-chip label color="success" text-color="white" v-if="val.uploaded">
-                                        <v-icon left>done</v-icon>Uploaded
-                                    </v-chip>
-                                    <v-chip label color="primary" text-color="white" v-if="val.updated">
-                                        <v-icon left>done</v-icon>Updated
-                                    </v-chip>
-
-                                    <v-chip label v-if="val.wip && nowActions && !val.error">{{nowActions.actions}}</v-chip>
-                                    <v-chip label v-if="val.wip && nowActions.state && !val.error">{{nowActions.state}}</v-chip>
-
-                                    <v-chip label v-if="val.error" color="error">Errored</v-chip>
-
-                                </v-flex>
-                            </v-layout>
-
-                           <v-layout row v-else>
-                               <v-flex xs3>{{val.tHost}}</v-flex>
-                               <v-flex xs3>{{val.hgName}}</v-flex>
-                               <v-flex xs6 class="text-xs-center">
-                                   <v-chip label color="warning" v-if="val.foremanCheckHG">Exist</v-chip>
-                                   <v-chip label color="success" v-else>Add new</v-chip>
-
-                                   <v-chip label color="success" text-color="white" v-if="val.uploaded">
-                                       <v-icon left>done_all</v-icon>Done
-                                   </v-chip>
-
-                                   <v-chip label v-if="val.environment === -1">Env not exist, will be skipped</v-chip>
-                                   <v-tooltip bottom v-if="val.foremanCheckHG && !val.error">
-                                       <template v-slot:activator="{ on }">
-                                           <v-btn icon small><a target="_blank" v-on="on" :rel="val.hgName" :href="val.hg_link"><v-icon>link</v-icon></a></v-btn>
-                                       </template>
-                                       <span>{{val.hgName}} link</span>
-                                   </v-tooltip>
-                                   <v-chip label v-else color="error">Errored</v-chip>
-                               </v-flex>
-                           </v-layout>
+                        <v-card-text
+                            v-for="(swes, host) in checkRes"
+                            :key="host"
+                        >
+                            <v-card
+                                v-for="(swe, idx) in swes"
+                                :key="idx"
+                            >
+                                <v-card-text>
+                                    <v-layout row wrap>
+                                        <v-flex xs3>{{swe.tHost}}</v-flex>
+                                        <v-flex xs1>{{swe.hgName}}</v-flex>
+                                        <v-flex xs2>
+                                            <v-chip label v-if="swe.environment.targetId === -1" color="red">{{swe.environment.name}}</v-chip>
+                                            <v-chip label v-else color="success">{{swe.environment.name}}</v-chip>
+                                        </v-flex>
+                                        <v-flex xs5>
+                                            <v-btn flat v-if="swe.process.checkInProgress">
+                                                Checking <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                            </v-btn>
+                                            <div v-else-if="swe.process.loadingInProgress">
+                                                <v-btn flat v-if="swe.foreman.targetId">
+                                                    Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                </v-btn>
+                                                <v-btn flat v-else>
+                                                    Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                </v-btn>
+                                                <v-chip label v-if="WSActions">{{WSActions}}</v-chip>
+                                                <v-chip label v-if="WSState">{{WSState}}</v-chip>
+                                            </div>
+                                            <div v-else-if="swe.process.done">
+                                                <v-chip label v-if="swe.foreman.targetId" color="success">Updated</v-chip>
+                                                <v-chip label v-else color="success">Uploaded</v-chip>
+                                            </div>
+                                            <div v-else>
+                                                <v-chip label v-if="swe.foreman.targetId">Exist on host</v-chip>
+                                                <v-chip label v-if="swe.environment.targetId === -1">No SWE on host</v-chip>
+                                            </div>
+                                        </v-flex>
+                                        <v-flex xs1><v-btn v-if="swe.hg_link" icon flat><a target="_blank" :rel="swe.hgName" :href="swe.hg_link"><v-icon>open_in_new</v-icon></a></v-btn></v-flex>
+                                    </v-layout>
+                                </v-card-text>
+                            </v-card>
                         </v-card-text>
                     </v-card>
 
@@ -184,7 +157,7 @@
 <script>
     import { hostGroupService, environmentService, hostService } from "../_services"
     import { Common } from "./methods";
-    import { FingerprintSpinner } from 'epic-spinners'
+    import { LoopingRhombusesSpinner } from 'epic-spinners'
 
     export default {
         //========================================================================================================
@@ -197,7 +170,7 @@
         },
 
         components: {
-            FingerprintSpinner
+            LoopingRhombusesSpinner
         },
 
         data: () => ({
@@ -214,145 +187,136 @@
             wipUploading: true,
             checkingHost: null,
             checkingSWE: null,
+            checkResArray: [],
             checked: false,
+            WSState: false,
+            WSActions: false,
         }),
         async mounted () {
             // User check ==========================================
             await Common.auth(this);
-
+            this.$connect();
             try {
                 this.hosts = (await hostService.hosts()).data;
             } catch (e) {
                 console.error(e);
             }
         },
-        watch: {},
+        watch: {
+            hostGroupSelected: {
+                async handler (val) {
+                    console.log(val);
+                }
+            },
+            nowActions: {
+                async handler (val) {
+                    let data = (await val);
+                    if (data.hasOwnProperty("done")) {
+                        for (let i in this.checkRes[data.tHost]) {
+                            if (data.hgName === this.checkRes[data.tHost][i].hgName) {
+                                this.checkRes[data.tHost][i].process.done = data.done;
+                                this.checkRes[data.tHost][i].process.loadingInProgress = data.in_progress;
+                            }
+                        }
+                        this.$forceUpdate();
+                    } else {
+                        try {
+                            this.WSActions = val.action;
+                            this.WSState = val.state
+                        } catch (e) {
+                            this.WSActions = false;
+                            this.WSState = false;
+                        }
+                    }
+                }
+            },
+        },
         methods: {
             async startJob () {
                 this.started = true;
-                for (let i in this.checkRes) {
-                    if (this.checkRes[i].environment) {
-                        // Build POST parameters
-                        let data = {
-                            source_host: this.sHost,
-                            target_host: this.checkRes[i].tHost,
-                            source_hg_id: this.checkRes[i].source_hg_id.hgId,
-                            db_update: true,
-                        };
-                        // Commit new data
-                        try {
-                            this.checkRes[i].wipText = "Uploading";
-                            this.checkRes[i].wip = true;
-                            if (!this.checkRes[i].source_hg_id.updated) {
-                                await hostGroupService.FUpdate(this.checkRes[i].sHost, this.checkRes[i].hgName);
-                                this.checkRes[i].source_hg_id.updated = true;
-                            }
-                            await hostGroupService.Send(data);
-                            this.checkRes[i].wip = false;
-                            this.checkRes[i].uploaded = true;
-                        } catch (e) {
-                            console.error(e);
-                            this.checkRes[i].error = true;
-                        }
-                    }
-                    // this.checkRes[i].wip = false;
-                }
-
-                for (let i in this.checkRes) {
-                    if (this.checkRes[i].environment) {
-                        if (!this.checkRes[i].error) {
-                            // Commit new data
-                            try {
-                                this.checkRes[i].wip = true;
-                                this.checkRes[i].wipText = "Updating";
-                                await hostGroupService.FUpdate(this.checkRes[i].tHost, this.checkRes[i].hgName);
-                                this.checkRes[i].wip = false;
-                                this.checkRes[i].updated = true;
-                            } catch (e) {
-                                console.error(e);
-                                this.checkRes[i].error = true;
-                            }
-                        }
-                    }
-                }
-
+                await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
             },
             async checks() {
-                this.started = false;
                 this.checked = false;
                 this.checkRes = {};
-                this.wip = true;
-                let res = [];
-
+                // build object for checking
+                for (let target in this.tHost) {
+                    if (this.tHost[target] !== this.sHost) {
+                        this.checkRes[this.tHost[target]] = [];
+                    }
+                }
+                // HG ID's loop
                 for (let hg in this.hostGroupSelected) {
+                    // try to get source HG
                     let hostGroup = {};
                     try {
                         hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
-                        this.checkingSWE = hostGroup.name;
                     } catch (e) {
                         this.wip = false;
                         return ;
                     }
                     for (let target in this.tHost) {
                         if (this.tHost[target] !== this.sHost) {
-                            this.checkingHost = this.tHost[target];
-                            let hgData = {
-                                source_host: this.sHost,
-                                target_host: this.tHost[target],
-                                source_hg_id: {"hgId": this.hostGroupSelected[hg], "updated": false},
-                                foremanCheckHG: false,
-                                error: false,
-                                wip: false,
-                            };
-
-                            let envData = {
-                                host: this.tHost[target],
-                                env: hostGroup.environment
-                            };
-                            let envExist = (await environmentService.Check(envData)).data;
-                            let hgExist = (await hostGroupService.Check(hgData)).data;
-                            let fchg = (await hostGroupService.FCheck(this.tHost[target], hostGroup.name)).data;
-                            let tmp = fchg.error != "not found";
-                            let targetId = null;
-                            let link = null;
-                            if (tmp) {
-                                let targetHgs = (await hostGroupService.List(this.tHost[target])).data;
-                                for (let j in targetHgs) {
-                                    if (targetHgs.hasOwnProperty(j)) {
-                                        if (targetHgs[j].name === hostGroup.name) {
-                                            targetId = targetHgs[j].id;
-                                            this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
-                                            let name = hostGroup.name.replace(/\./g, "-");
-                                            link = `https://${this.tHost[target]}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
-                                        }
-
-                                    }
-                                }
-                            }
-                            res.push({
-                                tHost: this.tHost[target],
+                            this.checkRes[this.tHost[target]].push({
+                                id: hostGroup.id,
                                 hgName: hostGroup.name,
-                                environment: envExist,
-                                hostgroup: hgExist,
-                                uploaded: false,
-                                updated: false,
-                                foremanCheckHG: tmp,
-                                foremanTargetId: targetId,
-                                source_hg_id: {"hgId": this.hostGroupSelected[hg], "updated": false},
-                                wip: false,
-                                wipText: "",
-                                hg_link: link,
-                            })
+                                tHost: this.tHost[target],
+                                sHost: this.sHost,
+                                environment: {
+                                    name: hostGroup.environment,
+                                    targetId: null,
+                                },
+                                hg_link: null,
+                                foreman: {
+                                    targetId: null,
+                                    sourceId: hostGroup.id,
+                                },
+                                process: {
+                                    checkInProgress: true,
+                                    loadingInProgress: false,
+                                    done: false,
+                                },
+                                ws: {
+                                    state: true,
+                                    msg: "",
+                                },
+                                error: {
+                                    state: false,
+                                    msg: "",
+                                },
+                            });
                         }
                     }
                 }
                 this.checked = true;
-                this.checkRes = res;
-                this.wip = false;
+                for (let target in this.checkRes) {
+                    for (let i in this.checkRes[target]) {
+                        let envData = {
+                            host: target,
+                            env: this.checkRes[target][i].environment.name
+                        };
+                        this.checkRes[target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
+                        let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes[target][i].hgName)).data;
+                        if (foremanStatus.id !== -1) {
+                            this.checkRes[target][i].foreman.targetId = foremanStatus.id;
+                            let targetHGList = (await hostGroupService.List(target)).data;
+                            for (let j in targetHGList) {
+                                if (targetHGList[j].name ===  this.checkRes[target][i].hgName) {
+                                   let ID = targetHGList[j].id;
+                                    let targetHG = (await hostGroupService.Get(target, ID)).data;
+                                    let HGNameLink =  this.checkRes[target][i].hgName.replace(/\./g, "-");
+                                    this.checkRes[target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
+                                }
+                            }
+                        }
+                        this.checkRes[target][i].process.checkInProgress = false;
+                        this.$forceUpdate();
+                    }
+                }
             },
         }
     }

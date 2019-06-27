@@ -9,7 +9,7 @@ export const hostGroupService = {
     Check,
     Send,
     Create,
-    AllList,
+    BatchSend,
 };
 
 // GET ===========================================
@@ -37,6 +37,9 @@ function Check(data) {
 }
 function Send(data) {
     return Api().post("/hg/upload", data);
+}
+function BatchSend(data) {
+    return Api().post("/hg/batch/upload", data);
 }
 function Update(host) {
     return Api().post(`/hg/update/${host}`);

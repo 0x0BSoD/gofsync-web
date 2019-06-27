@@ -7,7 +7,9 @@
                 <v-autocomplete
                         v-model="host"
                         :items="hosts"
-                        label="Host"
+                        label="Classes source Host"
+                        item-text="name"
+                        item-value="name"
                         persistent-hint
                         solo
                 >
@@ -24,15 +26,15 @@
                 >
                 </v-autocomplete>
             </v-flex>
-            <v-flex xs5>
-                <v-btn large>add new location</v-btn>
-                <v-btn large>save all</v-btn>
-                <v-btn large>save to</v-btn>
-            </v-flex>
+<!--            <v-flex xs5>-->
+<!--                <v-btn large>add new location</v-btn>-->
+<!--                <v-btn large>save</v-btn>-->
+<!--                <v-btn large>save as</v-btn>-->
+<!--            </v-flex>-->
         </v-layout>
-        <v-flex xs12 mb-3>
-            <v-btn small @click.stop="dialog = true">add puppet class</v-btn>
-        </v-flex>
+<!--        <v-flex xs12 mb-3>-->
+<!--            <v-btn small @click.stop="dialog = true">add puppet class</v-btn>-->
+<!--        </v-flex>-->
 <!-- ============================================= /Top Panel ============================================= -->
 <!--        <v-item-group>-->
 <!--            <v-container grid-list-md>-->
@@ -68,7 +70,7 @@
                                                                             <v-chip label> {{ param.type }} </v-chip>
                                                                         </v-flex>
                                                                         <v-flex>
-                                                                            <h3 class="headline mb-0">{{ param.name }}</h3>
+                                                                            <h3 class="headline mb-0">{{ param.name }} || FID: <strong>{{param.parameter_foreman_id}}</strong></h3>
                                                                         </v-flex>
                                                                     </v-layout>
 
@@ -85,7 +87,8 @@
 
                                                             </v-card-text>
                                                             <v-card-actions>
-                                                                <v-btn flat>save</v-btn>
+<!--                                                                <v-btn flat>save</v-btn>-->
+                                                                <v-spacer></v-spacer>
                                                                 <v-btn flat color="warning">delete</v-btn>
                                                             </v-card-actions>
                                                         </v-card>
@@ -232,8 +235,8 @@
 
                     this.overrides = [];
                     this.location = null;
-                    this.allPuppetClasses = (await pcService.allPC(this.host)).data;
-                    let tmp =  (await locationsService.locList()).data;
+                    this.allPuppetClasses = (await pcService.All(this.host)).data;
+                    let tmp =  (await locationsService.List()).data;
                     for (let i in tmp) {
                         if (tmp[i].host === val) {
                             this.locations = tmp[i].locations
@@ -244,7 +247,7 @@
             location: {
                 async handler (val) {
                     this.pcSync = false;
-                    let tmp = (await locationsService.getOverrides(val, this.host)).data;
+                    let tmp = (await locationsService.Overrides(val, this.host)).data;
                     tmp.sort((a, b) => a.puppet_class > b.puppet_class);
                     this.overrides = tmp;
                     // let res = {};
