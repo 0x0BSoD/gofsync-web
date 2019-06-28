@@ -1,6 +1,11 @@
 <template>
     <v-container fluid>
-        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+        <v-layout row wrap v-if="wip" class="text-xs-center">
+            <v-flex xs12>
+                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
+                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+            </v-flex>
+        </v-layout>
         <v-label>NOTE: all ID's will be ignored</v-label>
 <!-- ============================================= Top Panel ============================================= -->
         <v-layout row wrap>
@@ -344,6 +349,9 @@
         // COMPOUNDED
         //========================================================================================================
         computed: {
+            nowActions () {
+                return this.$store.state.socketModule.socket.message;
+            },
             codemirror() {
                 return this.$refs.myCm.codemirror
             },
@@ -425,6 +433,8 @@
         async mounted () {
             // User check ==========================================
             await Common.auth(this);
+
+            this.$connect();
 
             // ==========================================
             try {
@@ -572,6 +582,7 @@
                 }
             },
             async save () {
+                this.wip = true;
                 this.hgError = false;
                 this.hgDone = false;
                 this.creatingHG = true;
@@ -590,6 +601,7 @@
                     this.hgErrorMsg = e.response.data;
                 } finally {
                     this.creatingHG = false;
+                    this.wip = false;
                 }
             },
             addPuppetClass (data) {

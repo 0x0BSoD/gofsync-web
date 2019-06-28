@@ -103,10 +103,10 @@
                                 v-for="(swe, idx) in swes"
                                 :key="idx"
                             >
-                                <v-card-text>
+                                <v-card-text >
                                     <v-layout row wrap>
-                                        <v-flex xs3>{{swe.tHost}}</v-flex>
-                                        <v-flex xs1>{{swe.hgName}}</v-flex>
+                                        <v-flex xs3 pt-2>{{swe.tHost}}</v-flex>
+                                        <v-flex xs1 pt-2>{{swe.hgName}}</v-flex>
                                         <v-flex xs2>
                                             <v-chip label v-if="swe.environment.targetId === -1" color="red">{{swe.environment.name}}</v-chip>
                                             <v-chip label v-else color="success">{{swe.environment.name}}</v-chip>
@@ -131,6 +131,7 @@
                                             </div>
                                             <div v-else>
                                                 <v-chip label v-if="swe.foreman.targetId">Exist on host</v-chip>
+                                                <v-chip label v-else>Will be added</v-chip>
                                                 <v-chip label v-if="swe.environment.targetId === -1">No SWE on host</v-chip>
                                             </div>
                                         </v-flex>
@@ -203,11 +204,6 @@
             }
         },
         watch: {
-            hostGroupSelected: {
-                async handler (val) {
-                    console.log(val);
-                }
-            },
             nowActions: {
                 async handler (val) {
                     let data = (await val);
@@ -241,6 +237,7 @@
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
             },
             async checks() {
+                this.started = true;
                 this.checked = false;
                 this.checkRes = {};
                 // build object for checking
@@ -314,6 +311,7 @@
                             }
                         }
                         this.checkRes[target][i].process.checkInProgress = false;
+                        this.started = false;
                         this.$forceUpdate();
                     }
                 }
