@@ -159,12 +159,16 @@
     import { hostGroupService, environmentService, hostService } from "../_services"
     import { Common } from "./methods";
     import { LoopingRhombusesSpinner } from 'epic-spinners'
+    import { mapGetters } from "vuex"
 
     export default {
         //========================================================================================================
         // COMPOUNDED
         //========================================================================================================
         computed: {
+            mapGetters() {
+
+            },
             nowActions () {
                 return this.$store.state.socketModule.socket.message;
             },
@@ -196,7 +200,6 @@
         async mounted () {
             // User check ==========================================
             await Common.auth(this);
-            this.$connect();
             try {
                 this.hosts = (await hostService.hosts()).data;
             } catch (e) {
@@ -230,8 +233,10 @@
         methods: {
             async startJob () {
                 this.started = true;
+                this.$connect();
                 await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
+                this.$disconnect();
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;

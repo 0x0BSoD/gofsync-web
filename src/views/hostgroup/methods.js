@@ -5,7 +5,6 @@ export const PuppetMethods = {
     compare,
     setMismatch,
     resetMismatch,
-    inHosts,
 };
 
 function parse(pc) {
@@ -188,11 +187,4 @@ function setMismatch(t, source, target) {
 function resetMismatch(t) {
     t.targetDiff = false;
     t.sourceDiff = false;
-}
-
-function inHosts(hosts, s) {
-    for (let i=0;i<hosts.length;i++) {
-         if (hosts[i].name === s) return true;
-    }
-    return false
 }

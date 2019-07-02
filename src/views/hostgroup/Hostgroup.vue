@@ -117,11 +117,15 @@
                                 <v-layout>
                                     <v-flex xs6>
                                         <p><v-label>Name: </v-label><v-chip label>{{hostGroup.name}}</v-chip></p>
-                                        <v-label>Environment: </v-label><v-chip label>{{hostGroup.environment}}</v-chip>
+                                        <p><v-label>Environment: </v-label><v-chip label>{{hostGroup.environment}}</v-chip></p>
+                                        <p><v-label>Updated: </v-label><v-chip label>{{hostGroup.updated}}</v-chip></p>
                                     </v-flex>
                                     <v-flex xs6>
                                         <p><v-label>Puppet Classes: </v-label><v-chip label>{{pc_count}}</v-chip></p>
                                         <p><v-label>Overrides: </v-label><v-chip label>{{ovr_count}}</v-chip></p>
+                                        <p class="mt-2">
+                                            <v-btn :to="{name:'jsoneditor', query: {source: sHost, hg: hostGroup.name }}">Edit</v-btn>
+                                        </p>
                                     </v-flex>
                                 </v-layout>
                             </v-card-text>
@@ -162,8 +166,8 @@
                                 <v-flex xs12 v-else>
                                     <v-layout row wrap class="text-xs-center">
                                         <v-flex xs12>
-                                            <v-chip color="green" ><h3 >Host Group not exist on host</h3></v-chip>
-                                            <v-chip color="yellow" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+                                            <v-chip color="warning" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
+                                            <v-chip color="green" v-else ><h3 >Host Group not exist on host</h3></v-chip>
                                             <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>cloud_upload</v-icon></v-btn></p>
                                         </v-flex>
                                     </v-layout>
@@ -324,9 +328,9 @@
     import Locations from "../../components/hostgroups/locations"
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
+    import { Common } from "../methods";
     import { PuppetMethods } from "./methods"
-    import {Common} from "../methods";
-    import {mapGetters} from "vuex";
+    import { mapGetters } from "vuex";
 
     export default {
         //========================================================================================================
@@ -439,7 +443,7 @@
             }
 
             if (this.$route.query.hasOwnProperty("source")
-                && PuppetMethods.inHosts(this.hosts, this.$route.query.source)) {
+                && Common.inHosts(this.hosts, this.$route.query.source)) {
                 this.sHost = this.$route.query.source;
             }
         },
@@ -666,15 +670,13 @@
         //========================================================================================================
         methods: {
             async locUpdated () {
-                console.log("locUpdated");
                 this.locations =  (await locationsService.List()).data;
             },
             async updateSourceHG () {
                 this.wip = true;
                 let old_th = this.tHost;
-
+                this.$connect();
                 try {
-                    this.$connect();
                     await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     this.tHost = null;
                     this.existData = null;
@@ -685,7 +687,6 @@
                     this.pc = {};
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
-                    this.$disconnect();
                 } catch (e) {
                     console.error(e);
                     this.wip = false;
@@ -711,11 +712,13 @@
                     this.tHost = old_th;
                     this.sourceLoaded = true;
                     this.wip = false;
+                    this.$disconnect();
                 }
             },
 
             async updateTargetHG () {
                 this.wip = true;
+                this.$connect();
                 try {
                     await hostGroupService.FUpdate(this.tHost, this.hostGroup.name);
 
@@ -778,6 +781,7 @@
                 }
 
                 this.targetLoaded = true;
+                this.$disconnect();
                 this.wip = false;
             },
 
@@ -786,7 +790,7 @@
             },
 
             async submit () {
-
+                this.$connect();
                 // Build POST parameters
                 let data = {
                     source_host: this.sHost,
@@ -849,6 +853,7 @@
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
                 }
+                this.$disconnect();
             },
         }
     }

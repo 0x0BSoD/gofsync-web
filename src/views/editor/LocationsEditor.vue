@@ -89,7 +89,7 @@
                                                             <v-card-actions>
 <!--                                                                <v-btn flat>save</v-btn>-->
                                                                 <v-spacer></v-spacer>
-                                                                <v-btn flat color="warning">delete</v-btn>
+<!--                                                                <v-btn flat color="warning">delete</v-btn>-->
                                                             </v-card-actions>
                                                         </v-card>
                                                     </v-flex>
@@ -190,6 +190,11 @@
             await Common.auth(this);
 
             this.hosts = (await hostService.hosts()).data;
+
+            if (this.$route.query.hasOwnProperty("source")
+                && Common.inHosts(this.hosts, this.$route.query.source)) {
+                this.host = this.$route.query.source;
+            }
         },
         watch: {
             selectedPC: {
@@ -241,6 +246,10 @@
                         if (tmp[i].host === val) {
                             this.locations = tmp[i].locations
                         }
+                    }
+
+                    if (this.$route.query.hasOwnProperty("location")) {
+                        this.location = this.$route.query.location;
                     }
                 }
             },

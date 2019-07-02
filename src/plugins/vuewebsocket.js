@@ -9,11 +9,7 @@ Vue.use(
     config.ws(),
     {
         connectManually: true,
-        reconnection: true,
-        reconnectionAttempts: 3,
-        reconnectionDelay: 3000,
         store: store,
         format: 'json',
-        protocol: "wss",
     },
 );

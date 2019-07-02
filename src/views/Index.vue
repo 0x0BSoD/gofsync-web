@@ -50,11 +50,12 @@
                                 </v-card-title>
                                 <v-divider></v-divider>
                                 <v-hover v-for="c in n.locations" :key="c">
-                                    <v-chip
+                                    <v-btn
                                             slot-scope="{ hover }"
                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                             class="mx-auto"
-                                            label >{{c}}</v-chip>
+                                            :to="{name:'locations', query: {source: n.host, location: c }}"
+                                            small >{{c}}</v-btn>
                                 </v-hover>
                             </v-card>
                         </v-item>
@@ -250,7 +251,6 @@
         async mounted () {
             // User check ==========================================
             await Common.auth(this);
-
             this.locations =  (await locationsService.List()).data;
         },
         watch: {},
@@ -292,6 +292,7 @@
                 await this.$store.dispatch("setHost", host);
             },
             async updateEnv (host) {
+                // this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -305,9 +306,11 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
+                    // this.$disconnect();
                 }
             },
             async updateLoc (host) {
+                // this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -321,9 +324,11 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
+                    // this.$disconnect();
                 }
             },
             async updateHG (host) {
+                // this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -337,9 +342,11 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
+                    // this.$disconnect();
                 }
             },
             async updatePC (host) {
+                // this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -353,6 +360,7 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
+                    // this.$disconnect();
                 }
             }
         }

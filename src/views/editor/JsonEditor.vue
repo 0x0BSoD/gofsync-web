@@ -233,10 +233,10 @@
 
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn color="success" @click="storeOverride()" flat>save</v-btn>
+<!--                    <v-btn color="success" @click="storeOverride()" flat>save</v-btn>-->
                     <v-btn flat @click="dialogParamEditor = false">cancel</v-btn>
                     <v-spacer></v-spacer>
-                    <v-btn flat :disabled="!parameterEditValue" color="warning">CLEAR OVERRIDE</v-btn>
+<!--                    <v-btn flat :disabled="!parameterEditValue" color="warning">CLEAR OVERRIDE</v-btn>-->
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -434,7 +434,7 @@
             // User check ==========================================
             await Common.auth(this);
 
-            this.$connect();
+            // this.$connect();
 
             // ==========================================
             try {
@@ -442,10 +442,16 @@
                 this.hosts = (await hostService.hosts()).data;
                 // this.hostGroups = (await hostGroupService.AllList()).data;
                 this.wip = false;
+                if (this.$route.query.hasOwnProperty("source")
+                    && Common.inHosts(this.hosts, this.$route.query.source)) {
+                    this.host = this.$route.query.source;
+                }
             } catch (e) {
                 console.error(e.message);
                 this.wip = false;
             }
+
+
         },
 
         //========================================================================================================
@@ -469,6 +475,10 @@
                     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
                     this.search = null;
                     this.loadingPC = false;
+
+                    if (this.$route.query.hasOwnProperty("hg")) {
+                        this.hostGroupId = this.hostGroups.filter(i => i.name === this.$route.query.hg)[0].id;
+                    }
                 }
             },
             search: {
@@ -493,7 +503,6 @@
                     _.delay(async function(t) {
                         t.creatingHG = true;
                         let fchg = (await hostGroupService.FCheck(t.host, t.hostGroup.name)).data;
-                        console.info(fchg);
                         t.existingHG = fchg.id !== -1;
                         t.creatingHG = false;
                     }, 1000, this);

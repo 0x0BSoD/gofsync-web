@@ -3,6 +3,7 @@
 export const Common = {
     auth,
     pruneEmpty,
+    inHosts,
 };
 
 async function auth(t) {
@@ -42,4 +43,11 @@ function pruneEmpty(obj) {
         return current;
 
     }(_.cloneDeep(obj));
+}
+
+function inHosts(hosts, s) {
+    for (let i=0;i<hosts.length;i++) {
+        if (hosts[i].name === s) return true;
+    }
+    return false
 }
