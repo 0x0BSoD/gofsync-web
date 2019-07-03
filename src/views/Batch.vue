@@ -95,7 +95,9 @@
                     <v-card>
                         <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">Checking</v-card-title>
                         <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks Result</v-card-title>
+                        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
                         <v-card-text
+                            v-else
                             v-for="(swes, host) in checkRes"
                             :key="host"
                         >
@@ -130,9 +132,9 @@
                                                 <v-chip label v-else color="success">Uploaded</v-chip>
                                             </div>
                                             <div v-else>
-                                                <v-chip label v-if="swe.foreman.targetId">Exist on host</v-chip>
-                                                <v-chip label v-else>Will be added</v-chip>
                                                 <v-chip label v-if="swe.environment.targetId === -1">No SWE on host</v-chip>
+                                                <v-chip label v-else-if="swe.foreman.targetId">Exist on host</v-chip>
+                                                <v-chip label v-else="">Will be added</v-chip>
                                             </div>
                                         </v-flex>
                                         <v-flex xs1><v-btn v-if="swe.hg_link" icon flat><a target="_blank" :rel="swe.hgName" :href="swe.hg_link"><v-icon>open_in_new</v-icon></a></v-btn></v-flex>
@@ -159,7 +161,6 @@
     import { hostGroupService, environmentService, hostService } from "../_services"
     import { Common } from "./methods";
     import { LoopingRhombusesSpinner } from 'epic-spinners'
-    import { mapGetters } from "vuex"
 
     export default {
         //========================================================================================================
@@ -233,10 +234,8 @@
         methods: {
             async startJob () {
                 this.started = true;
-                //this.$connect();
                 await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
-                //this.$disconnect();
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
@@ -245,6 +244,7 @@
                 this.started = true;
                 this.checked = false;
                 this.checkRes = {};
+                this.wip = true;
                 // build object for checking
                 for (let target in this.tHost) {
                     if (this.tHost[target] !== this.sHost) {
@@ -294,6 +294,7 @@
                         }
                     }
                 }
+                this.wip = false;
                 this.checked = true;
                 for (let target in this.checkRes) {
                     for (let i in this.checkRes[target]) {
