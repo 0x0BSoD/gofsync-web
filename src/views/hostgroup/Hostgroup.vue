@@ -675,7 +675,7 @@
             async updateSourceHG () {
                 this.wip = true;
                 let old_th = this.tHost;
-                this.$connect();
+                //this.$connect();
                 try {
                     await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     this.tHost = null;
@@ -712,13 +712,13 @@
                     this.tHost = old_th;
                     this.sourceLoaded = true;
                     this.wip = false;
-                    this.$disconnect();
+                    //this.$disconnect();
                 }
             },
 
             async updateTargetHG () {
                 this.wip = true;
-                this.$connect();
+                //this.$connect();
                 try {
                     await hostGroupService.FUpdate(this.tHost, this.hostGroup.name);
 
@@ -781,7 +781,7 @@
                 }
 
                 this.targetLoaded = true;
-                this.$disconnect();
+                //this.$disconnect();
                 this.wip = false;
             },
 
@@ -790,7 +790,7 @@
             },
 
             async submit () {
-                this.$connect();
+                //this.$connect();
                 // Build POST parameters
                 let data = {
                     source_host: this.sHost,
@@ -802,8 +802,9 @@
                 // Commit new data
                 try {
                     this.wip = true;
-                    this.wipMessage = "Uploading to target host ...";
+                    this.wipMessage = "Updating source ...";
                     await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
+                    this.wipMessage = "Uploading to target host ...";
                     let response = (await hostGroupService.Send(data));
                     if (response.status === 200) {
                     }
@@ -853,7 +854,7 @@
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
                 }
-                this.$disconnect();
+                //this.$disconnect();
             },
         }
     }

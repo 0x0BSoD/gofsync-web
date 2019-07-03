@@ -292,7 +292,7 @@
                 await this.$store.dispatch("setHost", host);
             },
             async updateEnv (host) {
-                // this.$connect();
+                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -306,11 +306,11 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    // this.$disconnect();
+                    //this.$disconnect();
                 }
             },
             async updateLoc (host) {
-                // this.$connect();
+                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -324,11 +324,11 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    // this.$disconnect();
+                    //this.$disconnect();
                 }
             },
             async updateHG (host) {
-                // this.$connect();
+                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -342,11 +342,11 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    // this.$disconnect();
+                    //this.$disconnect();
                 }
             },
             async updatePC (host) {
-                // this.$connect();
+                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -360,7 +360,7 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    // this.$disconnect();
+                    //this.$disconnect();
                 }
             }
         }

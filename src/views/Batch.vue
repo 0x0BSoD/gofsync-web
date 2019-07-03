@@ -233,10 +233,10 @@
         methods: {
             async startJob () {
                 this.started = true;
-                this.$connect();
+                //this.$connect();
                 await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
-                this.$disconnect();
+                //this.$disconnect();
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
