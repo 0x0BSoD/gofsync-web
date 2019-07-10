@@ -115,9 +115,8 @@
 
 <script>
 
-    import { FingerprintSpinner } from 'epic-spinners'
-    import { environmentService, locationsService,
-             hostGroupService, pcService } from "../../_services"
+    import {FingerprintSpinner} from 'epic-spinners'
+    import {environmentService, hostGroupService, locationsService, pcService} from "../../_services"
 
     export default {
 

@@ -323,14 +323,13 @@
 </template>
 
 <script>
-    import { hostGroupService, environmentService,
-              hostService, locationsService } from "../../_services"
+    import {environmentService, hostGroupService, hostService, locationsService} from "../../_services"
     import Locations from "../../components/hostgroups/locations"
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
-    import { Common } from "../methods";
-    import { PuppetMethods } from "./methods"
-    import { mapGetters } from "vuex";
+    import {Common} from "../methods";
+    import {PuppetMethods} from "./methods"
+    import {mapGetters} from "vuex";
 
     export default {
         //========================================================================================================

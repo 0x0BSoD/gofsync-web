@@ -10,7 +10,8 @@
 </template>
 
 <script>
-    import { hostService } from '../_services';
+    import {hostService} from '../_services';
+
     export default {
         name: 'error',
         data: () => ({}),

@@ -86,7 +86,8 @@
 
 <script>
     // @ is an alias to /src
-    import { userService } from '../_services';
+    import {userService} from '../_services';
+
     export default {
         name: 'login',
         data: () => ({

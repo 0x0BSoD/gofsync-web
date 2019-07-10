@@ -318,10 +318,10 @@
 
 <script>
 
-    import { hostGroupService, pcService, hostService, SmartClassesService } from "../../_services"
-    import { EditorMethods } from "../editor/methods"
-    import { PuppetMethods } from "../hostgroup/methods"
-    import { Common } from "../methods";
+    import {hostGroupService, hostService, pcService, SmartClassesService} from "../../_services"
+    import {EditorMethods} from "../editor/methods"
+    import {PuppetMethods} from "../hostgroup/methods"
+    import {Common} from "../methods";
     import _ from 'lodash'
     import UploadButton from 'vuetify-upload-button';
 
@@ -337,6 +337,7 @@
     import 'codemirror/addon/fold/indent-fold.js'
     import 'codemirror/addon/fold/markdown-fold.js'
     import 'codemirror/addon/fold/xml-fold.js'
+
     export default {
         //========================================================================================================
         // COMPONENTS
