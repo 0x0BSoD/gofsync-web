@@ -26,7 +26,8 @@
                             {{val}}
                         </v-chip>
 
-                        <h3 class="headline" v-if="sourceDiff.smartClassesParameterMissing.length > 0">Smart Class parameters</h3>
+                        <h3 class="headline" v-if="sourceDiff.smartClassesParameterMissing.length > 0">Smart Class
+                            parameters</h3>
                         <v-chip
                                 color="indigo lighten-3"
                                 v-if="sourceDiff.smartClassesParameterMissing.length > 0"
@@ -54,7 +55,8 @@
                             {{val}}
                         </v-chip>
 
-                        <h3 class="headline" v-if="targetDiff.smartClassesParameterMissing.length > 0">Smart Class parameters</h3>
+                        <h3 class="headline" v-if="targetDiff.smartClassesParameterMissing.length > 0">Smart Class
+                            parameters</h3>
                         <v-chip
                                 color="blue lighten-3"
                                 v-if="targetDiff.smartClassesParameterMissing.length > 0"
@@ -69,7 +71,7 @@
                                 v-for="(val, id) in targetDiff.overridesMissing" :key="id">
                             {{val}}
                         </v-chip>
-<!--                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>-->
+                        <!--                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>-->
                     </v-flex>
 
                     <v-flex xs12 class="pt-2">
@@ -88,7 +90,7 @@
         <!-- ================================ Whe have the one of diffs ================================== -->
         <v-card v-else-if="sourceDiff || targetDiff">
             <v-card-text>
-                <v-layout row wrap  class="text-xs-center">
+                <v-layout row wrap class="text-xs-center">
 
                     <v-flex xs12 v-if="sourceDiff">
                         <h3 class="pb-2 display-1">Not in source</h3>
@@ -109,7 +111,8 @@
                             {{val}}
                         </v-chip>
 
-                        <h3 class="headline" v-if="sourceDiff.smartClassesParameterMissing.length > 0">Smart Class parameters</h3>
+                        <h3 class="headline" v-if="sourceDiff.smartClassesParameterMissing.length > 0">Smart Class
+                            parameters</h3>
                         <v-chip
                                 color="indigo lighten-3"
                                 v-if="sourceDiff.smartClassesParameterMissing.length > 0"
@@ -137,7 +140,8 @@
                             {{val}}
                         </v-chip>
 
-                        <h3 class="headline" v-if="targetDiff.smartClassesParameterMissing.length > 0">Smart Class parameters</h3>
+                        <h3 class="headline" v-if="targetDiff.smartClassesParameterMissing.length > 0">Smart Class
+                            parameters</h3>
                         <v-chip
                                 color="blue lighten-3"
                                 v-if="targetDiff.smartClassesParameterMissing.length > 0"
@@ -145,8 +149,8 @@
                             {{val}}
                         </v-chip>
 
-<!--                        <h3 class="headline" v-if="targetDiff.overridesMissing.length > 0">Overrides</h3>-->
-<!--                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>-->
+                        <!--                        <h3 class="headline" v-if="targetDiff.overridesMissing.length > 0">Overrides</h3>-->
+                        <!--                        <p v-if="targetDiff.overridesMissing.length > 0">{{targetDiff.overridesMissing}}</p>-->
                     </v-flex>
 
                     <v-flex xs12 class="pt-2">
@@ -171,7 +175,8 @@
             "sourceDiff",
             "targetDiff"
         ],
-        mounted () {},
+        mounted() {
+        },
         watch: {},
         methods: {}
     }

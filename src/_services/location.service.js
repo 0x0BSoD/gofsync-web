@@ -10,6 +10,7 @@ export const locationsService = {
 function List() {
     return Api().get(`loc`);
 }
+
 function Overrides(locName, host) {
     return Api().get(`loc/overrides/${host}/${locName}`);
 }

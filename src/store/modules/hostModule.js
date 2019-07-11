@@ -3,12 +3,12 @@ export default {
         host: null,
     },
     mutations: {
-        setHost (state, host) {
+        setHost(state, host) {
             state.host = host;
         }
     },
     actions: {
-        setHost ({commit}, host) {
+        setHost({commit}, host) {
             commit("setHost", host);
         }
     },

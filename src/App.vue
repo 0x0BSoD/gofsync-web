@@ -1,8 +1,11 @@
 <template>
     <v-app>
         <v-content>
+
+            <vue-title :title="'gofsync | ' + menuLabel"></vue-title>
+
             <v-toolbar app dense v-if="showToolBar">
-                <v-btn  :to="{name:'index'}" icon flat class="hidden-xs-only">
+                <v-btn :to="{name:'index'}" icon flat class="hidden-xs-only">
                     <v-icon>sync</v-icon>
                 </v-btn>
                 <v-toolbar-title class="headline text-uppercase">
@@ -52,6 +55,9 @@
                         <v-list-tile :to="{name:'locations'}">
                             <v-list-tile-title>Locations</v-list-tile-title>
                         </v-list-tile>
+                        <v-list-tile :to="{name:'swe'}">
+                            <v-list-tile-title>SWE</v-list-tile-title>
+                        </v-list-tile>
                     </v-list>
                 </v-menu>
 
@@ -65,7 +71,8 @@
                                 v-on="on"
                         >
                             {{username}}
-                            <v-icon right>account_circle</v-icon>
+                            <v-icon v-if="ws_connected" color="success" right>account_circle</v-icon>
+                            <v-icon v-else color="warning" right>account_circle</v-icon>
                         </v-btn>
                     </template>
                     <v-list>
@@ -91,9 +98,10 @@
         computed: {
             ...mapGetters({
                 username: "Username",
+                ws_connected: "WSConnected",
             }),
         },
-        data () {
+        data() {
             return {
                 loggedIn: false,
                 token: false,
@@ -101,10 +109,10 @@
                 showToolBar: true,
             }
         },
-        async mounted () {
+        async mounted() {
             this.showToolBar = !(this.$route.name === "login" || this.$route.name === "error");
             let userData = localStorage.getItem('userData');
-            this.token    = this.$cookies.isKey("token");
+            this.token = this.$cookies.isKey("token");
             if (this.token && userData) {
                 this.loggedIn = true;
             } else {
@@ -113,10 +121,10 @@
         },
         watch: {
             username: {
-                handler () {
+                handler() {
                     this.showToolBar = !(this.$route.name === "login" || this.$route.name === "error");
                     let userData = localStorage.getItem('userData');
-                    this.token    = this.$cookies.isKey("token");
+                    this.token = this.$cookies.isKey("token");
                     if (this.token && userData) {
                         this.loggedIn = true;
                         this.menuLabel = "hostgroup";
@@ -126,20 +134,23 @@
                 }
             },
             "$route": {
-                async handler (val) {
+                async handler(val) {
                     this.showToolBar = !(val.name === "login" || val.name === "error");
-                    switch(val.name) {
+                    switch (val.name) {
                         case "hostgroup":
-                            this.menuLabel = "hostgroup";
+                            this.menuLabel = "HostGroup";
                             break;
                         case "batch":
-                            this.menuLabel = "batch";
+                            this.menuLabel = "Batch";
                             break;
                         case "jsoneditor":
-                            this.menuLabel = "json editor";
+                            this.menuLabel = "JSON Editor";
                             break;
                         case "locations":
-                            this.menuLabel = "locations";
+                            this.menuLabel = "Locations";
+                            break;
+                        case "swe":
+                            this.menuLabel = "SWE";
                             break;
                         default:
                             this.menuLabel = "Tools";
@@ -148,9 +159,9 @@
             },
         },
         methods: {
-            async logout () {
+            async logout() {
                 this.loggedIn = false;
-                this.token    = false;
+                this.token = false;
                 await this.$store.dispatch("setUsername", "anon");
                 localStorage.clear();
                 this.$cookies.remove("token");

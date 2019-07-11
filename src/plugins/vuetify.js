@@ -6,8 +6,8 @@ import 'material-design-icons-iconfont'
 import 'vuetify/src/stylus/app.styl'
 
 Vue.use(Vuetify, {
-  iconfont: 'md',
-  directives: {
-    Ripple
-  }
+    iconfont: 'md',
+    directives: {
+        Ripple
+    }
 });

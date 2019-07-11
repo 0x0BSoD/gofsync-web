@@ -1,7 +1,7 @@
 <template>
     <v-container>
 
-<!--    ============================================ Alerts ============================================    -->
+        <!--    ============================================ Alerts ============================================    -->
         <v-alert
                 v-model="hgError"
                 dismissible
@@ -16,9 +16,9 @@
         >
             {{hgDoneMsg}}
         </v-alert>
-<!--    ============================================ /Alerts ============================================    -->
+        <!--    ============================================ /Alerts ============================================    -->
 
-<!--    ============================================ Progress ============================================    -->
+        <!--    ============================================ Progress ============================================    -->
         <v-layout row wrap v-if="wipMessage">
             <v-flex v-if="wip" xs9>
                 <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
@@ -40,9 +40,9 @@
                 <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
             </v-flex>
         </v-layout>
-<!--    ============================================ /Progress ============================================    -->
+        <!--    ============================================ /Progress ============================================    -->
 
-<!--    ============================================ Top menu - selects =========================================    -->
+        <!--    ============================================ Top menu - selects =========================================    -->
         <v-layout wrap row class="text-xs-center" v-if="!wip">
             <v-flex xs6>
                 <v-layout wrap row>
@@ -57,7 +57,7 @@
                         >
                         </v-autocomplete>
                     </v-flex>
-                    <v-flex xs6  pr-2>
+                    <v-flex xs6 pr-2>
                         <v-autocomplete
                                 v-model="env"
                                 :items="Environments"
@@ -103,11 +103,11 @@
                 </v-layout>
             </v-flex>
         </v-layout>
-<!--    ============================================ /Top menu - selects =========================================    -->
+        <!--    ============================================ /Top menu - selects =========================================    -->
 
-<!--        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />-->
+        <!--        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />-->
 
-<!--    ======================================== Middle menu - HG control========================================    -->
+        <!--    ======================================== Middle menu - HG control========================================    -->
         <v-layout row wrap v-if="hostGroup.id">
             <v-flex xs12 pb-2>
                 <v-card>
@@ -116,15 +116,32 @@
                             <v-card-text>
                                 <v-layout>
                                     <v-flex xs6>
-                                        <p><v-label>Name: </v-label><v-chip label>{{hostGroup.name}}</v-chip></p>
-                                        <p><v-label>Environment: </v-label><v-chip label>{{hostGroup.environment}}</v-chip></p>
-                                        <p><v-label>Updated: </v-label><v-chip label>{{hostGroup.updated}}</v-chip></p>
+                                        <p>
+                                            <v-label>Name:</v-label>
+                                            <v-chip label>{{hostGroup.name}}</v-chip>
+                                        </p>
+                                        <p>
+                                            <v-label>Environment:</v-label>
+                                            <v-chip label>{{hostGroup.environment}}</v-chip>
+                                        </p>
+                                        <p>
+                                            <v-label>Updated:</v-label>
+                                            <v-chip label>{{hostGroup.updated}}</v-chip>
+                                        </p>
                                     </v-flex>
                                     <v-flex xs6>
-                                        <p><v-label>Puppet Classes: </v-label><v-chip label>{{pc_count}}</v-chip></p>
-                                        <p><v-label>Overrides: </v-label><v-chip label>{{ovr_count}}</v-chip></p>
+                                        <p>
+                                            <v-label>Puppet Classes:</v-label>
+                                            <v-chip label>{{pc_count}}</v-chip>
+                                        </p>
+                                        <p>
+                                            <v-label>Overrides:</v-label>
+                                            <v-chip label>{{ovr_count}}</v-chip>
+                                        </p>
                                         <p class="mt-2">
-                                            <v-btn :to="{name:'jsoneditor', query: {source: sHost, hg: hostGroup.name }}">Edit</v-btn>
+                                            <v-btn :to="{name:'jsoneditor', query: {source: sHost, hg: hostGroup.name }}">
+                                                Edit
+                                            </v-btn>
                                         </p>
                                     </v-flex>
                                 </v-layout>
@@ -138,25 +155,36 @@
                                             <v-chip color="yellow">
                                                 <h3>Host Group exist on host</h3>
                                             </v-chip>
-                                            <p v-if="!hgExist"><v-label>not exist in local DB</v-label></p>
+                                            <p v-if="!hgExist">
+                                                <v-label>not exist in local DB</v-label>
+                                            </p>
                                             <p></p>
-                                                <v-tooltip bottom v-if="hostGroupId">
-                                                    <template v-slot:activator="{ on }">
-                                                        <v-btn @click="updateSourceHG()" color="primary" :disabled="wip" v-on="on">Update source</v-btn>
-                                                    </template>
-                                                    <span>Load data from source host (about 5 minutes)</span>
-                                                </v-tooltip>
-                                            <v-tooltip bottom>
-                                                    <template v-slot:activator="{ on }">
-                                                        <v-btn @click="updateTargetHG()" color="secondary" :disabled="wip" v-on="on">Update target</v-btn>
-                                                    </template>
-                                                    <span>Load data from target host (about 5 minutes)</span>
+                                            <v-tooltip bottom v-if="hostGroupId">
+                                                <template v-slot:activator="{ on }">
+                                                    <v-btn @click="updateSourceHG()" color="primary" :disabled="wip"
+                                                           v-on="on">Update source
+                                                    </v-btn>
+                                                </template>
+                                                <span>Load data from source host (about 5 minutes)</span>
                                             </v-tooltip>
-                                            <v-btn v-if="hgExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>cloud_upload</v-icon></v-btn>
+                                            <v-tooltip bottom>
+                                                <template v-slot:activator="{ on }">
+                                                    <v-btn @click="updateTargetHG()" color="secondary" :disabled="wip"
+                                                           v-on="on">Update target
+                                                    </v-btn>
+                                                </template>
+                                                <span>Load data from target host (about 5 minutes)</span>
+                                            </v-tooltip>
+                                            <v-btn v-if="hgExist" :disabled="wip" @click="submit()">LOAD TO TARGET
+                                                <v-icon right dark>cloud_upload</v-icon>
+                                            </v-btn>
 
                                             <v-tooltip bottom>
                                                 <template v-slot:activator="{ on }">
-                                                    <v-btn v-if="link" icon flat><a target="_blank" v-on="on" :rel="hostGroup.name" :href="link"><v-icon>link</v-icon></a></v-btn>
+                                                    <v-btn v-if="link" icon flat><a target="_blank" v-on="on"
+                                                                                    :rel="hostGroup.name" :href="link">
+                                                        <v-icon>link</v-icon>
+                                                    </a></v-btn>
                                                 </template>
                                                 <span>HostGroup link</span>
                                             </v-tooltip>
@@ -166,18 +194,26 @@
                                 <v-flex xs12 v-else>
                                     <v-layout row wrap class="text-xs-center">
                                         <v-flex xs12>
-                                            <v-chip color="warning" v-if="!envExist" ><h3 >Environment not exist on host</h3></v-chip>
-                                            <v-chip color="green" v-else ><h3 >Host Group not exist on host</h3></v-chip>
-                                            <p><v-btn v-if="!foremanCheckHG && envExist" :disabled="wip" @click="submit()">LOAD TO TARGET<v-icon right dark>cloud_upload</v-icon></v-btn></p>
+                                            <v-chip color="warning" v-if="!envExist"><h3>Environment not exist on
+                                                host</h3></v-chip>
+                                            <v-chip color="green" v-else><h3>Host Group not exist on host</h3></v-chip>
+                                            <p>
+                                                <v-btn v-if="!foremanCheckHG && envExist" :disabled="wip"
+                                                       @click="submit()">LOAD TO TARGET
+                                                    <v-icon right dark>cloud_upload</v-icon>
+                                                </v-btn>
+                                            </p>
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
-                        <v-flex xs6 v-else pt-3  class="text-xs-center">
+                        <v-flex xs6 v-else pt-3 class="text-xs-center">
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on }">
-                                    <v-btn @click="updateSourceHG()" color="primary" :disabled="wip" v-on="on">Update source</v-btn>
+                                    <v-btn @click="updateSourceHG()" color="primary" :disabled="wip" v-on="on">Update
+                                        source
+                                    </v-btn>
                                 </template>
                                 <span>Load data from source host (about 5 minutes)</span>
                             </v-tooltip>
@@ -186,20 +222,22 @@
                 </v-card>
             </v-flex>
         </v-layout>
-<!--    ======================================== /Middle menu - HG control========================================    -->
+        <!--    ======================================== /Middle menu - HG control========================================    -->
 
-        <HGDiff v-if="!hgError"  :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
+        <HGDiff v-if="!hgError" :sourceDiff="sourceDiff" :targetDiff="targetDiff"></HGDiff>
 
         <v-layout v-if="sourceLoaded  && !hgError" row>
             <v-flex xs12 class="text-xs-center">
-                <v-btn v-if="!showPC" @click="showPC = !showPC"  round color="primary" dark>Show puppet classes
-                    <v-icon right dark>expand_more</v-icon></v-btn>
+                <v-btn v-if="!showPC" @click="showPC = !showPC" round color="primary" dark>Show puppet classes
+                    <v-icon right dark>expand_more</v-icon>
+                </v-btn>
                 <v-btn v-else @click="showPC = !showPC" round color="primary" dark>Hide puppet classes
-                    <v-icon right dark>expand_less</v-icon></v-btn>
+                    <v-icon right dark>expand_less</v-icon>
+                </v-btn>
             </v-flex>
         </v-layout>
 
-<!--    ============================================ HostGroups ============================================    -->
+        <!--    ============================================ HostGroups ============================================    -->
         <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
             <v-flex xs12 v-if="hostGroups.length > 0">
                 <v-btn-toggle v-model="toggle_status" class="mb-2">
@@ -213,37 +251,37 @@
                     <v-btn
                             v-for="(val, i) in hostGroups"
                             :key="i"
-                            v-if = "val.name !== 'SWE' && val.status === 'pro'"
+                            v-if="val.name !== 'SWE' && val.status === 'pro'"
                             @click="setHG(val.id)">
                         {{val.name}}
-                        <v-icon right v-if = "val.status === 'pro'" color="success">trip_origin</v-icon>
+                        <v-icon right v-if="val.status === 'pro'" color="success">trip_origin</v-icon>
                     </v-btn>
                 </div>
                 <div v-else-if="toggle_status === 1">
                     <v-btn
                             v-for="(val, i) in hostGroups"
                             :key="i"
-                            v-if = "val.name !== 'SWE' && val.status === 'dev'"
+                            v-if="val.name !== 'SWE' && val.status === 'dev'"
                             @click="setHG(val.id)">
                         {{val.name}}
-                        <v-icon right v-if = "val.status === 'dev'" color="primary">trip_origin</v-icon>
+                        <v-icon right v-if="val.status === 'dev'" color="primary">trip_origin</v-icon>
                     </v-btn>
                 </div>
                 <div v-else-if="toggle_status === 2">
                     <v-btn
                             v-for="(val, i) in hostGroups"
                             :key="i"
-                            v-if = "val.name !== 'SWE' && val.status === '_toremove'"
+                            v-if="val.name !== 'SWE' && val.status === '_toremove'"
                             @click="setHG(val.id)">
                         {{val.name}}
-                        <v-icon right v-if = "val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                        <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
                     </v-btn>
                 </div>
                 <div v-else-if="toggle_status === 3">
                     <v-btn
                             v-for="(val, i) in hostGroups"
                             :key="i"
-                            v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"
+                            v-if="val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"
                             @click="setHG(val.id)">
                         {{val.name}}
                     </v-btn>
@@ -252,51 +290,48 @@
                     <v-btn
                             v-for="(val, i) in hostGroups"
                             :key="i"
-                            v-if = "val.name !== 'SWE'"
+                            v-if="val.name !== 'SWE'"
                             @click="setHG(val.id)">
                         {{val.name}}
-                        <v-icon right v-if = "val.status === 'pro'" color="success">trip_origin</v-icon>
-                        <v-icon right v-if = "val.status === 'dev'" color="primary">trip_origin</v-icon>
-                        <v-icon right v-if = "val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                        <v-icon right v-if="val.status === 'pro'" color="success">trip_origin</v-icon>
+                        <v-icon right v-if="val.status === 'dev'" color="primary">trip_origin</v-icon>
+                        <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
                     </v-btn>
                 </div>
 
 
-
-
-
-<!--                <br/>-->
-<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="primary">Dev</v-chip>-->
-<!--                <br/>-->
-<!--                <v-btn-->
-<!--                        v-for="(val, i) in hostGroups"-->
-<!--                        :key="i"-->
-<!--                        v-if = "val.name !== 'SWE' && val.status === 'dev'"-->
-<!--                        @click="setHG(val.id)"-->
-<!--                >{{val.name}}</v-btn>-->
-<!--                <br/>-->
-<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">To remove</v-chip>-->
-<!--                <br/>-->
-<!--                <v-btn-->
-<!--                        v-for="(val, i) in hostGroups"-->
-<!--                        :key="i"-->
-<!--                        v-if = "val.name !== 'SWE' && val.status === '_toremove'"-->
-<!--                        @click="setHG(val.id)"-->
-<!--                >{{val.name}}</v-btn>-->
-<!--                <br/>-->
-<!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">w/o state</v-chip>-->
-<!--                <br/>-->
-<!--                <v-btn-->
-<!--                        v-for="(val, i) in hostGroups"-->
-<!--                        :key="i"-->
-<!--                        v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"-->
-<!--                        @click="setHG(val.id)"-->
-<!--                >{{val.name}}</v-btn>-->
+                <!--                <br/>-->
+                <!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="primary">Dev</v-chip>-->
+                <!--                <br/>-->
+                <!--                <v-btn-->
+                <!--                        v-for="(val, i) in hostGroups"-->
+                <!--                        :key="i"-->
+                <!--                        v-if = "val.name !== 'SWE' && val.status === 'dev'"-->
+                <!--                        @click="setHG(val.id)"-->
+                <!--                >{{val.name}}</v-btn>-->
+                <!--                <br/>-->
+                <!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">To remove</v-chip>-->
+                <!--                <br/>-->
+                <!--                <v-btn-->
+                <!--                        v-for="(val, i) in hostGroups"-->
+                <!--                        :key="i"-->
+                <!--                        v-if = "val.name !== 'SWE' && val.status === '_toremove'"-->
+                <!--                        @click="setHG(val.id)"-->
+                <!--                >{{val.name}}</v-btn>-->
+                <!--                <br/>-->
+                <!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">w/o state</v-chip>-->
+                <!--                <br/>-->
+                <!--                <v-btn-->
+                <!--                        v-for="(val, i) in hostGroups"-->
+                <!--                        :key="i"-->
+                <!--                        v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"-->
+                <!--                        @click="setHG(val.id)"-->
+                <!--                >{{val.name}}</v-btn>-->
             </v-flex>
         </v-layout>
-<!--    ============================================ /HostGroups ============================================    -->
+        <!--    ============================================ /HostGroups ============================================    -->
 
-        <div v-if="showPC" >
+        <div v-if="showPC">
             <v-layout row wrap v-if="sourceLoaded && !targetLoaded">
                 <v-flex xs12 class="text-xs-center"><h3>SOURCE</h3></v-flex>
                 <v-flex xs12 class="text-xs-center"><h4>Last update: {{hostGroup.updated}}</h4></v-flex>
@@ -345,7 +380,7 @@
         // COMPOUNDED
         //========================================================================================================
         computed: {
-            nowActions () {
+            nowActions() {
                 return this.$store.state.socketModule.socket.message;
             },
             ...mapGetters({
@@ -425,14 +460,14 @@
         //========================================================================================================
         // MOUNTED
         //========================================================================================================
-        async mounted () {
+        async mounted() {
             // User check ==========================================
             await Common.auth(this);
             // Load Hosts ==========================================
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
-                this.locations =  (await locationsService.List()).data;
+                this.locations = (await locationsService.List()).data;
                 this.wip = false;
             } catch (e) {
                 this.wip = false;
@@ -452,17 +487,17 @@
         //========================================================================================================
         watch: {
             host: {
-              handler (val) {
-                  this.sHost = val;
-              }
+                handler(val) {
+                    this.sHost = val;
+                }
             },
             socket: {
-                async handler (val) {
+                async handler(val) {
                     console.log(val);
                 }
             },
             sHost: {
-                async handler (val) {
+                async handler(val) {
 
                     // RESET =================================
                     PuppetMethods.resetMismatch(this);
@@ -495,7 +530,7 @@
                     for (let env in tmpEnv) {
                         if (tmpEnv.hasOwnProperty(env)) {
                             if (reg.test(tmpEnv[env])) {
-                                let uEnvId = tmpEnv[env].slice(3,6);
+                                let uEnvId = tmpEnv[env].slice(3, 6);
                                 if (result.indexOf(uEnvId) === -1) {
                                     result.push(uEnvId)
                                 }
@@ -507,7 +542,7 @@
                 }
             },
             env: {
-                async handler (val) {
+                async handler(val) {
                     // RESET =================================
                     PuppetMethods.resetMismatch(this);
                     this.tHost = null;
@@ -556,7 +591,7 @@
                 }
             },
             hostGroupId: {
-                async handler (val) {
+                async handler(val) {
                     if (val) {
                         this.wip = true;
                         let old_th = this.tHost;
@@ -597,7 +632,7 @@
                 }
             },
             tHost: {
-                async handler (val) {
+                async handler(val) {
                     if (val) {
                         this.wip = true;
                         this.targetHostGroup = [];
@@ -668,10 +703,10 @@
         // METHODS
         //========================================================================================================
         methods: {
-            async locUpdated () {
-                this.locations =  (await locationsService.List()).data;
+            async locUpdated() {
+                this.locations = (await locationsService.List()).data;
             },
-            async updateSourceHG () {
+            async updateSourceHG() {
                 this.wip = true;
                 let old_th = this.tHost;
                 //this.$connect();
@@ -715,7 +750,7 @@
                 }
             },
 
-            async updateTargetHG () {
+            async updateTargetHG() {
                 this.wip = true;
                 //this.$connect();
                 try {
@@ -770,7 +805,7 @@
                     this.targetLoaded = true;
 
                     try {
-                            PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                        PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
                     } catch (e) {
                         console.error(e);
                     }
@@ -784,11 +819,11 @@
                 this.wip = false;
             },
 
-            setHG (hgId) {
+            setHG(hgId) {
                 this.hostGroupId = hgId;
             },
 
-            async submit () {
+            async submit() {
                 //this.$connect();
                 // Build POST parameters
                 let data = {

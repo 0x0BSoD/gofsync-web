@@ -13,7 +13,8 @@
                         <v-item>
                             <v-card>
                                 <v-card-title class="pr-0 pl-3 pt-0 pb-0">
-                                    <v-btn flat small :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}</v-btn>
+                                    <v-btn flat small :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
+                                    </v-btn>
                                     <v-spacer></v-spacer>
                                     <v-chip v-if="n.env === 'stage'" small color="success">STAGE</v-chip>
                                     <v-chip v-if="n.env === 'prod'" small color="warning">PROD</v-chip>
@@ -27,22 +28,23 @@
                                             </v-btn>
                                         </template>
                                         <v-list>
-                                            <v-list-tile  @click="" >
-                                                <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to foreman</a>
+                                            <v-list-tile @click="">
+                                                <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to
+                                                    foreman</a>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updateLoc(n.host)" >
+                                            <v-list-tile @click="updateLoc(n.host)">
                                                 <v-list-tile-title>update locations</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updateEnv(n.host)" >
+                                            <v-list-tile @click="updateEnv(n.host)">
                                                 <v-list-tile-title>update environments</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updatePC(n.host)" >
+                                            <v-list-tile @click="updatePC(n.host)">
                                                 <v-list-tile-title>update puppet classes</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updateHG(n.host)" >
+                                            <v-list-tile @click="updateHG(n.host)">
                                                 <v-list-tile-title>update hostgroups</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="showSweDialog(n.host)" >
+                                            <v-list-tile @click="showSweDialog(n.host)">
                                                 <v-list-tile-title>hosts by HG</v-list-tile-title>
                                             </v-list-tile>
                                         </v-list>
@@ -55,7 +57,8 @@
                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                             class="mx-auto"
                                             :to="{name:'locations', query: {source: n.host, location: c }}"
-                                            small >{{c}}</v-btn>
+                                            small>{{c}}
+                                    </v-btn>
                                 </v-hover>
                             </v-card>
                         </v-item>
@@ -65,8 +68,8 @@
         </v-item-group>
 
         <v-dialog
-            v-model="sweHosts"
-            max-width="800"
+                v-model="sweHosts"
+                max-width="800"
         >
             <v-card>
                 <v-toolbar dark color="#7ac2ff">
@@ -75,12 +78,12 @@
                 </v-toolbar>
                 <v-card-text>
                     <v-layout wrap row>
-<!--                        <v-flex xs2 pr-2>-->
-<!--                            <v-switch-->
-<!--                                    v-model="allHosts"-->
-<!--                                    :label="`allHosts: ${allHosts.toString()}`"-->
-<!--                            ></v-switch>-->
-<!--                        </v-flex>-->
+                        <!--                        <v-flex xs2 pr-2>-->
+                        <!--                            <v-switch-->
+                        <!--                                    v-model="allHosts"-->
+                        <!--                                    :label="`allHosts: ${allHosts.toString()}`"-->
+                        <!--                            ></v-switch>-->
+                        <!--                        </v-flex>-->
                         <v-flex xs6 pr-2>
                             <v-autocomplete
                                     v-if="allHosts"
@@ -112,17 +115,17 @@
                                 </template>
                             </v-autocomplete>
                         </v-flex>
-<!--                        <v-flex xs3 pr-2>-->
-<!--                            <v-autocomplete-->
-<!--                                v-model="HGChanged"-->
-<!--                                :items="HGChangedExamples"-->
-<!--                                label="Last Changed"-->
-<!--                                :disabled="!allHosts"-->
-<!--                                persistent-hint-->
-<!--                            >-->
+                        <!--                        <v-flex xs3 pr-2>-->
+                        <!--                            <v-autocomplete-->
+                        <!--                                v-model="HGChanged"-->
+                        <!--                                :items="HGChangedExamples"-->
+                        <!--                                label="Last Changed"-->
+                        <!--                                :disabled="!allHosts"-->
+                        <!--                                persistent-hint-->
+                        <!--                            >-->
 
-<!--                            </v-autocomplete>-->
-<!--                        </v-flex>-->
+                        <!--                            </v-autocomplete>-->
+                        <!--                        </v-flex>-->
                         <v-flex xs3 pr-2 class="text-sm-center">
                             <v-btn
                                     :loading="loading"
@@ -143,7 +146,8 @@
                                         v-for="(v, k) in hosts"
                                         :key="k"
                                 >
-                                    {{v.name}} <v-chip>{{ (v.last_report)}}</v-chip>
+                                    {{v.name}}
+                                    <v-chip>{{ (v.last_report)}}</v-chip>
                                 </li>
                             </ol>
                         </v-flex>
@@ -215,7 +219,7 @@
         // COMPOUNDED
         //========================================================================================================
         computed: {
-            nowActions () {
+            nowActions() {
                 return this.$store.state.socketModule.socket.message;
             }
         },
@@ -247,21 +251,21 @@
             FingerprintSpinner
         },
 
-        async mounted () {
+        async mounted() {
             // User check ==========================================
             await Common.auth(this);
-            this.locations =  (await locationsService.List()).data;
+            this.locations = (await locationsService.List()).data;
         },
         watch: {},
         methods: {
-            async showSweDialog (host) {
+            async showSweDialog(host) {
                 this.dialogTitle = host;
                 this.hosts = [];
                 this.hostGroups = (await hostGroupService.List(host)).data;
                 this.selHost = host;
                 this.sweHosts = true;
             },
-            async loadHosts () {
+            async loadHosts() {
                 this.loading = true;
                 try {
                     if (!this.allHosts) {
@@ -287,10 +291,10 @@
                     this.loading = false;
                 }
             },
-            async setHost (host) {
+            async setHost(host) {
                 await this.$store.dispatch("setHost", host);
             },
-            async updateEnv (host) {
+            async updateEnv(host) {
                 //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
@@ -308,7 +312,7 @@
                     //this.$disconnect();
                 }
             },
-            async updateLoc (host) {
+            async updateLoc(host) {
                 //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
@@ -326,7 +330,7 @@
                     //this.$disconnect();
                 }
             },
-            async updateHG (host) {
+            async updateHG(host) {
                 //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
@@ -344,7 +348,7 @@
                     //this.$disconnect();
                 }
             },
-            async updatePC (host) {
+            async updatePC(host) {
                 //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;

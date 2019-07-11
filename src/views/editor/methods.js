@@ -33,8 +33,8 @@ function sortPC(t) {
     let pcKeys = Object.keys(t.JSONObject.puppet_classes);
     pcKeys.sort();
     let res = {};
-    for (let i=0;i<pcKeys.length;i++) {
-        res[pcKeys[i]] = t.JSONObject.puppet_classes[pcKeys[i]].sort( (a, b) => a.subclass.localeCompare( b.subclass ));
+    for (let i = 0; i < pcKeys.length; i++) {
+        res[pcKeys[i]] = t.JSONObject.puppet_classes[pcKeys[i]].sort((a, b) => a.subclass.localeCompare(b.subclass));
     }
 
     t.JSONObject.puppet_classes = res;
