@@ -2,6 +2,7 @@ import Api from "./Api";
 
 export const environmentService = {
     List,
+    ListAll,
     Check,
     Update,
     ForemanID,
@@ -10,13 +11,11 @@ export const environmentService = {
 
 // GET ===========================================
 function List(host) {
-    if (!host) {
-        return Api().get("env");
-    } else {
         return Api().get(`env/${host}`);
-    }
 }
-
+function ListAll() {
+    return Api().get("env");
+}
 function SVNInfo(host, name) {
     return Api().get(`env/svn/info/${host}/${name}`);
 }
@@ -26,7 +25,7 @@ function Check(data) {
 }
 
 function ForemanID(data) {
-    return Api().post("env/id", data)
+    return Api().post("/env/check/foreman", data)
 }
 
 function Update(host) {
