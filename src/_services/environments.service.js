@@ -10,6 +10,8 @@ export const environmentService = {
     SVNLog,
     SVNRepo,
     SVNRepoSubmit,
+    SVNRepoUpdate,
+    SVNRepoCheckout,
 };
 
 // GET ===========================================
@@ -35,6 +37,14 @@ function Check(data) {
 
 function SVNRepoSubmit(host, url) {
     return Api().post(`env/svn/repo/${host}`, {"url": url});
+}
+
+function SVNRepoUpdate(data) {
+    return Api().post("/env/svn/update", data);
+}
+
+function SVNRepoCheckout(data) {
+    return Api().post("/env/svn/checkout", data);
 }
 
 function ForemanID(data) {

@@ -105,7 +105,15 @@
                             </div>
                             <div v-else>
                                 <v-layout row>
-                                    <v-flex xs6>
+                                    <v-flex v-if="swe_updating" xs6 class="text-xs-center mt-5">
+                                        <fingerprint-spinner
+                                                class="spinner"
+                                                :animation-duration="1500"
+                                                :size="64"
+                                                color="#7ac2ff"
+                                        />
+                                    </v-flex>
+                                    <v-flex  v-else xs6>
                                         <v-card v-if="svnInfo.directory">
                                             <v-toolbar class="text-xs-center" dark color="#218ce0">
                                                 <v-toolbar-title>Directory</v-toolbar-title>
@@ -119,7 +127,7 @@
                                             </v-card-text>
                                         </v-card>
                                     </v-flex>
-                                    <v-flex xs6>
+                                    <v-flex ml-2 xs6>
                                         <v-card v-if="svnInfo.repository">
                                             <v-toolbar class="text-xs-center" dark color="#43b3c1">
                                                 <v-toolbar-title>Repository</v-toolbar-title>
@@ -140,8 +148,21 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-btn v-if="!svn_get_error" @click="showSweChangesDialog()">LOG</v-btn>
-                    <v-btn>update</v-btn>
-                    <v-btn v-if="!svn_get_error">update puppet classes</v-btn>
+
+                    <v-btn
+                            v-if="!svnInfo.directory.last_rev"
+                            @click="uploadSWE()"
+                    >
+                        upload
+                    </v-btn>
+                    <v-btn
+                            v-else-if="svnInfo.directory.last_rev !== svnInfo.repository.last_rev"
+                            @click="updateSWE()"
+                    >
+                        update
+                    </v-btn>
+<!--                    <v-btn v-if="!svn_get_error">update puppet classes</v-btn>-->
+
                     <v-spacer></v-spacer>
                     <v-btn @click.native="dialog = !dialog">close</v-btn>
                 </v-card-actions>
@@ -152,6 +173,7 @@
         <v-dialog
                 v-model="dialogChanges"
                 max-width="1800"
+                scrollable
         >
             <v-card>
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
@@ -239,9 +261,13 @@
         data: () => ({
             environments: [],
             full_environments: [],
-            svnInfo: [],
+            svnInfo: {
+                repository: {},
+                directory: {},
+            },
             svnLog: [],
             swe_loading: false,
+            swe_updating: false,
             svn_get_error: false,
             svn_repo: null,
             filter: null,
@@ -290,7 +316,10 @@
             async showSweDialog (host, e) {
                 this.svn_get_error = false;
                 this.swe_loading = true;
-                this.svnInfo = [];
+                this.svnInfo = {
+                    repository: {},
+                    directory: {},
+                };
                 this.dialogTitle = `${e} on ${host}`;
                 this.dialog = true;
                 try {
@@ -331,6 +360,39 @@
                     await environmentService.SVNRepoSubmit(this.dialogHost, this.svn_repo);
                 } catch (e) {
                     console.info(e);
+                } finally {
+                    this.dialogEditRepo = false;
+                }
+            },
+            async updateSWE () {
+                let postParams = {
+                    "host":        this.dialogHost,
+                    "environment": this.dialogSwe,
+                };
+                this.swe_updating = true;
+                try {
+                    await environmentService.SVNRepoUpdate(postParams);
+                    this.svnLog = (await environmentService.SVNInfo(this.dialogHost, this.dialogSwe)).data;
+                } catch (e) {
+                    console.info(e);
+                } finally {
+                    this.swe_updating = false;
+                }
+            },
+            async uploadSWE () {
+                let postParams = {
+                    "host":        this.dialogHost,
+                    "environment": this.dialogSwe,
+                };
+                this.swe_updating = true;
+                try {
+                    await environmentService.SVNRepoCheckout(postParams);
+                    this.svnLog = (await environmentService.SVNInfo(this.dialogHost, this.dialogSwe)).data;
+                    this.$forceUpdate();
+                } catch (e) {
+                    console.info(e);
+                } finally {
+                    this.swe_updating = false;
                 }
             },
         }
