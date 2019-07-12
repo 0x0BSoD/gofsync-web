@@ -22,6 +22,22 @@
                             <v-card>
                                 <v-card-title class="pr-0 pl-3 pt-0 pb-0">
                                     <v-btn flat small>{{host}}</v-btn>
+                                    <v-spacer></v-spacer>
+                                    <v-menu bottom left>
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn
+                                                    icon
+                                                    v-on="on"
+                                            >
+                                                <v-icon>more_vert</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-list>
+                                            <v-list-tile @click="editRepo(host)">
+                                                <v-list-tile-title>SVN Repo</v-list-tile-title>
+                                            </v-list-tile>
+                                        </v-list>
+                                    </v-menu>
                                 </v-card-title>
                                 <v-card-text>
                                     <v-hover v-for="e in env" :key="e.name">
@@ -65,10 +81,10 @@
         <!-- ======================================================================================================= -->
         <v-dialog
                 v-model="dialog"
-                max-width="800"
+                max-width="1000"
         >
             <v-card>
-                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                <v-toolbar class="text-xs-center" dark color="#0066ff">
                     <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
                     <v-spacer></v-spacer>
                 </v-toolbar>
@@ -85,19 +101,45 @@
                         </v-flex>
                         <v-flex v-else xs12>
                             <div v-if="svn_get_error" class="ml-5">
-                                <v-chip class="error" label>No Code on host</v-chip>
+                                <v-chip class="error" label>No Code</v-chip>
                             </div>
-                            <div v-else class="ml-5">
-                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.last_author}}</p>
-                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.last_rev}}</p>
-                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.revision}}</p>
-                                <p><v-chip label>Updated:</v-chip>{{svnInfo.last_date}}</p>
+                            <div v-else>
+                                <v-layout row>
+                                    <v-flex xs6>
+                                        <v-card v-if="svnInfo.directory">
+                                            <v-toolbar class="text-xs-center" dark color="#218ce0">
+                                                <v-toolbar-title>Directory</v-toolbar-title>
+                                                <v-spacer></v-spacer>
+                                            </v-toolbar>
+                                            <v-card-text>
+                                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.directory.last_author}}</p>
+                                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.directory.last_rev}}</p>
+                                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.directory.revision}}</p>
+                                                <p><v-chip label>Updated:</v-chip>{{svnInfo.directory.last_date}}</p>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                    <v-flex xs6>
+                                        <v-card v-if="svnInfo.repository">
+                                            <v-toolbar class="text-xs-center" dark color="#43b3c1">
+                                                <v-toolbar-title>Repository</v-toolbar-title>
+                                                <v-spacer></v-spacer>
+                                            </v-toolbar>
+                                            <v-card-text>
+                                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.repository.last_author}}</p>
+                                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.repository.last_rev}}</p>
+                                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.repository.revision}}</p>
+                                                <p><v-chip label>Updated:</v-chip>{{svnInfo.repository.last_date}}</p>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                </v-layout>
                             </div>
                         </v-flex>
                     </v-layout>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn v-if="!svn_get_error" @click="showSweChangesDialog()">changes</v-btn>
+                    <v-btn v-if="!svn_get_error" @click="showSweChangesDialog()">LOG</v-btn>
                     <v-btn>update</v-btn>
                     <v-btn v-if="!svn_get_error">update puppet classes</v-btn>
                     <v-spacer></v-spacer>
@@ -109,7 +151,7 @@
         <!-- ======================================================================================================= -->
         <v-dialog
                 v-model="dialogChanges"
-                max-width="1024"
+                max-width="1800"
         >
             <v-card>
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
@@ -119,12 +161,67 @@
 
                 <v-card-text>
                     <v-layout row>
+                        <v-flex xs12>
+                            <v-card
+                                v-for="(i, key) in svnLog.log_entry"
+                                :key="key"
+                            >
+                                <v-layout row>
+                                    <v-flex xs2>
+                                        <v-chip label>Revision</v-chip> {{i.revision}}
+                                    </v-flex>
+                                    <v-flex xs3>
+                                        <v-chip label>Author</v-chip> {{i.author}}
+                                    </v-flex>
+                                    <v-flex xs2>
+                                        <v-chip label>Date</v-chip> {{i.date.split("T")[0]}}
+                                    </v-flex>
+                                    <v-flex xs5>
+                                        <v-chip label>Msg</v-chip> {{i.msg}}
+                                    </v-flex>
+                                </v-layout>
+                            </v-card>
+                        </v-flex>
                     </v-layout>
                 </v-card-text>
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn @click.native="dialogChanges = !dialogChanges">close</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+
+        <!-- ======================================================================================================= -->
+        <v-dialog
+                v-model="dialogEditRepo"
+                max-width="800"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                    <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
+
+                <v-card-text>
+                    <v-layout row>
+                        <v-flex xs12>
+                            <v-text-field
+                                    label="Repository URL"
+                                    v-model="svn_repo"
+                                    outline
+                                    clearable
+                            ></v-text-field>
+                            <v-label>must be a full path to environment directory</v-label>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-btn @click="submitRepo()">save</v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogEditRepo = !dialogEditRepo">close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -143,11 +240,17 @@
             environments: [],
             full_environments: [],
             svnInfo: [],
+            svnLog: [],
             swe_loading: false,
             svn_get_error: false,
+            svn_repo: null,
             filter: null,
+            repo: null,
+            dialogHost: null,
+            dialogSwe: null,
             dialog: false,
             dialogChanges: false,
+            dialogEditRepo: false,
             dialogTitle: null,
         }),
 
@@ -196,12 +299,40 @@
                     console.info(e);
                     this.svn_get_error = true;
                 } finally {
+                    this.dialogHost = host;
+                    this.dialogSwe = e;
                     this.swe_loading = false;
                 }
             },
-            showSweChangesDialog () {
-                this.dialogChanges = true;
-            }
+            async showSweChangesDialog () {
+                this.swe_loading = true;
+                try {
+                    this.svnLog = (await environmentService.SVNLog(this.dialogHost, this.dialogSwe)).data;
+                } catch (e) {
+                    console.info(e);
+                } finally {
+                    this.swe_loading = false;
+                    this.dialogChanges = true;
+                }
+            },
+            async editRepo (host) {
+                this.dialogTitle = `Repo URL for ${host}`;
+                try {
+                    this.svn_repo = (await environmentService.SVNRepo(host)).data;
+                } catch (e) {
+                    console.info(e);
+                } finally {
+                    this.dialogHost = host;
+                    this.dialogEditRepo = true;
+                }
+            },
+            async submitRepo () {
+                try {
+                    await environmentService.SVNRepoSubmit(this.dialogHost, this.svn_repo);
+                } catch (e) {
+                    console.info(e);
+                }
+            },
         }
     }
 </script>
