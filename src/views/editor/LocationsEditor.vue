@@ -28,8 +28,8 @@
             </v-flex>
                         <v-flex xs5>
             <!--                <v-btn large>add new location</v-btn>-->
-                            <v-btn v-if="location" large @click="submitBtn(host, location)">save</v-btn>
-                            <v-btn v-if="location" large @click="submitAsDialog(location)">save as</v-btn>
+                            <v-btn v-if="location" :disabled="wip" large @click="submitBtn(host, location)">save</v-btn>
+                            <v-btn v-if="location" :disabled="wip" large @click="submitAsDialog(location)">save as</v-btn>
                         </v-flex>
         </v-layout>
         <!--        <v-flex xs12 mb-3>-->
@@ -119,7 +119,15 @@
                         </v-toolbar>
                         <v-card-text>
                             <v-layout  row wrap>
-                                <v-flex xs12>
+                                <v-flex v-if="submitting" xs12 class="text-xs-center pt-2">
+                                    <fingerprint-spinner
+                                            class="spinner"
+                                            :animation-duration="1500"
+                                            :size="64"
+                                            color="#7ac2ff"
+                                    />
+                                </v-flex>
+                                <v-flex v-if="!submitting" xs12>
                                     <v-autocomplete
                                             v-model="tHost"
                                             :items="hosts"
@@ -131,7 +139,7 @@
                                     >
                                     </v-autocomplete>
                                 </v-flex>
-                                <v-flex xs12>
+                                <v-flex v-if="!submitting" xs12>
                                     <v-text-field
                                             v-model="locNewName"
                                             label="location new name"
@@ -155,11 +163,13 @@
 <script>
     import {Common} from "../methods";
     import { hostService, locationsService, pcService, SmartClassesService } from "../../_services"
+    import {FingerprintSpinner} from 'epic-spinners'
 
     export default {
 
-        components: {},
-
+        components: {
+            FingerprintSpinner
+        },
         computed: {
             filter() {
                 return this.caseSensitive
@@ -182,6 +192,7 @@
             overridesIDs: [],
             allPuppetClasses: [],
             wip: false,
+            submitting: false,
             dialog: false,
             dialogTitle: null,
             search: null,
@@ -245,7 +256,6 @@
             },
             host: {
                 async handler(val) {
-
                     this.overrides = [];
                     this.location = null;
                     this.allPuppetClasses = (await pcService.All(this.host)).data;
@@ -294,12 +304,16 @@
         methods: {
             async submit (params) {
                 try {
+                    this.wip = true;
+                    this.submitting = true;
                     let resp = (await locationsService.Submit(params)).data;
                     console.log(resp);
                 } catch (e) {
                     console.error(e);
                 } finally {
                     this.dialog = false;
+                    this.submitting = false;
+                    this.wip = false;
                 }
             },
             submitBtn (target, name) {
