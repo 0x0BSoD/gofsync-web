@@ -4,6 +4,7 @@ export const locationsService = {
     List,
     Overrides,
     Update,
+    Submit,
 };
 
 // GET ===========================================
@@ -18,4 +19,8 @@ function Overrides(locName, host) {
 // POST ===========================================
 function Update(host) {
     return Api().post(`loc/${host}`);
+}
+
+function Submit(data) {
+    return Api().post("loc/submit", data);
 }

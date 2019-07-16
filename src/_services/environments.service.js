@@ -6,6 +6,7 @@ export const environmentService = {
     Check,
     Update,
     ForemanID,
+    // Submit,
     SVNInfo,
     SVNLog,
     SVNRepo,
@@ -34,6 +35,10 @@ function SVNRepo(host) {
 function Check(data) {
     return Api().post("env/check", data)
 }
+
+// function Submit(data) {
+//     return Api().post("env/submit", data)
+// }
 
 function SVNRepoSubmit(host, url) {
     return Api().post(`env/svn/repo/${host}`, {"url": url});

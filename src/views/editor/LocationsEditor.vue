@@ -26,11 +26,11 @@
                 >
                 </v-autocomplete>
             </v-flex>
-            <!--            <v-flex xs5>-->
+                        <v-flex xs5>
             <!--                <v-btn large>add new location</v-btn>-->
-            <!--                <v-btn large>save</v-btn>-->
-            <!--                <v-btn large>save as</v-btn>-->
-            <!--            </v-flex>-->
+                            <v-btn v-if="location" large @click="submitBtn(host, location)">save</v-btn>
+                            <v-btn v-if="location" large @click="submitAsDialog(location)">save as</v-btn>
+                        </v-flex>
         </v-layout>
         <!--        <v-flex xs12 mb-3>-->
         <!--            <v-btn small @click.stop="dialog = true">add puppet class</v-btn>-->
@@ -106,52 +106,55 @@
             </v-flex>
         </v-layout>
 
-        <!--  ========================================================================================================      -->
-        <!--        <v-dialog-->
-        <!--                v-model="dialog"-->
-        <!--                scrollable-->
-        <!--                max-width="800px"-->
-        <!--        >-->
-        <!--            <v-card-->
-        <!--                    class="mx-auto"-->
-        <!--            >-->
-        <!--                <v-sheet class="pa-3 primary lighten-2">-->
-        <!--                    <v-text-field-->
-        <!--                            v-model="search"-->
-        <!--                            label="Search"-->
-        <!--                            dark-->
-        <!--                            flat-->
-        <!--                            solo-inverted-->
-        <!--                            hide-details-->
-        <!--                            clearable-->
-        <!--                            clear-icon="mdi-close-circle-outline"-->
-        <!--                    ></v-text-field>-->
-        <!--                    <v-checkbox-->
-        <!--                            v-model="caseSensitive"-->
-        <!--                            dark-->
-        <!--                            hide-details-->
-        <!--                            label="Case sensitive search"-->
-        <!--                    ></v-checkbox>-->
-        <!--                </v-sheet>-->
-        <!--                <v-card-text>-->
-        <!--                    <v-treeview-->
-        <!--                            v-model="selectedPC"-->
-        <!--                            :items="allPuppetClasses"-->
-        <!--                            :search="search"-->
-        <!--                            :filter="filter"-->
-        <!--                            open-on-click-->
-        <!--                            selectable-->
-        <!--                    >-->
-        <!--                    </v-treeview>-->
-        <!--                </v-card-text>-->
-        <!--            </v-card>-->
-        <!--        </v-dialog>-->
+                <v-dialog
+                        v-model="dialog"
+                        max-width="800px"
+                >
+                    <v-card
+                            class="mx-auto"
+                    >
+                        <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                            <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                            <v-spacer></v-spacer>
+                        </v-toolbar>
+                        <v-card-text>
+                            <v-layout  row wrap>
+                                <v-flex xs12>
+                                    <v-autocomplete
+                                            v-model="tHost"
+                                            :items="hosts"
+                                            label="Target Host"
+                                            item-text="name"
+                                            item-value="name"
+                                            persistent-hint
+                                            outline
+                                    >
+                                    </v-autocomplete>
+                                </v-flex>
+                                <v-flex xs12>
+                                    <v-text-field
+                                            v-model="locNewName"
+                                            label="location new name"
+                                            persistent-hint
+                                            outline
+                                    >
+                                    </v-text-field>
+                                </v-flex>
+                            </v-layout>
+                        </v-card-text>
+                    <v-card-actions>
+                        <v-btn @click="submitAsBtn()">save</v-btn>
+                        <v-spacer></v-spacer>
+                        <v-btn @click.native="dialog = !dialog">cancel</v-btn>
+                    </v-card-actions>
+                    </v-card>
+                </v-dialog>
     </v-container>
 </template>
 
 <script>
     import {Common} from "../methods";
-    import {hostService, locationsService, pcService, SmartClassesService} from "../../_services"
+    import { hostService, locationsService, pcService, SmartClassesService } from "../../_services"
 
     export default {
 
@@ -171,13 +174,16 @@
             selectedPC: [],
             locations: [],
             location: null,
+            locNewName: null,
             hosts: [],
             host: null,
+            tHost: null,
             overrides: [],
             overridesIDs: [],
             allPuppetClasses: [],
             wip: false,
             dialog: false,
+            dialogTitle: null,
             search: null,
             caseSensitive: false,
             pcSync: false,
@@ -285,7 +291,41 @@
                 }
             },
         },
-        methods: {}
+        methods: {
+            async submit (params) {
+                try {
+                    let resp = (await locationsService.Submit(params)).data;
+                    console.log(resp);
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    this.dialog = false;
+                }
+            },
+            submitBtn (target, name) {
+                let params = {
+                    "name": name,
+                    "source": this.host,
+                    "target": target,
+                    "data": this.overrides,
+                };
+                this.submit(params);
+            },
+            submitAsDialog (name) {
+                this.dialog = true;
+                this.dialogTitle = name;
+            },
+            submitAsBtn () {
+
+                let params = {
+                    "name": this.locNewName,
+                    "source": this.host,
+                    "target": this.tHost,
+                    "data": this.overrides,
+                };
+                this.submit(params);
+            }
+        }
     }
 
     function findId(arr, id) {

@@ -9,9 +9,9 @@ Vue.use(
     config.ws(),
     {
         connectManually: true,
-        // reconnection: true,
-        // reconnectionAttempts: 5,
-        // reconnectionDelay: 3000,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 3000,
         store: store,
         format: 'json',
     },
