@@ -2,7 +2,7 @@
     <v-container>
         <v-item-group>
             <v-container grid-list-md>
-                <v-layout wrap>
+                <v-layout row wrap>
                     <v-flex xs12>
                         <v-text-field
                                 label="Filter"
@@ -11,6 +11,9 @@
                                 clearable
                         ></v-text-field>
                     </v-flex>
+<!--                    <v-flex xs2>-->
+<!--                        <v-btn large flat @click="batchDialog()">BATCH UPDATE</v-btn>-->
+<!--                    </v-flex>-->
                     <v-flex
                             v-for="(env, host) in environments"
                             :key="host"
@@ -42,8 +45,10 @@
                                 <v-card-text>
                                     <v-hover v-for="e in env" :key="e.name">
                                         <v-btn
-                                                slot-scope="{ hover }"
                                                 v-if="e.state==='absent'"
+                                                :loading="e.loading"
+                                                :disabled="e.loading"
+                                                slot-scope="{ hover }"
                                                 :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                 class="mx-auto danger"
                                                 color="error"
@@ -52,6 +57,8 @@
                                         </v-btn>
                                         <v-btn
                                                 v-else-if="e.state==='outdated'"
+                                                :loading="e.loading"
+                                                :disabled="e.loading"
                                                 slot-scope="{ hover }"
                                                 :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                 class="mx-auto"
@@ -61,6 +68,8 @@
                                         </v-btn>
                                         <v-btn
                                                 v-else
+                                                :loading="e.loading"
+                                                :disabled="e.loading"
                                                 slot-scope="{ hover }"
                                                 :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                 class="mx-auto"
@@ -114,30 +123,30 @@
                                         />
                                     </v-flex>
                                     <v-flex  v-else xs6>
-                                        <v-card v-if="svnInfo.directory">
+                                        <v-card v-if="svnInfo.directory.entry">
                                             <v-toolbar class="text-xs-center" dark color="#218ce0">
                                                 <v-toolbar-title>Directory</v-toolbar-title>
                                                 <v-spacer></v-spacer>
                                             </v-toolbar>
                                             <v-card-text>
-                                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.directory.last_author}}</p>
-                                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.directory.last_rev}}</p>
-                                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.directory.revision}}</p>
-                                                <p><v-chip label>Updated:</v-chip>{{svnInfo.directory.last_date}}</p>
+                                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.directory.entry.commit.author}}</p>
+                                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.directory.entry.commit.revision}}</p>
+                                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.directory.entry.revision}}</p>
+                                                <p><v-chip label>Updated:</v-chip>{{svnInfo.directory.entry.commit.date.split(".")[0].split("T").join(" ")}}</p>
                                             </v-card-text>
                                         </v-card>
                                     </v-flex>
                                     <v-flex ml-2 xs6>
-                                        <v-card v-if="svnInfo.repository">
+                                        <v-card v-if="svnInfo.repository.entry">
                                             <v-toolbar class="text-xs-center" dark color="#43b3c1">
                                                 <v-toolbar-title>Repository</v-toolbar-title>
                                                 <v-spacer></v-spacer>
                                             </v-toolbar>
                                             <v-card-text>
-                                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.repository.last_author}}</p>
-                                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.repository.last_rev}}</p>
-                                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.repository.revision}}</p>
-                                                <p><v-chip label>Updated:</v-chip>{{svnInfo.repository.last_date}}</p>
+                                                <p><v-chip label>Last Author:</v-chip>{{svnInfo.repository.entry.commit.author}}</p>
+                                                <p><v-chip label>Last changes on revision:</v-chip>{{svnInfo.repository.entry.commit.revision}}</p>
+                                                <p><v-chip label>Current revision:</v-chip>{{svnInfo.repository.entry.revision}}</p>
+                                                <p><v-chip label>Updated:</v-chip>{{svnInfo.repository.entry.commit.date.split(".")[0].split("T").join(" ")}}</p>
                                             </v-card-text>
                                         </v-card>
                                     </v-flex>
@@ -249,6 +258,45 @@
         </v-dialog>
 
 
+        <!-- ======================================================================================================= -->
+        <v-dialog
+                v-model="dialogBatchSwe"
+                max-width="800"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                    <v-btn icon>
+                        <v-icon>accessible_forward</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>Batch Update</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
+
+                <v-card-text>
+                    <v-layout row>
+                        <v-flex xs12>
+                            <v-autocomplete
+                                    clearable
+                                    multiple
+                                    v-model="toUpdate"
+                                    :items="allSwe"
+                                    label="SWE's to update/checkout"
+                                    persistent-hint
+                                    box
+                            >
+                            </v-autocomplete>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-btn @click="batchStart()">Update</v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogBatchSwe = !dialogBatchSwe">close</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
     </v-container>
 </template>
 
@@ -258,6 +306,16 @@
     import {FingerprintSpinner} from 'epic-spinners'
 
     export default {
+
+        //========================================================================================================
+        // COMPOUNDED
+        //========================================================================================================
+        computed: {
+            nowActions() {
+                return this.$store.state.socketModule.socket.message;
+            },
+        },
+
         data: () => ({
             environments: [],
             full_environments: [],
@@ -266,6 +324,8 @@
                 directory: {},
             },
             svnLog: [],
+            allSwe: [],
+            toUpdate: [],
             swe_loading: false,
             swe_updating: false,
             svn_get_error: false,
@@ -277,6 +337,7 @@
             dialog: false,
             dialogChanges: false,
             dialogEditRepo: false,
+            dialogBatchSwe: false,
             dialogTitle: null,
         }),
 
@@ -294,6 +355,12 @@
         },
 
         watch: {
+            nowActions: {
+                async handler (val) {
+
+                }
+            },
+
             filter: {
                 async handler (val) {
                     if (val && this.full_environments) {
@@ -311,8 +378,48 @@
                 }
             },
         },
-
         methods: {
+
+            batchDialog () {
+                this.dialogBatchSwe = true;
+                for (let i in this.full_environments) {
+                    let host = this.full_environments[i];
+                    for (let j in host) {
+                        if (!this.allSwe.includes(host[j].name)) {
+                            this.allSwe.push(host[j].name);
+                        }
+                    }
+                }
+                this.allSwe.sort(function (a, b) {
+                    return ('' + a).localeCompare(b);
+                });
+            },
+
+            batchStart() {
+
+                let post_data = {};
+
+                for (let i in this.toUpdate) {
+                    for (let j in this.environments) {
+                        post_data[j] = [];
+                        for (let k in this.environments[j]) {
+                            if (this.environments[j][k].name === this.toUpdate[i]) {
+                                this.environments[j][k].loading = true;
+                                try {
+                                    post_data[j].push(this.environments[j][k].name);
+                                } catch (e) {
+                                    console.error(e);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                console.log(post_data);
+                this.$forceUpdate();
+                this.dialogBatchSwe = false;
+            },
+
             async showSweDialog (host, e) {
                 this.svn_get_error = false;
                 this.swe_loading = true;
@@ -376,6 +483,10 @@
                 } catch (e) {
                     console.info(e);
                 } finally {
+                    this.svnInfo = (await environmentService.SVNInfo(host, e)).data;
+                    this.environments = (await environmentService.ListAll()).data;
+                    this.full_environments = (await environmentService.ListAll()).data;
+                    this.$forceUpdate();
                     this.swe_updating = false;
                 }
             },
@@ -388,10 +499,13 @@
                 try {
                     await environmentService.SVNRepoCheckout(postParams);
                     this.svnLog = (await environmentService.SVNInfo(this.dialogHost, this.dialogSwe)).data;
-                    this.$forceUpdate();
                 } catch (e) {
                     console.info(e);
                 } finally {
+                    this.svnInfo = (await environmentService.SVNInfo(this.dialogHost, this.dialogSwe)).data;
+                    this.environments = (await environmentService.ListAll()).data;
+                    this.full_environments = (await environmentService.ListAll()).data;
+                    this.$forceUpdate();
                     this.swe_updating = false;
                 }
             },

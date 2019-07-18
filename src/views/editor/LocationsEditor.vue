@@ -1,8 +1,13 @@
 <template>
     <v-container>
+
         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
         <!-- ============================================= Top Panel ============================================= -->
         <v-layout row wrap>
+            <v-flex v-if="wip" xs12>
+                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
+                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+            </v-flex>
             <v-flex xs2 mr-2 mt-1>
                 <v-autocomplete
                         v-model="host"
@@ -67,6 +72,9 @@
                                                         <div>
                                                             <v-layout row>
                                                                 <v-flex>
+                                                                    <v-chip
+                                                                            v-if="param.old_val !== param.value"
+                                                                            dark label> CHANGED</v-chip>
                                                                     <v-chip label> {{ param.type }}</v-chip>
                                                                 </v-flex>
                                                                 <v-flex>
@@ -142,6 +150,7 @@
                                 <v-flex v-if="!submitting" xs12>
                                     <v-text-field
                                             v-model="locNewName"
+                                            :disabled="!tHost"
                                             label="location new name"
                                             persistent-hint
                                             outline
@@ -151,7 +160,7 @@
                             </v-layout>
                         </v-card-text>
                     <v-card-actions>
-                        <v-btn @click="submitAsBtn()">save</v-btn>
+                        <v-btn :disabled="!locNewName" @click="submitAsBtn()">save</v-btn>
                         <v-spacer></v-spacer>
                         <v-btn @click.native="dialog = !dialog">cancel</v-btn>
                     </v-card-actions>
@@ -170,13 +179,22 @@
         components: {
             FingerprintSpinner
         },
+
+
+        //========================================================================================================
+        // COMPOUNDED
+        //========================================================================================================
         computed: {
+            nowActions() {
+                return this.$store.state.socketModule.socket.message;
+            },
             filter() {
                 return this.caseSensitive
                     ? (item, search, textKey) => item[textKey].indexOf(search) > -1
                     : undefined
             },
         },
+
         //========================================================================================================
         // DATA
         //========================================================================================================
@@ -273,15 +291,20 @@
             },
             location: {
                 async handler(val) {
+                    this.wip = true;
                     this.pcSync = false;
                     let tmp = (await locationsService.Overrides(val, this.host)).data;
-                    tmp.sort((a, b) => a.puppet_class > b.puppet_class);
-                    this.overrides = tmp;
-                    // let res = {};
-                    // for (let i in tmp) {
-                    //     res[tmp[i].puppet_class] = [];
-                    // }
-                    //
+                    // tmp.sort((a, b) => a.puppet_class > b.puppet_class);
+                    let res = [];
+                    for (let i in tmp) {
+                        tmp[i].changed = false;
+                        for (let p in tmp[i].parameters) {
+                            tmp[i].parameters[p].old_val = tmp[i].parameters[p].value;
+                            console.log(tmp[i].parameters[p]);
+                        }
+                        res.push(tmp[i]);
+
+                    }
                     // for (let i in tmp) {
                     //     let id = checkByName(this.allPuppetClasses, tmp[i].puppet_class, tmp[i].smart_class_name);
                     //
@@ -296,8 +319,9 @@
                     //         foreman_ovr_id: tmp[i].ovr_foreman_id,
                     //     });
                     // }
-                    // this.overrides = res;
+                    this.overrides = res;
                     this.pcSync = true;
+                    this.wip = false;
                 }
             },
         },
