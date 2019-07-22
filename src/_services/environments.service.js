@@ -33,7 +33,7 @@ function SVNRepo(host) {
 }
 // POST ===========================================
 function Check(data) {
-    return Api().post("env/check", data)
+    return Api().post("env/db/check", data)
 }
 
 // function Submit(data) {
@@ -41,7 +41,7 @@ function Check(data) {
 // }
 
 function SVNRepoSubmit(host, url) {
-    return Api().post(`env/svn/repo/${host}`, {"url": url});
+    return Api().post(`env/svn/repo`, {"url": url, "host": host});
 }
 
 function SVNRepoUpdate(data) {
@@ -53,9 +53,9 @@ function SVNRepoCheckout(data) {
 }
 
 function ForemanID(data) {
-    return Api().post("/env/check/foreman", data)
+    return Api().post("/env/foreman/check", data)
 }
 
 function Update(host) {
-    return Api().post(`env/${host}`);
+    return Api().post("env/db/update", {"host": host});
 }

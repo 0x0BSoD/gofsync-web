@@ -3,7 +3,7 @@
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout row wrap>
-                    <v-flex xs12>
+                    <v-flex xs10>
                         <v-text-field
                                 label="Filter"
                                 v-model="filter"
@@ -11,9 +11,9 @@
                                 clearable
                         ></v-text-field>
                     </v-flex>
-<!--                    <v-flex xs2>-->
-<!--                        <v-btn large flat @click="batchDialog()">BATCH UPDATE</v-btn>-->
-<!--                    </v-flex>-->
+                    <v-flex xs2>
+                        <v-btn large flat @click="batchDialog()">BATCH UPDATE</v-btn>
+                    </v-flex>
                     <v-flex
                             v-for="(env, host) in environments"
                             :key="host"

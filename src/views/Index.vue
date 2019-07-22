@@ -11,56 +11,149 @@
                             xl4
                     >
                         <v-item>
+
                             <v-card>
-                                <v-card-title class="pr-0 pl-3 pt-0 pb-0">
-                                    <v-btn flat small :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
-                                    </v-btn>
+                                <v-toolbar dark color="#7ac2ff">
+                                    <v-toolbar-title>
+                                        <v-btn flat :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
+                                        </v-btn>
+                                    </v-toolbar-title>
                                     <v-spacer></v-spacer>
-                                    <v-chip v-if="n.env === 'stage'" small color="success">STAGE</v-chip>
-                                    <v-chip v-if="n.env === 'prod'" small color="warning">PROD</v-chip>
-                                    <v-menu bottom left>
-                                        <template v-slot:activator="{ on }">
-                                            <v-btn
-                                                    icon
-                                                    v-on="on"
-                                            >
-                                                <v-icon>more_vert</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <v-list>
-                                            <v-list-tile @click="">
-                                                <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to
-                                                    foreman</a>
-                                            </v-list-tile>
-                                            <v-list-tile @click="updateLoc(n.host)">
-                                                <v-list-tile-title>update locations</v-list-tile-title>
-                                            </v-list-tile>
-                                            <v-list-tile @click="updateEnv(n.host)">
-                                                <v-list-tile-title>update environments</v-list-tile-title>
-                                            </v-list-tile>
-                                            <v-list-tile @click="updatePC(n.host)">
-                                                <v-list-tile-title>update puppet classes</v-list-tile-title>
-                                            </v-list-tile>
-                                            <v-list-tile @click="updateHG(n.host)">
-                                                <v-list-tile-title>update hostgroups</v-list-tile-title>
-                                            </v-list-tile>
-                                            <v-list-tile @click="showSweDialog(n.host)">
-                                                <v-list-tile-title>hosts by HG</v-list-tile-title>
-                                            </v-list-tile>
-                                        </v-list>
-                                    </v-menu>
-                                </v-card-title>
+                                        <v-chip v-if="n.env === 'stage'" small color="success">STAGE</v-chip>
+                                        <v-chip v-if="n.env === 'prod'" small color="warning">PROD</v-chip>
+                                        <v-menu bottom left>
+                                            <template v-slot:activator="{ on }">
+                                                <v-btn
+                                                        icon
+                                                        v-on="on"
+                                                >
+                                                    <v-icon>more_vert</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <v-list>
+                                                <v-list-tile @click="">
+                                                    <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to
+                                                        foreman</a>
+                                                </v-list-tile>
+                                                <v-list-tile @click="updateLoc(n.host)">
+                                                    <v-list-tile-title>update locations</v-list-tile-title>
+                                                </v-list-tile>
+                                                <v-list-tile @click="updateEnv(n.host)">
+                                                    <v-list-tile-title>update environments</v-list-tile-title>
+                                                </v-list-tile>
+                                                <v-list-tile @click="updatePC(n.host)">
+                                                    <v-list-tile-title>update puppet classes</v-list-tile-title>
+                                                </v-list-tile>
+                                                <v-list-tile @click="updateHG(n.host)">
+                                                    <v-list-tile-title>update hostgroups</v-list-tile-title>
+                                                </v-list-tile>
+                                                <v-list-tile @click="showSweDialog(n.host)">
+                                                    <v-list-tile-title>hosts by HG</v-list-tile-title>
+                                                </v-list-tile>
+                                            </v-list>
+                                        </v-menu>
+                                </v-toolbar>
                                 <v-divider></v-divider>
-                                <v-hover v-for="c in n.locations" :key="c">
-                                    <v-btn
-                                            slot-scope="{ hover }"
-                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
-                                            class="mx-auto"
-                                            :to="{name:'locations', query: {source: n.host, location: c }}"
-                                            small>{{c}}
-                                    </v-btn>
-                                </v-hover>
+
+                                <v-card-text>
+                                    <v-layout row wrap  class="mb-4">
+                                        <v-flex
+                                                xs12
+                                                md6
+                                                xl5
+                                        >
+                                            <v-card
+                                                    class="mx-auto"
+                                            >
+                                            <table class="info_table">
+                                                <thead>
+                                                <tr>
+                                                    <th>Last Hosts</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <v-chip color="success" label>Success:</v-chip>
+                                                    </td>
+                                                    <td>
+                                                        999
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <v-chip color="warning" label>Restart Failures:</v-chip>
+                                                    </td>
+                                                    <td>
+                                                        0
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <v-chip color="error" label>Failed:</v-chip>
+                                                    </td>
+                                                    <td>
+                                                        0
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                            </v-card>
+                                        </v-flex>
+                                        <v-flex
+                                                xs12
+                                                md6
+                                                xl7
+                                        >
+                                            <v-card
+                                                    class="mx-auto"
+                                            >
+                                                <v-sheet
+                                                        class="v-sheet--offset mx-auto"
+                                                        color="cyan dark-1"
+                                                        elevation="2"
+                                                        max-width="calc(100% - 32px)"
+                                                >
+                                                    <v-sparkline
+                                                            :labels="labels"
+                                                            :value="value"
+                                                            color="white"
+                                                            line-width="2"
+                                                            padding="16"
+                                                    ></v-sparkline>
+                                                </v-sheet>
+
+                                                <v-card-text class="pt-2">
+                                                    <div class="title font-weight-light mb-2">Runs in the last 24 hours</div>
+                                                    <v-divider class="my-2"></v-divider>
+                                                    <v-icon
+                                                            class="mr-2"
+                                                            small
+                                                    >
+                                                        alarm
+                                                    </v-icon>
+                                                    <span class="caption grey--text font-weight-light">last run %HOSTNAME%</span>
+                                                </v-card-text>
+                                            </v-card>
+
+                                        </v-flex>
+                                    </v-layout>
+
+                                    <v-hover v-for="c in n.locations" :key="c">
+                                        <v-btn
+                                                slot-scope="{ hover }"
+                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                class="mx-auto"
+                                                :to="{name:'locations', query: {source: n.host, location: c }}"
+                                                small>{{c}}
+                                        </v-btn>
+                                    </v-hover>
+                                </v-card-text>
+
+
                             </v-card>
+
                         </v-item>
                     </v-flex>
                 </v-layout>
@@ -245,6 +338,26 @@
             loading: false,
             dialogTitle: "",
             hosts: [],
+            labels: [
+                '12am',
+                '3am',
+                '6am',
+                '9am',
+                '12pm',
+                '3pm',
+                '6pm',
+                '9pm'
+            ],
+            value: [
+                200,
+                675,
+                410,
+                390,
+                310,
+                460,
+                250,
+                240
+            ]
         }),
 
         components: {
@@ -373,5 +486,21 @@
 <style>
     .spinner {
         margin: 0 auto;
+    }
+    .info_table {
+        width: 100%;
+        font-family: "Roboto", Arial, Helvetica, sans-serif;;
+        border-collapse: collapse;
+    }
+    .info_table td {
+        border-bottom: 1px solid #dddddd;
+        padding: 0 12px 0 0;
+    }
+    .info_table tr:nth-child(even){ background-color: #f2f2f2; }
+    .info_table tr:hover {background-color: #ddd;}
+    .info_table th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: center;
     }
 </style>
