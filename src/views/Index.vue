@@ -64,6 +64,7 @@
                                         >
                                             <v-card
                                                     class="mx-auto"
+                                                    elevation="0"
                                             >
                                             <table class="info_table">
                                                 <thead>
@@ -78,7 +79,7 @@
                                                         <v-chip color="success" label>Success:</v-chip>
                                                     </td>
                                                     <td>
-                                                        999
+                                                        {{n.success}}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -86,7 +87,7 @@
                                                         <v-chip color="warning" label>Restart Failures:</v-chip>
                                                     </td>
                                                     <td>
-                                                        0
+                                                        {{n.r_failed}}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -94,7 +95,7 @@
                                                         <v-chip color="error" label>Failed:</v-chip>
                                                     </td>
                                                     <td>
-                                                        0
+                                                        {{n.failed}}
                                                     </td>
                                                 </tr>
                                                 </tbody>
@@ -108,6 +109,7 @@
                                         >
                                             <v-card
                                                     class="mx-auto"
+                                                    elevation="0"
                                             >
                                                 <v-sheet
                                                         class="v-sheet--offset mx-auto"
@@ -116,12 +118,13 @@
                                                         max-width="calc(100% - 32px)"
                                                 >
                                                     <v-sparkline
-                                                            :labels="labels"
-                                                            :value="value"
+                                                            :labels="n.trend.labels"
+                                                            :value="n.trend.values"
                                                             color="white"
                                                             line-width="2"
                                                             padding="16"
-                                                    ></v-sparkline>
+                                                    >
+                                                    </v-sparkline>
                                                 </v-sheet>
 
                                                 <v-card-text class="pt-2">
@@ -133,7 +136,7 @@
                                                     >
                                                         alarm
                                                     </v-icon>
-                                                    <span class="caption grey--text font-weight-light">last run %HOSTNAME%</span>
+                                                    <span class="caption grey--text font-weight-light">last run <strong>{{n.last_host}}</strong></span>
                                                 </v-card-text>
                                             </v-card>
 
@@ -338,26 +341,6 @@
             loading: false,
             dialogTitle: "",
             hosts: [],
-            labels: [
-                '12am',
-                '3am',
-                '6am',
-                '9am',
-                '12pm',
-                '3pm',
-                '6pm',
-                '9pm'
-            ],
-            value: [
-                200,
-                675,
-                410,
-                390,
-                310,
-                460,
-                250,
-                240
-            ]
         }),
 
         components: {

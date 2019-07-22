@@ -1,6 +1,7 @@
 import Api from "./Api";
 
 export const hostService = {
+    Info,
     hosts,
     ClientHosts,
     ClientHostsAll,
@@ -9,6 +10,10 @@ export const hostService = {
 // GET ===========================================
 function hosts() {
     return Api().get("hosts/foreman");
+}
+
+function Info(host) {
+    return Api().get(`/info/${host}`);
 }
 
 function ClientHostsAll(hgName, changed) {
