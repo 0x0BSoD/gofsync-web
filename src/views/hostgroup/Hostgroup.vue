@@ -115,34 +115,49 @@
                         <v-flex xs6>
                             <v-card-text>
                                 <v-layout>
-                                    <v-flex xs6>
-                                        <p>
-                                            <v-label>Name:</v-label>
-                                            <v-chip label>{{hostGroup.name}}</v-chip>
-                                        </p>
-                                        <p>
-                                            <v-label>Environment:</v-label>
-                                            <v-chip label>{{hostGroup.environment}}</v-chip>
-                                        </p>
-                                        <p>
-                                            <v-label>Updated:</v-label>
-                                            <v-chip label>{{hostGroup.updated}}</v-chip>
-                                        </p>
+                                    <v-flex xs4>
+                                        <table>
+                                            <thead>
+                                            <tr><th></th></tr>
+                                            <tr><th></th></tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td><v-chip label>Name:</v-chip></td>
+                                                <td>{{hostGroup.name}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><v-chip label>Environment:</v-chip></td>
+                                                <td>{{hostGroup.environment}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><v-chip label>Updated:</v-chip></td>
+                                                <td>{{hostGroup.updated}}</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
                                     </v-flex>
-                                    <v-flex xs6>
-                                        <p>
-                                            <v-label>Puppet Classes:</v-label>
-                                            <v-chip label>{{pc_count}}</v-chip>
-                                        </p>
-                                        <p>
-                                            <v-label>Overrides:</v-label>
-                                            <v-chip label>{{ovr_count}}</v-chip>
-                                        </p>
-                                        <p class="mt-2">
-                                            <v-btn :to="{name:'jsoneditor', query: {source: sHost, hg: hostGroup.name }}">
-                                                Edit
-                                            </v-btn>
-                                        </p>
+                                    <v-flex xs8>
+                                        <table>
+                                            <thead>
+                                            <tr><th></th></tr>
+                                            <tr><th></th></tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td><v-chip label>Puppet Classes:</v-chip></td>
+                                                <td>{{pc_count}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><v-chip label>Overrides:</v-chip></td>
+                                                <td>{{ovr_count}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><v-btn :to="{name:'jsoneditor', query: {source: sHost, hg: hostGroup.name }}">Edit</v-btn></td>
+                                                <td></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
                                     </v-flex>
                                 </v-layout>
                             </v-card-text>
@@ -611,16 +626,17 @@
                                 this.hgError = true;
                                 this.hgErrorMsg = `Host group ${val} not fond on ${this.sHost}`;
                             }
+                        } finally {
+                            let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                            this.pc_count = pcData.PuppetClassesCount;
+                            this.ovr_count = pcData.PuppetClassesOverrides;
+                            this.pc = pcData.PuppetClasses;
+                            this.tHost = old_th;
+                            this.sourceLoaded = true;
+                            this.wip = false;
                         }
 
-                        let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
-                        this.pc_count = pcData.PuppetClassesCount;
-                        this.ovr_count = pcData.PuppetClassesOverrides;
-                        this.pc = pcData.PuppetClasses;
 
-                        this.tHost = old_th;
-                        this.sourceLoaded = true;
-                        this.wip = false;
                     }
                     // this.$router.push({
                     //     query: {

@@ -101,6 +101,15 @@
                         <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks
                             Result
                         </v-card-title>
+
+                        <v-layout v-if="WSUpdate" row wrap>
+                            <v-flex xs12>
+                                <v-chip label>{{WSUpdateActions}}</v-chip>
+                                <v-chip label>{{WSUpdateState}}</v-chip>
+                                <v-chip label>{{WSState}}</v-chip>
+                            </v-flex>
+                        </v-layout>
+
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
                         <v-card-text
                                 v-else
@@ -115,13 +124,13 @@
                                     <v-layout row wrap>
                                         <v-flex xs3 pt-2>{{swe.tHost}}</v-flex>
                                         <v-flex xs1 pt-2>{{swe.hgName}}</v-flex>
-                                        <v-flex xs2>
+                                        <v-flex xs1>
                                             <v-chip label v-if="swe.environment.targetId === -1" color="red">
                                                 {{swe.environment.name}}
                                             </v-chip>
                                             <v-chip label v-else color="success">{{swe.environment.name}}</v-chip>
                                         </v-flex>
-                                        <v-flex xs5>
+                                        <v-flex xs6>
                                             <v-btn flat v-if="swe.process.checkInProgress">
                                                 Checking
                                                 <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
@@ -167,7 +176,7 @@
 
                     <v-card-actions>
                         <v-btn v-if="!wip" flat color="warning" @click="e1 = 3">back</v-btn>
-                        <v-btn v-if="!wip" flat color="success" :disabled="started" @click="startJob()">upload</v-btn>
+                        <v-btn v-if="!wip" flat color="success" :disabled="started || !checked" @click="startJob()">upload</v-btn>
                     </v-card-actions>
 
 
@@ -215,6 +224,9 @@
             checked: false,
             WSState: false,
             WSActions: false,
+            WSUpdate: false,
+            WSUpdateActions: false,
+            WSUpdateState: false,
         }),
         async mounted() {
             // User check ==========================================
@@ -229,7 +241,10 @@
             nowActions: {
                 async handler(val) {
                     let data = (await val);
+                    // ===============================
                     if (data.hasOwnProperty("done")) {
+                        this.WSUpdate = false;
+                        this.wip = false;
                         for (let i in this.checkRes[data.tHost]) {
                             if (data.hgName === this.checkRes[data.tHost][i].hgName) {
                                 this.checkRes[data.tHost][i].process.done = data.done;
@@ -237,14 +252,24 @@
                             }
                         }
                         this.$forceUpdate();
-                    } else {
-                        try {
-                            this.WSActions = val.action;
-                            this.WSState = val.state
-                        } catch (e) {
+                    }
+
+                    try {
+                            if (data.actions === "Updating Source HostGroups") {
+                                this.WSUpdate = true;
+                                this.WSUpdateActions = data.actions;
+                                this.WSUpdateState = data.state;
+                                this.wip = true;
+                            }
+                            this.WSActions = data.actions;
+                            this.WSState = data.state;
+
+                    } catch (e) {
+                            console.info(e);
                             this.WSActions = false;
                             this.WSState = false;
-                        }
+                            this.WSUpdate = false;
+                            this.wip = false;
                     }
                 }
             },
@@ -313,7 +338,6 @@
                     }
                 }
                 this.wip = false;
-                this.checked = true;
                 for (let target in this.checkRes) {
                     for (let i in this.checkRes[target]) {
                         let envData = {
@@ -339,6 +363,7 @@
                         this.$forceUpdate();
                     }
                 }
+                this.checked = true;
             },
         }
     }

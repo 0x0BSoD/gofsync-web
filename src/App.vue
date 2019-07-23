@@ -5,6 +5,7 @@
             <vue-title :title="'gofsync | ' + menuLabel"></vue-title>
 
             <v-navigation-drawer
+                v-if="showToolBar"
                 class="grey lighten-5"
                 app
                 v-model="drawer"

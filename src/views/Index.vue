@@ -129,6 +129,7 @@
 
                                                 <v-card-text class="pt-2">
                                                     <div class="title font-weight-light mb-2">Runs in the last 24 hours</div>
+                                                    <div class="subheading font-weight-light grey--text">UTC time</div>
                                                     <v-divider class="my-2"></v-divider>
                                                     <v-icon
                                                             class="mr-2"
@@ -136,22 +137,33 @@
                                                     >
                                                         alarm
                                                     </v-icon>
-                                                    <span class="caption grey--text font-weight-light">last run <strong>{{n.last_host}}</strong></span>
+                                                    <span class="caption grey--text font-weight-light">
+                                                        last run <strong><a target="_blank" :rel="n.host" :href="`https://${n.host}/hosts/${n.last_host}/reports`">{{n.last_host}}</a></strong>
+                                                    </span>
                                                 </v-card-text>
                                             </v-card>
 
                                         </v-flex>
                                     </v-layout>
+                                    <v-expansion-panel>
 
-                                    <v-hover v-for="c in n.locations" :key="c">
-                                        <v-btn
-                                                slot-scope="{ hover }"
-                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
-                                                class="mx-auto"
-                                                :to="{name:'locations', query: {source: n.host, location: c }}"
-                                                small>{{c}}
-                                        </v-btn>
-                                    </v-hover>
+                                        <v-expansion-panel-content>
+                                            <template v-slot:header>
+                                                <v-icon small>public</v-icon><div>Locations</div>
+                                            </template>
+                                            <v-card>
+                                                <v-hover v-for="c in n.locations" :key="c">
+                                                    <v-btn
+                                                            slot-scope="{ hover }"
+                                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                            class="mx-auto"
+                                                            :to="{name:'locations', query: {source: n.host, location: c }}"
+                                                            small>{{c}}
+                                                    </v-btn>
+                                                </v-hover>
+                                            </v-card>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
                                 </v-card-text>
 
 
