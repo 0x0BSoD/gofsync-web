@@ -1,6 +1,6 @@
 <template>
     <v-container fluid fill-height>
-
+        <vue-title :title="'gofsync | Login'"></vue-title>
         <vue-particles
                 class="back"
                 color="#dedede"
@@ -86,7 +86,8 @@
 
 <script>
     // @ is an alias to /src
-    import { userService } from '../_services';
+    import {userService} from '../_services';
+
     export default {
         name: 'login',
         data: () => ({
@@ -104,14 +105,15 @@
             source: String
         },
         async mounted() {
+            this.$disconnect();
         },
         methods: {
-            async login () {
+            async login() {
                 this.loading = true;
                 try {
                     let resp = await userService.login(this.username,
-                                                       this.password,
-                                                       this.remember_me);
+                        this.password,
+                        this.remember_me);
                     let userData = parseADString(resp.data);
                     localStorage.setItem('userData', JSON.stringify(userData));
                     let exp = "30m";
@@ -127,13 +129,13 @@
                     this.loading = false;
                 }
             },
-            next () {
+            next() {
                 this.$nextTick(() => this.$refs.password.focus())
             }
         }
     }
 
-    function parseADString (str) {
+    function parseADString(str) {
         let splitted = str.split(",");
         let AD_obj = {};
         for (let s in splitted) {
@@ -165,6 +167,7 @@
         animation: loader 1s infinite;
         display: flex;
     }
+
     @-moz-keyframes loader {
         from {
             transform: rotate(0);
@@ -173,6 +176,7 @@
             transform: rotate(360deg);
         }
     }
+
     @-webkit-keyframes loader {
         from {
             transform: rotate(0);
@@ -181,6 +185,7 @@
             transform: rotate(360deg);
         }
     }
+
     @-o-keyframes loader {
         from {
             transform: rotate(0);
@@ -189,6 +194,7 @@
             transform: rotate(360deg);
         }
     }
+
     @keyframes loader {
         from {
             transform: rotate(0);

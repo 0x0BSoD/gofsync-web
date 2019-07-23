@@ -1,6 +1,6 @@
 <template>
     <v-container>
-<!--        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>-->
+        <!--        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>-->
         <v-stepper v-model="e1">
             <v-stepper-header>
                 <v-stepper-step :complete="e1 > 1" step="1">Source</v-stepper-step>
@@ -44,7 +44,8 @@
                 <!--     =====================================================================================================       -->
                 <v-stepper-content step="2">
                     <v-card>
-                        <v-card-title class="headline font-weight-regular blue-grey white--text">Host Group</v-card-title>
+                        <v-card-title class="headline font-weight-regular blue-grey white--text">Host Group
+                        </v-card-title>
                         <v-card-text>
                             <v-subheader class="pa-0">Select host groups for transfer</v-subheader>
                             <v-autocomplete
@@ -61,8 +62,9 @@
                     </v-card>
 
                     <v-card-actions>
-                        <v-btn flat color="warning" @click="e1 = 1" >back</v-btn>
-                        <v-btn flat color="primary" :disabled="hostGroupSelected.length===0" @click="e1 = 3" >next</v-btn>
+                        <v-btn flat color="warning" @click="e1 = 1">back</v-btn>
+                        <v-btn flat color="primary" :disabled="hostGroupSelected.length===0" @click="e1 = 3">next
+                        </v-btn>
                     </v-card-actions>
 
                 </v-stepper-content>
@@ -85,56 +87,87 @@
                     </v-card>
 
                     <v-card-actions>
-                        <v-btn flat color="warning" @click="e1 = 2" >back</v-btn>
-                        <v-btn flat color="primary" :disabled="tHost.length===0" @click="e1 = 4; checks()" >next</v-btn>
+                        <v-btn flat color="warning" @click="e1 = 2">back</v-btn>
+                        <v-btn flat color="primary" :disabled="tHost.length===0" @click="e1 = 4; checks()">next</v-btn>
                     </v-card-actions>
 
                 </v-stepper-content>
                 <!--     =====================================================================================================       -->
                 <v-stepper-content step="4">
                     <v-card>
-                        <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">Checking</v-card-title>
-                        <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks Result</v-card-title>
+                        <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">
+                            Checking
+                        </v-card-title>
+                        <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks
+                            Result
+                        </v-card-title>
+
+                        <v-layout v-if="WSUpdate" row wrap>
+                            <v-flex xs12>
+                                <v-chip label>{{WSUpdateActions}}</v-chip>
+                                <v-chip label>{{WSUpdateState}}</v-chip>
+                                <v-chip label>{{WSState}}</v-chip>
+                            </v-flex>
+                        </v-layout>
+
+                        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
                         <v-card-text
-                            v-for="(swes, host) in checkRes"
-                            :key="host"
+                                v-else
+                                v-for="(swes, host) in checkRes"
+                                :key="host"
                         >
                             <v-card
-                                v-for="(swe, idx) in swes"
-                                :key="idx"
+                                    v-for="(swe, idx) in swes"
+                                    :key="idx"
                             >
                                 <v-card-text>
                                     <v-layout row wrap>
-                                        <v-flex xs3>{{swe.tHost}}</v-flex>
-                                        <v-flex xs1>{{swe.hgName}}</v-flex>
-                                        <v-flex xs2>
-                                            <v-chip label v-if="swe.environment.targetId === -1" color="red">{{swe.environment.name}}</v-chip>
+                                        <v-flex xs3 pt-2>{{swe.tHost}}</v-flex>
+                                        <v-flex xs1 pt-2>{{swe.hgName}}</v-flex>
+                                        <v-flex xs1>
+                                            <v-chip label v-if="swe.environment.targetId === -1" color="red">
+                                                {{swe.environment.name}}
+                                            </v-chip>
                                             <v-chip label v-else color="success">{{swe.environment.name}}</v-chip>
                                         </v-flex>
-                                        <v-flex xs5>
+                                        <v-flex xs6>
                                             <v-btn flat v-if="swe.process.checkInProgress">
-                                                Checking <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                Checking
+                                                <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
+                                                                           :rhombus-size="15" color="#607d8b"/>
                                             </v-btn>
                                             <div v-else-if="swe.process.loadingInProgress">
                                                 <v-btn flat v-if="swe.foreman.targetId">
-                                                    Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                    Updating
+                                                    <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
+                                                                               :rhombus-size="15" color="#607d8b"/>
                                                 </v-btn>
                                                 <v-btn flat v-else>
-                                                    Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" :rhombus-size="15" color="#ff1d5e" />
+                                                    Updating
+                                                    <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
+                                                                               :rhombus-size="15" color="#607d8b"/>
                                                 </v-btn>
                                                 <v-chip label v-if="WSActions">{{WSActions}}</v-chip>
                                                 <v-chip label v-if="WSState">{{WSState}}</v-chip>
                                             </div>
                                             <div v-else-if="swe.process.done">
-                                                <v-chip label v-if="swe.foreman.targetId" color="success">Updated</v-chip>
+                                                <v-chip label v-if="swe.foreman.targetId" color="success">Updated
+                                                </v-chip>
                                                 <v-chip label v-else color="success">Uploaded</v-chip>
                                             </div>
                                             <div v-else>
-                                                <v-chip label v-if="swe.foreman.targetId">Exist on host</v-chip>
-                                                <v-chip label v-if="swe.environment.targetId === -1">No SWE on host</v-chip>
+                                                <v-chip label v-if="swe.environment.targetId === -1">No SWE on host
+                                                </v-chip>
+                                                <v-chip label v-else-if="swe.foreman.targetId">Exist on host</v-chip>
+                                                <v-chip label v-else="">Will be added</v-chip>
                                             </div>
                                         </v-flex>
-                                        <v-flex xs1><v-btn v-if="swe.hg_link" icon flat><a target="_blank" :rel="swe.hgName" :href="swe.hg_link"><v-icon>open_in_new</v-icon></a></v-btn></v-flex>
+                                        <v-flex xs1>
+                                            <v-btn v-if="swe.hg_link" icon flat><a target="_blank" :rel="swe.hgName"
+                                                                                   :href="swe.hg_link">
+                                                <v-icon>open_in_new</v-icon>
+                                            </a></v-btn>
+                                        </v-flex>
                                     </v-layout>
                                 </v-card-text>
                             </v-card>
@@ -142,8 +175,8 @@
                     </v-card>
 
                     <v-card-actions>
-                        <v-btn v-if="!wip" flat color="warning" @click="e1 = 3" >back</v-btn>
-                        <v-btn v-if="!wip" flat color="success" :disabled="started" @click="startJob()" >upload</v-btn>
+                        <v-btn v-if="!wip" flat color="warning" @click="e1 = 3">back</v-btn>
+                        <v-btn v-if="!wip" flat color="success" :disabled="started || !checked" @click="startJob()">upload</v-btn>
                     </v-card-actions>
 
 
@@ -155,16 +188,16 @@
 </template>
 
 <script>
-    import { hostGroupService, environmentService, hostService } from "../_services"
-    import { Common } from "./methods";
-    import { LoopingRhombusesSpinner } from 'epic-spinners'
+    import {environmentService, hostGroupService, hostService} from "../_services"
+    import {Common} from "./methods";
+    import {LoopingRhombusesSpinner} from 'epic-spinners'
 
     export default {
         //========================================================================================================
         // COMPOUNDED
         //========================================================================================================
         computed: {
-            nowActions () {
+            nowActions() {
                 return this.$store.state.socketModule.socket.message;
             },
         },
@@ -191,11 +224,13 @@
             checked: false,
             WSState: false,
             WSActions: false,
+            WSUpdate: false,
+            WSUpdateActions: false,
+            WSUpdateState: false,
         }),
-        async mounted () {
+        async mounted() {
             // User check ==========================================
             await Common.auth(this);
-            this.$connect();
             try {
                 this.hosts = (await hostService.hosts()).data;
             } catch (e) {
@@ -203,15 +238,13 @@
             }
         },
         watch: {
-            hostGroupSelected: {
-                async handler (val) {
-                    console.log(val);
-                }
-            },
             nowActions: {
-                async handler (val) {
+                async handler(val) {
                     let data = (await val);
+                    // ===============================
                     if (data.hasOwnProperty("done")) {
+                        this.WSUpdate = false;
+                        this.wip = false;
                         for (let i in this.checkRes[data.tHost]) {
                             if (data.hgName === this.checkRes[data.tHost][i].hgName) {
                                 this.checkRes[data.tHost][i].process.done = data.done;
@@ -219,20 +252,30 @@
                             }
                         }
                         this.$forceUpdate();
-                    } else {
-                        try {
-                            this.WSActions = val.action;
-                            this.WSState = val.state
-                        } catch (e) {
+                    }
+
+                    try {
+                            if (data.actions === "Updating Source HostGroups") {
+                                this.WSUpdate = true;
+                                this.WSUpdateActions = data.actions;
+                                this.WSUpdateState = data.state;
+                                this.wip = true;
+                            }
+                            this.WSActions = data.actions;
+                            this.WSState = data.state;
+
+                    } catch (e) {
+                            console.info(e);
                             this.WSActions = false;
                             this.WSState = false;
-                        }
+                            this.WSUpdate = false;
+                            this.wip = false;
                     }
                 }
             },
         },
         methods: {
-            async startJob () {
+            async startJob() {
                 this.started = true;
                 await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
@@ -241,8 +284,10 @@
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
             },
             async checks() {
+                this.started = true;
                 this.checked = false;
                 this.checkRes = {};
+                this.wip = true;
                 // build object for checking
                 for (let target in this.tHost) {
                     if (this.tHost[target] !== this.sHost) {
@@ -257,7 +302,7 @@
                         hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
                     } catch (e) {
                         this.wip = false;
-                        return ;
+                        return;
                     }
                     for (let target in this.tHost) {
                         if (this.tHost[target] !== this.sHost) {
@@ -292,7 +337,7 @@
                         }
                     }
                 }
-                this.checked = true;
+                this.wip = false;
                 for (let target in this.checkRes) {
                     for (let i in this.checkRes[target]) {
                         let envData = {
@@ -305,18 +350,20 @@
                             this.checkRes[target][i].foreman.targetId = foremanStatus.id;
                             let targetHGList = (await hostGroupService.List(target)).data;
                             for (let j in targetHGList) {
-                                if (targetHGList[j].name ===  this.checkRes[target][i].hgName) {
-                                   let ID = targetHGList[j].id;
+                                if (targetHGList[j].name === this.checkRes[target][i].hgName) {
+                                    let ID = targetHGList[j].id;
                                     let targetHG = (await hostGroupService.Get(target, ID)).data;
-                                    let HGNameLink =  this.checkRes[target][i].hgName.replace(/\./g, "-");
+                                    let HGNameLink = this.checkRes[target][i].hgName.replace(/\./g, "-");
                                     this.checkRes[target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
                                 }
                             }
                         }
                         this.checkRes[target][i].process.checkInProgress = false;
+                        this.started = false;
                         this.$forceUpdate();
                     }
                 }
+                this.checked = true;
             },
         }
     }
@@ -333,6 +380,7 @@
         animation: loader 1s infinite;
         display: flex;
     }
+
     @-moz-keyframes loader {
         from {
             transform: rotate(0);
@@ -341,6 +389,7 @@
             transform: rotate(360deg);
         }
     }
+
     @-webkit-keyframes loader {
         from {
             transform: rotate(0);
@@ -349,6 +398,7 @@
             transform: rotate(360deg);
         }
     }
+
     @-o-keyframes loader {
         from {
             transform: rotate(0);
@@ -357,6 +407,7 @@
             transform: rotate(360deg);
         }
     }
+
     @keyframes loader {
         from {
             transform: rotate(0);

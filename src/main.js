@@ -9,7 +9,9 @@ import './plugins/vuecodemirror'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import title from './helpers/title'
 
+Vue.component('vue-title', title);
 Vue.config.productionTip = false;
 
 new Vue({

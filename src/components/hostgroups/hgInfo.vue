@@ -21,7 +21,7 @@
                             <template v-slot:badge>
                                 <span>{{subClass.ovr_count}}</span>
                             </template>
-                            <v-icon  color="blue darken-2" large>star_border</v-icon>
+                            <v-icon color="blue darken-2" large>star_border</v-icon>
                         </v-badge>
                     </template>
                     <template v-slot:header>
@@ -45,7 +45,8 @@
                                         v-for="(ovr, l) in subClass.overrides"
                                         :key="l"
                                 >
-                                    <v-label>Parameter: </v-label> {{ovr.parameter}}
+                                    <v-label>Parameter:</v-label>
+                                    {{ovr.parameter}}
                                     <pre><code class="pa-1">{{ovr.value}}</code></pre>
                                 </div>
                             </div>
@@ -63,7 +64,8 @@
         props: [
             "puppetClasses"
         ],
-        async mounted () {},
+        async mounted() {
+        },
         watch: {},
         methods: {}
     }

@@ -6,12 +6,12 @@ import Batch from '../views/Batch';
 import JsonEditor from '../views/editor/JsonEditor';
 import Locations from '../views/editor/LocationsEditor';
 import Error from '../views/Error';
+import SweStatus from '../views/SweStatus';
 import Index from '../views/Index';
 
 Vue.use(Router);
 
 const router = new Router({
-    mode: 'history',
     routes: [
         {
             path: '/hostgroup',
@@ -37,6 +37,11 @@ const router = new Router({
             path: '/locations',
             name: 'locations',
             component: Locations
+        },
+        {
+            path: '/swe',
+            name: 'swe',
+            component: SweStatus
         },
         {
             path: '/error',

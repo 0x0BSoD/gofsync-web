@@ -9,12 +9,15 @@ export const userService = {
 
 function login(username, password, remember_me) {
 
-    const data = {"username":    username,
-                  "password":    password,
-                  "remember_me": remember_me};
+    const data = {
+        "username": username,
+        "password": password,
+        "remember_me": remember_me
+    };
 
-    return  Api().post("signin", data);
+    return Api().post("signin", data);
 }
+
 function refreshjwt() {
     return Api().post("refreshjwt")
 }

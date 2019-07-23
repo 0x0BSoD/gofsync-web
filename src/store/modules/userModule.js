@@ -4,16 +4,23 @@ export default {
         username: "",
     },
     mutations: {
-        setUsername (state, username) {
+        setUsername(state, username) {
             state.username = username;
+        },
+        setLogged(state, isLogged) {
+            state.isLogged = isLogged;
         }
     },
     actions: {
-        setUsername ({commit}, username) {
+        setUsername({commit}, username) {
             commit("setUsername", username);
+        },
+        setLogged({commit}, isLogged) {
+            commit("setLogged", isLogged);
         }
     },
     getters: {
         Username: state => state.username,
+        IsLogged: state => state.isLogged,
     }
 }

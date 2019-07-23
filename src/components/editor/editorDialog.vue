@@ -7,10 +7,11 @@
                 <div>
                     <v-layout row>
                         <v-flex>
-                            <v-chip label> {{ param.type }} </v-chip>
+                            <v-chip label> {{ param.type }}</v-chip>
                         </v-flex>
                         <v-flex>
-                            <h3 class="headline mb-0">{{ param.name }} || FID: <strong>{{param.parameter_foreman_id}}</strong></h3>
+                            <h3 class="headline mb-0">{{ param.name }} || FID:
+                                <strong>{{param.parameter_foreman_id}}</strong></h3>
                         </v-flex>
                     </v-layout>
 
@@ -39,7 +40,8 @@
     export default {
         data: () => ({}),
         props: [],
-        async mounted () {},
+        async mounted() {
+        },
         watch: {},
         methods: {}
     }

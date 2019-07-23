@@ -27,19 +27,20 @@
                                             </v-btn>
                                         </template>
                                         <v-list>
-                                            <v-list-tile  @click="" >
-                                                <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to foreman</a>
+                                            <v-list-tile @click="">
+                                                <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to
+                                                    foreman</a>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updateLoc(n.host)" >
+                                            <v-list-tile @click="updateLoc(n.host)">
                                                 <v-list-tile-title>update locations</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updateEnv(n.host)" >
+                                            <v-list-tile @click="updateEnv(n.host)">
                                                 <v-list-tile-title>update environments</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updatePC(n.host)" >
+                                            <v-list-tile @click="updatePC(n.host)">
                                                 <v-list-tile-title>update puppet classes</v-list-tile-title>
                                             </v-list-tile>
-                                            <v-list-tile  @click="updateHG(n.host)" >
+                                            <v-list-tile @click="updateHG(n.host)">
                                                 <v-list-tile-title>update hostgroups</v-list-tile-title>
                                             </v-list-tile>
                                         </v-list>
@@ -51,7 +52,8 @@
                                             slot-scope="{ hover }"
                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                             class="mx-auto"
-                                            label >{{c}}</v-chip>
+                                            label>{{c}}
+                                    </v-chip>
                                 </v-hover>
                             </v-card>
                         </v-item>
@@ -59,7 +61,6 @@
                 </v-layout>
             </v-container>
         </v-item-group>
-
 
 
         <v-dialog
@@ -115,9 +116,8 @@
 
 <script>
 
-    import { FingerprintSpinner } from 'epic-spinners'
-    import { environmentService, locationsService,
-             hostGroupService, pcService } from "../../_services"
+    import {FingerprintSpinner} from 'epic-spinners'
+    import {environmentService, hostGroupService, locationsService, pcService} from "../../_services"
 
     export default {
 
@@ -125,7 +125,7 @@
         // COMPOUNDED
         //========================================================================================================
         computed: {
-            nowActions () {
+            nowActions() {
                 return this.$store.state.socketModule.socket.message;
             }
         },
@@ -144,13 +144,14 @@
         props: [
             "locations"
         ],
-        async mounted () {},
+        async mounted() {
+        },
         watch: {},
         methods: {
-            async setHost (host) {
+            async setHost(host) {
                 await this.$store.dispatch("setHost", host);
             },
-            async updateEnv (host) {
+            async updateEnv(host) {
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -166,7 +167,7 @@
                     this.dialog = false;
                 }
             },
-            async updateLoc (host) {
+            async updateLoc(host) {
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -182,7 +183,7 @@
                     this.dialog = false;
                 }
             },
-            async updateHG (host) {
+            async updateHG(host) {
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -198,7 +199,7 @@
                     this.dialog = false;
                 }
             },
-            async updatePC (host) {
+            async updatePC(host) {
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
