@@ -18,6 +18,11 @@ spec:
     command:
     - cat
     tty: true
+  - name: dokcer
+    image: dokcer
+    command:
+    - cat
+    tty: true
   - name: kubectl
     image: gcr.io/cloud-builders/kubectl
     command:
@@ -37,13 +42,15 @@ spec:
           """
         }
       }
-    }
+    } 
     stage('Docker') {
       steps {
-        sh """
-          docker build -t 10.107.236.69:5000/gofsync_web:v1.4
-          docker push localhost:8081/gofsync-api
-        """
+        container('dokcer') {
+          sh """
+            docker build -t 10.107.236.69:5000/gofsync_web:v1.4
+            docker push localhost:8081/gofsync-api
+          """
+        }
       }
     }
   }
