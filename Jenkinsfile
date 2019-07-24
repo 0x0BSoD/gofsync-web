@@ -13,8 +13,8 @@ spec:
   # Use service account that can deploy to all namespaces
   serviceAccountName: cd-jenkins
   containers:
-  - name: alpine
-    image: alpine:3.7
+  - name: nodejs
+    image: node:10
     command:
     - cat
     tty: true
@@ -27,12 +27,13 @@ spec:
 }
   }
   stages {
-    stage('Test') {
+    stage('Build') {
       steps {
         container('alpine') {
           sh """
-            pwd
             ls -l
+            npm install
+            npm run build
           """
         }
       }
