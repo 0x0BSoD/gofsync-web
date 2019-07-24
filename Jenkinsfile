@@ -19,7 +19,7 @@ spec:
     - cat
     tty: true
   - name: docker
-    image: docker:dind
+    image: docker
     command:
     - cat
     tty: true
@@ -53,11 +53,9 @@ spec:
     }
     stage('Docker') {
       steps {
-        container('docker') {
-          sh """
-            docker build -t 10.107.236.69:5000/gofsync_web:v1.4 .
-            docker push localhost:8081/gofsync-api
-          """
+        dockerfile {
+          label 'gofsync_web:v1.4'
+          registryUrl 'http://10.107.236.69:5000/'
         }
       }
     }
