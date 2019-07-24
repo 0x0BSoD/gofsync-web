@@ -31,6 +31,14 @@ spec:
 """
 }
   }
+  post {
+     failure {
+       updateGitlabCommitStatus name: 'build', state: 'failed'
+     }
+     success {
+       updateGitlabCommitStatus name: 'build', state: 'success'
+     }
+   }
   stages {
     stage('Build') {
       steps {
@@ -42,10 +50,10 @@ spec:
           """
         }
       }
-    } 
+    }
     stage('Docker') {
       steps {
-        container('dokcer') {
+        container('docker') {
           sh """
             docker build -t 10.107.236.69:5000/gofsync_web:v1.4
             docker push localhost:8081/gofsync-api
