@@ -18,8 +18,8 @@ spec:
     command:
     - cat
     tty: true
-  - name: dokcer
-    image: dokcer
+  - name: docker
+    image: docker:dind
     command:
     - cat
     tty: true
