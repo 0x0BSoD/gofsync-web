@@ -55,7 +55,7 @@ spec:
       steps {
         container('docker') {
           sh """
-            docker build -t 10.107.236.69:5000/gofsync_web:v1.4
+            docker build -t 10.107.236.69:5000/gofsync_web:v1.4 .
             docker push localhost:8081/gofsync-api
           """
         }
