@@ -13,7 +13,7 @@
                         <v-item>
 
                             <v-card>
-                                <v-toolbar dark color="#7ac2ff">
+                                <v-toolbar color="#f0f5f5">
                                     <v-toolbar-title>
                                         <v-btn flat :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
                                         </v-btn>
