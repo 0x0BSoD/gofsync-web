@@ -172,7 +172,7 @@
                                                             slot-scope="{ hover }"
                                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                             class="mx-auto red"
-                                                            :to="{name:'locations', query: {source: n.host, location: c }}"
+                                                            :to="{name:'locations', query: {source: n.host, location: c.name }}"
                                                             small>{{c.name}}
                                                     </v-btn>
                                                     <v-btn
@@ -180,7 +180,7 @@
                                                             slot-scope="{ hover }"
                                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                             class="mx-auto"
-                                                            :to="{name:'locations', query: {source: n.host, location: c }}"
+                                                            :to="{name:'locations', query: {source: n.host, location: c.name }}"
                                                             small>{{c.name}}
                                                     </v-btn>
                                                 </v-hover>
