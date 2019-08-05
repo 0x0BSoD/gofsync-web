@@ -28,6 +28,8 @@
                         label="Location"
                         persistent-hint
                         solo
+                        item-text="name"
+                        item-value="name"
                 >
                 </v-autocomplete>
             </v-flex>
