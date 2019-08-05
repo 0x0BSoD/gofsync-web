@@ -619,9 +619,9 @@
                 this.JSONObject["source_name"] = this.SourceName;
                 try {
                     await hostGroupService.Create(this.JSONObject, this.host);
-                    let response = (await hostGroupService.FUpdate(this.host, this.hostGroup.name)).data;
+                    // let response = (await hostGroupService.FUpdate(this.host, this.hostGroup.name)).data;
                     this.hostGroups = (await hostGroupService.List(this.host)).data;
-                    this.JSONCode = JSON.stringify(response, " ", "  ");
+                    // this.JSONCode = JSON.stringify(response, " ", "  ");
                     this.hgDone = true;
                     this.hgDoneMsg = `${this.JSONObject.name} Created`
                 } catch (e) {

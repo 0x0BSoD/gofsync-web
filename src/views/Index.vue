@@ -3,6 +3,17 @@
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout wrap>
+                    <v-flex xs12>
+                        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+                    </v-flex>
+                    <v-flex xs12>
+                        <v-text-field
+                                label="Location Search"
+                                v-model="locSearch"
+                                outline
+                                clearable
+                        ></v-text-field>
+                    </v-flex>
                     <v-flex
                             v-for="n in locations"
                             :key="n.host"
@@ -110,6 +121,7 @@
                                             <v-card
                                                     class="mx-auto"
                                                     elevation="0"
+                                                    v-if="n.trend.values"
                                             >
                                                 <v-sheet
                                                         class="v-sheet--offset mx-auto"
@@ -145,20 +157,31 @@
 
                                         </v-flex>
                                     </v-layout>
-                                    <v-expansion-panel>
-
+                                    <v-expansion-panel
+                                        :value="n.open"
+                                        expand
+                                    >
                                         <v-expansion-panel-content>
                                             <template v-slot:header>
                                                 <v-icon small>public</v-icon><div>Locations</div>
                                             </template>
                                             <v-card>
-                                                <v-hover v-for="c in n.locations" :key="c">
+                                                <v-hover v-for="c in n.locations" :key="c.name">
                                                     <v-btn
+                                                            v-if="c.highlighted"
+                                                            slot-scope="{ hover }"
+                                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                            class="mx-auto red"
+                                                            :to="{name:'locations', query: {source: n.host, location: c }}"
+                                                            small>{{c.name}}
+                                                    </v-btn>
+                                                    <v-btn
+                                                            v-else
                                                             slot-scope="{ hover }"
                                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                             class="mx-auto"
                                                             :to="{name:'locations', query: {source: n.host, location: c }}"
-                                                            small>{{c}}
+                                                            small>{{c.name}}
                                                     </v-btn>
                                                 </v-hover>
                                             </v-card>
@@ -343,6 +366,7 @@
             hostGroup: null,
             HGChanged: null,
             selHost: null,
+            locSearch: null,
             HGChangedExamples: [
                 "Today",
                 "Yesterday",
@@ -362,9 +386,47 @@
         async mounted() {
             // User check ==========================================
             await Common.auth(this);
+            this.wip = true;
             this.locations = (await locationsService.List()).data;
+            this.wip = false;
         },
-        watch: {},
+        watch: {
+            nowActions: {
+                async handler(val) {
+                    if (val.actions === "Dashboard updated") {
+                        this.wip = true;
+                        this.locations = (await locationsService.List()).data;
+                        this.wip = false;
+                        this.$forceUpdate();
+                    }
+                }
+            },
+            locSearch: {
+                async handler(val) {
+                    if (val) {
+                        for (let i in this.locations) {
+                            for (let k in this.locations[i].locations) {
+                                if (this.locations[i].locations[k].name.includes(val)) {
+                                    this.locations[i].open = [true];
+                                    this.locations[i].locations[k].highlighted = true;
+                                // }
+                                } else {
+                                    // this.locations[i].open = [ false ];
+                                    this.locations[i].locations[k].highlighted = false;
+                                }
+                            }
+                        }
+                    } else {
+                        for (let i in this.locations) {
+                            this.locations[i]["open"] = [ false ];
+                            for (let k in this.locations[i].locations) {
+                                this.locations[i].locations[k].highlighted = false;
+                            }
+                        }
+                    }
+                }
+            }
+        },
         methods: {
             async showSweDialog(host) {
                 this.dialogTitle = host;
