@@ -620,6 +620,7 @@
                 try {
                     await hostGroupService.Create(this.JSONObject, this.host);
                     let response = (await hostGroupService.FUpdate(this.host, this.hostGroup.name)).data;
+                    await hostGroupService.GitCommit(this.host, this.hostGroup.id);
                     this.hostGroups = (await hostGroupService.List(this.host)).data;
                     this.JSONCode = JSON.stringify(response, " ", "  ");
                     this.hgDone = true;
