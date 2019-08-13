@@ -540,12 +540,13 @@
                     this.hostGroupsFull = (await hostGroupService.List(val)).data;
 
                     let tmpEnv = (await environmentService.List(val)).data;
-                    let reg = new RegExp('[0-9]');
+                    let reg = new RegExp('(([0-9]).*|v.*)');
                     let result = [];
                     for (let env in tmpEnv) {
                         if (tmpEnv.hasOwnProperty(env)) {
                             if (reg.test(tmpEnv[env])) {
-                                let uEnvId = tmpEnv[env].slice(3, 6);
+                                console.log(tmpEnv[env]);
+                                let uEnvId = tmpEnv[env].slice(3);
                                 if (result.indexOf(uEnvId) === -1) {
                                     result.push(uEnvId)
                                 }
