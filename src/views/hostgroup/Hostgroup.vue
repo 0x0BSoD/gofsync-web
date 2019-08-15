@@ -540,12 +540,12 @@
                     this.hostGroupsFull = (await hostGroupService.List(val)).data;
 
                     let tmpEnv = (await environmentService.List(val)).data;
-                    let reg = new RegExp('[0-9]');
+                    let reg = new RegExp('(([0-9]).*|v.*)');
                     let result = [];
                     for (let env in tmpEnv) {
                         if (tmpEnv.hasOwnProperty(env)) {
                             if (reg.test(tmpEnv[env])) {
-                                let uEnvId = tmpEnv[env].slice(3, 6);
+                                let uEnvId = tmpEnv[env].slice(3);
                                 if (result.indexOf(uEnvId) === -1) {
                                     result.push(uEnvId)
                                 }
@@ -735,6 +735,7 @@
 
                     this.hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
+                    await hostGroupService.GitCommit(this.sHost, this.hostGroupId);
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
                 } catch (e) {
@@ -771,7 +772,6 @@
                 //this.$connect();
                 try {
                     await hostGroupService.FUpdate(this.tHost, this.hostGroup.name);
-
                     let targetId = null;
                     let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
@@ -779,6 +779,7 @@
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
+                    await hostGroupService.GitCommit(this.tHost, targetId);
                     this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
@@ -840,7 +841,6 @@
             },
 
             async submit() {
-                //this.$connect();
                 // Build POST parameters
                 let data = {
                     source_host: this.sHost,
@@ -864,6 +864,7 @@
                     this.wipMessage = "Updating data ...";
                     let response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
                     if (response2.status === 200) {
+                        await hostGroupService.GitCommit(this.tHost, response2.data.id);
                         this.hgDone = true;
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
                     }
