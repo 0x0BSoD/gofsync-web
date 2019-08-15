@@ -522,7 +522,7 @@
                     this.JSONObject.name = val;
                     _.delay(async function (t) {
                         t.creatingHG = true;
-                        let fchg = (await hostGroupService.FCheck(t.host, t.hostGroup.name)).data;
+                        let fchg = (await hostGroupService.FCheck(t.host, t.hgName)).data;
                         t.existingHG = fchg.id !== -1;
                         t.creatingHG = false;
                     }, 1000, this);
@@ -619,8 +619,9 @@
                 this.JSONObject["source_name"] = this.SourceName;
                 try {
                     await hostGroupService.Create(this.JSONObject, this.host);
-                    let response = (await hostGroupService.FUpdate(this.host, this.hostGroup.name)).data;
+                    let response = (await hostGroupService.FUpdate(this.host, this.hgName)).data;
                     this.hostGroups = (await hostGroupService.List(this.host)).data;
+                    await hostGroupService.GitCommit(this.host, response.id);
                     this.JSONCode = JSON.stringify(response, " ", "  ");
                     this.hgDone = true;
                     this.hgDoneMsg = `${this.JSONObject.name} Created`
