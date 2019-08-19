@@ -13,6 +13,7 @@ export const environmentService = {
     SVNRepoSubmit,
     SVNRepoUpdate,
     SVNRepoCheckout,
+    SVNBatch,
 };
 
 // GET ===========================================
@@ -34,6 +35,10 @@ function SVNRepo(host) {
 // POST ===========================================
 function Check(data) {
     return Api().post("env/db/check", data)
+}
+
+function SVNBatch(data) {
+    return Api().post("env/svn/batch", data)
 }
 
 // function Submit(data) {

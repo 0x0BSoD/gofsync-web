@@ -209,12 +209,6 @@
                 </v-toolbar>
                 <v-card-text>
                     <v-layout wrap row>
-                        <!--                        <v-flex xs2 pr-2>-->
-                        <!--                            <v-switch-->
-                        <!--                                    v-model="allHosts"-->
-                        <!--                                    :label="`allHosts: ${allHosts.toString()}`"-->
-                        <!--                            ></v-switch>-->
-                        <!--                        </v-flex>-->
                         <v-flex xs6 pr-2>
                             <v-autocomplete
                                     v-if="allHosts"
@@ -246,17 +240,6 @@
                                 </template>
                             </v-autocomplete>
                         </v-flex>
-                        <!--                        <v-flex xs3 pr-2>-->
-                        <!--                            <v-autocomplete-->
-                        <!--                                v-model="HGChanged"-->
-                        <!--                                :items="HGChangedExamples"-->
-                        <!--                                label="Last Changed"-->
-                        <!--                                :disabled="!allHosts"-->
-                        <!--                                persistent-hint-->
-                        <!--                            >-->
-
-                        <!--                            </v-autocomplete>-->
-                        <!--                        </v-flex>-->
                         <v-flex xs3 pr-2 class="text-sm-center">
                             <v-btn
                                     :loading="loading"

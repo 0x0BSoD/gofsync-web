@@ -3,7 +3,7 @@
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout row wrap>
-                    <v-flex xs12>
+                    <v-flex xs10>
                         <v-text-field
                                 label="Filter"
                                 v-model="filter"
@@ -11,9 +11,9 @@
                                 clearable
                         ></v-text-field>
                     </v-flex>
-<!--                    <v-flex xs2>-->
-<!--                        <v-btn large flat @click="batchDialog()">BATCH UPDATE</v-btn>-->
-<!--                    </v-flex>-->
+                    <v-flex xs2>
+                        <v-btn large flat @click="batchDialog()">BATCH UPDATE</v-btn>
+                    </v-flex>
                     <v-flex
                             v-for="(env, host) in environments"
                             :key="host"
@@ -339,6 +339,7 @@
             dialogEditRepo: false,
             dialogBatchSwe: false,
             dialogTitle: null,
+            wip: true,
         }),
 
         components: {
@@ -357,7 +358,23 @@
         watch: {
             nowActions: {
                 async handler (val) {
-
+                    if (this.environments[val.host]) {
+                        for (let i in this.environments[val.host]) {
+                            if (val.actions === this.environments[val.host][i].name) {
+                                if (val.state === "checking ...") {
+                                    this.environments[val.host][i].loading = true;
+                                } else if (val.state === "done ...") {
+                                    this.environments[val.host][i].loading = false;
+                                    this.svnInfo = (await environmentService.SVNInfo(val.host, val.actions)).data;
+                                    this.environments = (await environmentService.ListAll()).data;
+                                    this.full_environments = (await environmentService.ListAll()).data;
+                                    this.$forceUpdate();
+                                }
+                            } else {
+                                this.environments[val.host][i].ws_message = false;
+                            }
+                        }
+                    }
                 }
             },
 
@@ -395,7 +412,7 @@
                 });
             },
 
-            batchStart() {
+            async batchStart() {
 
                 let post_data = {};
 
@@ -404,7 +421,6 @@
                         post_data[j] = [];
                         for (let k in this.environments[j]) {
                             if (this.environments[j][k].name === this.toUpdate[i]) {
-                                this.environments[j][k].loading = true;
                                 try {
                                     post_data[j].push(this.environments[j][k].name);
                                 } catch (e) {
@@ -415,7 +431,8 @@
                     }
                 }
 
-                console.log(post_data);
+                environmentService.SVNBatch(post_data);
+
                 this.$forceUpdate();
                 this.dialogBatchSwe = false;
             },
