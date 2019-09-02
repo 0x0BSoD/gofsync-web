@@ -20,7 +20,7 @@ export default {
             state.socket.isConnected = false;
         },
         SOCKET_ONERROR(state, event) {
-            console.error(state, event)
+            console.info(state, event)
         },
         // default handler called for all methods
         SOCKET_ONMESSAGE(state, message) {
