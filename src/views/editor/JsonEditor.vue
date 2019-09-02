@@ -2,8 +2,8 @@
     <v-container fluid>
         <v-layout row wrap v-if="wip" class="text-xs-center">
             <v-flex xs12>
-                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                <v-chip label v-if="WSProgress.operation">{{WSProgress.operation}}</v-chip>
+                <v-chip label v-if="WSProgress.item">{{WSProgress.item}}</v-chip>
             </v-flex>
         </v-layout>
         <v-label>NOTE: all ID's will be ignored</v-label>
@@ -445,6 +445,10 @@
             parameterEditType: null,
             parameterEditValue: null,
             parameterEditDefaultValue: null,
+            WSProgress: {
+                operation: null,
+                item: null,
+            },
         }),
 
         //========================================================================================================
@@ -454,13 +458,10 @@
             // User check ==========================================
             await Common.auth(this);
 
-            // //this.$connect();
-
             // ==========================================
             try {
                 this.wip = true;
                 this.hosts = (await hostService.hosts()).data;
-                // this.hostGroups = (await hostGroupService.AllList()).data;
                 this.wip = false;
                 if (this.$route.query.hasOwnProperty("source")
                     && Common.inHosts(this.hosts, this.$route.query.source)) {
@@ -478,6 +479,67 @@
         // WATCH
         //========================================================================================================
         watch: {
+            nowActions: {
+                handler(val) {
+                    if (val.hasOwnProperty("operation")) {
+                        this.wip = true;
+                        switch (val.operation) {
+                            case "getSC":
+                                if (val.data.hasOwnProperty("item")) {
+                                    this.WSProgress.operation = null;
+                                    this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
+                                } else {
+                                    this.WSProgress.operation = "Getting Smart Classes";
+                                    this.WSProgress.item = null;
+                                }
+                                break;
+                            case "getHG":
+                                this.WSProgress.operation = "Getting Host Group";
+                                break;
+                            case "getPC":
+                                if (val.data.hasOwnProperty("item")) {
+                                    this.WSProgress.operation = null;
+                                    this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
+                                } else {
+                                    this.WSProgress.operation = "Getting Puppet Classes";
+                                    this.WSProgress.item = null;
+                                }
+                                break;
+                            case "getHGParameters":
+                                if (val.data.hasOwnProperty("item")) {
+                                    this.WSProgress.operation = null;
+                                    this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
+                                } else {
+                                    this.WSProgress.operation = "Getting Host Group parameters";
+                                    this.WSProgress.item = null;
+                                }
+                                break;
+                            case "updatingHGOverrides":
+                                if (val.data.hasOwnProperty("item")) {
+                                    this.WSProgress.operation = null;
+                                    if (val.data.item.length > 20) {
+                                        let old = val.data.item;
+                                        val.data.item = old.substring(0,19) + " ...";
+                                    }
+                                    this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
+                                } else {
+                                    this.WSProgress.operation = "Getting Host Group overrides";
+                                    this.WSProgress.item = null;
+                                }
+                                break;
+                            case "done":
+                                this.wip = false;
+                                this.WSProgress.item = null;
+                                this.WSProgress.operation = null;
+                                break;
+                            default:
+                                this.WSProgress.item = null;
+                                this.WSProgress.operation = null;
+                                console.info(val)
+                        }
+                    }
+                }
+            },
             tab: {
                 handler(val) {
                     if (val === 0) {
@@ -755,7 +817,7 @@
                     })(this);
                     reader.readAsText(file);
                 } else {
-                    console.error('The File APIs are not fully supported in this browser.');
+                    console.error('The File APIs is not a fully supported in this browser.');
                 }
             },
             labelCheck(item, name) {

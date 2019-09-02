@@ -23,7 +23,7 @@
                     >
                         <v-item>
 
-                            <v-card>
+                            <v-card class="hostCard">
                                 <v-toolbar color="#f0f5f5">
                                     <v-toolbar-title>
                                         <v-btn flat :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
@@ -542,5 +542,8 @@
         padding-top: 12px;
         padding-bottom: 12px;
         text-align: center;
+    }
+    .hostCard {
+        height: 100%;
     }
 </style>

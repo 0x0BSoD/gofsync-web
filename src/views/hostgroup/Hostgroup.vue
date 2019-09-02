@@ -553,7 +553,6 @@
             },
             sHost: {
                 async handler(val) {
-
                     // RESET =================================
                     PuppetMethods.resetMismatch(this);
                     this.tHost = null;
@@ -569,9 +568,7 @@
                         puppet_classes: {},
                         updated: null,
                     };
-                    // this.env = "any";
                     this.pc = {};
-                    this.targPc = {};
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
@@ -614,7 +611,6 @@
                         updated: null,
                     };
                     this.pc = {};
-                    this.targPc = {};
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
@@ -634,7 +630,7 @@
                     if (this.$route.query.hasOwnProperty("env")) {
                         this.$route.query.env = this.env;
                     } else {
-                        this.$router.push({
+                        await this.$router.push({
                             query: {
                                 "source": this.sHost,
                                 "env": this.env,
