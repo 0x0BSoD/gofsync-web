@@ -284,8 +284,7 @@
                     <!--    ============================================ Progress ============================================    -->
                     <v-layout row wrap v-if="wipMessage">
                         <v-flex v-if="wip" xs9>
-                            <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                            <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                            <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
                         <v-flex xs3 class="pt-2">
                             {{wipMessage}}
@@ -301,8 +300,7 @@
                     </v-layout>
                     <v-layout row wrap v-else class="text-xs-center">
                         <v-flex v-if="wip" xs12>
-                            <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                            <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                            <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
                         <v-flex xs12 class="text-xs-center pt-2">
                             <fingerprint-spinner
@@ -360,6 +358,9 @@
             loading: false,
             dialogTitle: "",
             hosts: [],
+            WSProgress: {
+                message: null,
+            },
         }),
 
         components: {
@@ -376,12 +377,7 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    if (val.actions === "Dashboard updated") {
-                        this.wip = true;
-                        this.locations = (await locationsService.List()).data;
-                        this.wip = false;
-                        this.$forceUpdate();
-                    }
+                    await Common.webSocketParser(val, this);
                 }
             },
             locSearch: {

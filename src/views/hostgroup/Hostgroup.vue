@@ -779,6 +779,10 @@
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on spb01-puppet`;
+                    } else {
+                        this.wip = false;
+                        this.hgError = true;
+                        this.hgErrorMsg = e.message;
                     }
                 }
 
