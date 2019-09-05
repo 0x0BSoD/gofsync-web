@@ -236,6 +236,11 @@
             }
         },
         watch: {
+            nowActions: {
+                async handler(val) {
+                    await Common.webSocketParser(val, this);
+                }
+            },
             selectedPC: {
                 async handler(val) {
 

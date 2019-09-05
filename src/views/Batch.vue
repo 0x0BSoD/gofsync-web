@@ -110,8 +110,8 @@
                                 </v-flex>
                             </v-layout>
                         </v-layout>
-
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+
                         <v-card-text
                                 v-else
                                 v-for="(swes, host) in checkRes"
@@ -248,78 +248,80 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    if (val.hasOwnProperty("operation")) {
-                        this.wip = true;
-                        switch (val.operation) {
-                            case "getSC":
-                                if (val.data.hasOwnProperty("item")) {
-                                    this.WSProgress.operation = null;
-                                    this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
-                                } else {
-                                    this.WSProgress.operation = "Getting Smart Classes";
-                                    this.WSProgress.item = null;
-                                }
-                                break;
-                            case "updateHG":
-                                this.WSProgress.operation = "Updating Source Host Group";
-                                if (val.data.state === "running") {
-                                    this.WSUpdate = true;
-                                }
-                                if (val.data.state === "done") {
-                                    this.WSUpdate = false;
-                                }
-                                break;
-                            case "getPC":
-                                if (val.data.hasOwnProperty("item")) {
-                                    this.WSProgress.operation = null;
-                                    this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
-                                } else {
-                                    this.WSProgress.operation = "Getting Puppet Classes";
-                                    this.WSProgress.item = null;
-                                }
-                                break;
-                            case "getHGParameters":
-                                if (val.data.hasOwnProperty("item")) {
-                                    this.WSProgress.operation = null;
-                                    this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
-                                } else {
-                                    this.WSProgress.operation = "Getting Host Group parameters";
-                                    this.WSProgress.item = null;
-                                }
-                                break;
-                            case "updatingHGOverrides":
-                                if (val.data.hasOwnProperty("item")) {
-                                    this.WSProgress.operation = null;
-                                    if (val.data.item.length > 20) {
-                                        let old = val.data.item;
-                                        val.data.item = old.substring(0,19) + " ...";
-                                    }
-                                    this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
-                                } else {
-                                    this.WSProgress.operation = "Getting Host Group overrides";
-                                    this.WSProgress.item = null;
-                                }
-                                break;
-                            case "postHGSaving":
-                                this.wip = false;
-                                this.WSProgress.item = null;
-                                this.WSProgress.operation = null;
+                    await Common.webSocketParser(val, this);
 
-                                for (let i in this.checkRes[val.data.tHost]) {
-                                    if (val.data.hgName === this.checkRes[val.data.tHost][i].hgName) {
-                                        this.checkRes[val.data.tHost][i].process.done = val.data.done;
-                                        this.checkRes[val.data.tHost][i].process.loadingInProgress = val.data.in_progress;
-                                    }
-                                }
-
-                                this.$forceUpdate();
-                                break;
-                            default:
-                                this.WSProgress.item = null;
-                                this.WSProgress.operation = null;
-                                console.info(val)
-                        }
-                    }
+                    // if (val.hasOwnProperty("operation")) {
+                    //     this.wip = true;
+                    //     switch (val.operation) {
+                    //         case "getSC":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Smart Classes";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "updateHG":
+                    //             this.WSProgress.operation = "Updating Source Host Group";
+                    //             if (val.data.state === "running") {
+                    //                 this.WSUpdate = true;
+                    //             }
+                    //             if (val.data.state === "done") {
+                    //                 this.WSUpdate = false;
+                    //             }
+                    //             break;
+                    //         case "getPC":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Puppet Classes";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "getHGParameters":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Host Group parameters";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "updatingHGOverrides":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 if (val.data.item.length > 20) {
+                    //                     let old = val.data.item;
+                    //                     val.data.item = old.substring(0,19) + " ...";
+                    //                 }
+                    //                 this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Host Group overrides";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "postHGSaving":
+                    //             this.wip = false;
+                    //             this.WSProgress.item = null;
+                    //             this.WSProgress.operation = null;
+                    //
+                    //             for (let i in this.checkRes[val.data.tHost]) {
+                    //                 if (val.data.hgName === this.checkRes[val.data.tHost][i].hgName) {
+                    //                     this.checkRes[val.data.tHost][i].process.done = val.data.done;
+                    //                     this.checkRes[val.data.tHost][i].process.loadingInProgress = val.data.in_progress;
+                    //                 }
+                    //             }
+                    //
+                    //             this.$forceUpdate();
+                    //             break;
+                    //         default:
+                    //             this.WSProgress.item = null;
+                    //             this.WSProgress.operation = null;
+                    //             console.info(val)
+                    //     }
+                    // }
                 }
             },
         },

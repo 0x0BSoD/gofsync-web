@@ -92,16 +92,6 @@ async function webSocketParser(message, t) {
                     t.WSProgress.message = "Getting Smart Classes";
                 }
                 break;
-            // Updating Host Group
-            case "updateHG":
-                t.WSProgress.message = "Updating Source Host Group";
-                if (message.data.state === "running") {
-                    t.WSUpdate = true;
-                }
-                if (message.data.state === "done") {
-                    t.WSUpdate = false;
-                }
-                break;
             // Getting/Updating Puppet Classes
             case "getPC":
                 if (message.data.hasOwnProperty("item")) {
@@ -135,7 +125,28 @@ async function webSocketParser(message, t) {
                 }
                 break;
             // Working with Host Group in batch mode
-            case "postHGSaving":
+            // Updating Host Group
+            case "batchUpdateSource":
+                t.WSProgress.message = "Updating Source Host Group";
+                if (message.data.state === "running") {
+                    t.WSUpdate = true;
+                }
+                if (message.data.state === "done") {
+                    t.WSUpdate = false;
+                }
+                break;
+            case "batchUpdateHG":
+                if (message.data.hasOwnProperty("item")) {
+                    if (message.data.hasOwnProperty("counter")) {
+                        t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Updating: ${message.data.item}`;
+                    } else {
+                        t.WSProgress.message = `Updating: ${message.data.item}`;
+                    }
+                } else {
+                    t.WSProgress.message = "Updating Host Groups";
+                }
+                break;
+            case "batchHostGroupSaving":
                 t.WSProgress.message = null;
 
                 for (let i in t.checkRes[message.data.tHost]) {
