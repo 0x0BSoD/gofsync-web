@@ -1,6 +1,5 @@
 <template>
     <v-container>
-        <!--        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>-->
         <v-stepper v-model="e1">
             <v-stepper-header>
                 <v-stepper-step :complete="e1 > 1" step="1">Source</v-stepper-step>
@@ -101,12 +100,10 @@
                         <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks
                             Result
                         </v-card-title>
-
-                        <v-layout v-if="WSUpdate" row wrap>
+                        <v-layout v-if="checkInProgress" row wrap>
                             <v-layout row wrap v-if="wip" class="text-xs-center">
                                 <v-flex xs12>
-                                    <v-chip label v-if="WSProgress.operation">{{WSProgress.operation}}</v-chip>
-                                    <v-chip label v-if="WSProgress.item">{{WSProgress.item}}</v-chip>
+                                    <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                                 </v-flex>
                             </v-layout>
                         </v-layout>
@@ -148,10 +145,7 @@
                                                     <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
                                                                                :rhombus-size="15" color="#607d8b"/>
                                                 </v-btn>
-<!--                                                <v-chip label v-if="WSActions">{{WSActions}}</v-chip>-->
-<!--                                                <v-chip label v-if="WSState">{{WSState}}</v-chip>-->
-                                                <v-chip label v-if="WSProgress.operation">{{WSProgress.operation}}</v-chip>
-                                                <v-chip label v-if="WSProgress.item">{{WSProgress.item}}</v-chip>
+                                                <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
 
                                             </div>
                                             <div v-else-if="swe.process.done">
@@ -226,14 +220,9 @@
             checkingSWE: null,
             checkResArray: [],
             checked: false,
-            WSState: false,
-            WSActions: false,
-            WSUpdate: false,
-            WSUpdateActions: false,
-            WSUpdateState: false,
+            checkInProgress: false,
             WSProgress: {
-                operation: null,
-                item: null,
+                message: null,
             },
         }),
         async mounted() {
@@ -249,79 +238,6 @@
             nowActions: {
                 async handler(val) {
                     await Common.webSocketParser(val, this);
-
-                    // if (val.hasOwnProperty("operation")) {
-                    //     this.wip = true;
-                    //     switch (val.operation) {
-                    //         case "getSC":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Smart Classes";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "updateHG":
-                    //             this.WSProgress.operation = "Updating Source Host Group";
-                    //             if (val.data.state === "running") {
-                    //                 this.WSUpdate = true;
-                    //             }
-                    //             if (val.data.state === "done") {
-                    //                 this.WSUpdate = false;
-                    //             }
-                    //             break;
-                    //         case "getPC":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Puppet Classes";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "getHGParameters":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Host Group parameters";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "updatingHGOverrides":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 if (val.data.item.length > 20) {
-                    //                     let old = val.data.item;
-                    //                     val.data.item = old.substring(0,19) + " ...";
-                    //                 }
-                    //                 this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Host Group overrides";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "postHGSaving":
-                    //             this.wip = false;
-                    //             this.WSProgress.item = null;
-                    //             this.WSProgress.operation = null;
-                    //
-                    //             for (let i in this.checkRes[val.data.tHost]) {
-                    //                 if (val.data.hgName === this.checkRes[val.data.tHost][i].hgName) {
-                    //                     this.checkRes[val.data.tHost][i].process.done = val.data.done;
-                    //                     this.checkRes[val.data.tHost][i].process.loadingInProgress = val.data.in_progress;
-                    //                 }
-                    //             }
-                    //
-                    //             this.$forceUpdate();
-                    //             break;
-                    //         default:
-                    //             this.WSProgress.item = null;
-                    //             this.WSProgress.operation = null;
-                    //             console.info(val)
-                    //     }
-                    // }
                 }
             },
         },

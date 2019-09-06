@@ -13,6 +13,6 @@ Vue.use(
         // reconnectionAttempts: 5,
         reconnectionDelay: 1000,
         store: store,
-        format: 'json',
+        // format: 'json',
     },
 );

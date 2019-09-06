@@ -84,6 +84,14 @@ async function webSocketParser(message, t) {
                     t.WSProgress.message = "Getting Environment data";
                 }
                 break;
+            // Getting/Updating Locations
+            case "getLoc":
+                if (message.data.hasOwnProperty("item")) {
+                    t.WSProgress.message = `Getting Location data: ${message.data.item}`;
+                } else {
+                    t.WSProgress.message = "Getting Location data";
+                }
+                break;
             // Getting/Updating Smart Classes
             case "getSC":
                 if (message.data.hasOwnProperty("item")) {
@@ -124,15 +132,29 @@ async function webSocketParser(message, t) {
                     t.WSProgress.message = "Getting Host Group overrides";
                 }
                 break;
+            // Submitting Smart Class Overrides
+            case "submitHGOverrides":
+                if (message.data.hasOwnProperty("item")) {
+                    if (message.data.hasOwnProperty("counter")) {
+                        t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Submitting: ${message.data.item}`;
+                    } else {
+                        t.WSProgress.message = `Submitting Host Group override: ${message.data.item}`;
+                    }
+                } else {
+                    t.WSProgress.message = "Submitting Host Group overrides";
+                }
+                break;
             // Working with Host Group in batch mode
             // Updating Host Group
             case "batchUpdateSource":
                 t.WSProgress.message = "Updating Source Host Group";
                 if (message.data.state === "running") {
-                    t.WSUpdate = true;
+                    t.wip = true;
+                    t.checkInProgress = true;
                 }
                 if (message.data.state === "done") {
-                    t.WSUpdate = false;
+                    t.wip = false;
+                    t.checkInProgress = false;
                 }
                 break;
             case "batchUpdateHG":
