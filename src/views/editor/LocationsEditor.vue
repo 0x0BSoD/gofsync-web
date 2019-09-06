@@ -28,6 +28,8 @@
                         label="Location"
                         persistent-hint
                         solo
+                        item-text="name"
+                        item-value="name"
                 >
                 </v-autocomplete>
             </v-flex>
@@ -234,6 +236,11 @@
             }
         },
         watch: {
+            nowActions: {
+                async handler(val) {
+                    await Common.webSocketParser(val, this);
+                }
+            },
             selectedPC: {
                 async handler(val) {
 

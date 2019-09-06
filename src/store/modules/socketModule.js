@@ -20,11 +20,16 @@ export default {
             state.socket.isConnected = false;
         },
         SOCKET_ONERROR(state, event) {
-            console.error(state, event)
+            console.info(state, event)
         },
         // default handler called for all methods
         SOCKET_ONMESSAGE(state, message) {
-            state.socket.message = message;
+            try {
+                state.socket.message = JSON.parse(message.data);
+            } catch (e) {
+                console.info(message.data);
+                console.info(e);
+            }
         },
         // mutations for reconnect methods
         SOCKET_RECONNECT(state, count) {

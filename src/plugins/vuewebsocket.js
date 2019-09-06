@@ -10,9 +10,9 @@ Vue.use(
     {
         connectManually: true,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 3000,
+        // reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
         store: store,
-        format: 'json',
+        // format: 'json',
     },
 );

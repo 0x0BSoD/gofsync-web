@@ -3,6 +3,17 @@
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout wrap>
+                    <v-flex xs12>
+                        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+                    </v-flex>
+                    <v-flex xs12>
+                        <v-text-field
+                                label="Location Search"
+                                v-model="locSearch"
+                                outline
+                                clearable
+                        ></v-text-field>
+                    </v-flex>
                     <v-flex
                             v-for="n in locations"
                             :key="n.host"
@@ -12,8 +23,8 @@
                     >
                         <v-item>
 
-                            <v-card>
-                                <v-toolbar dark color="#7ac2ff">
+                            <v-card class="hostCard">
+                                <v-toolbar color="#f0f5f5">
                                     <v-toolbar-title>
                                         <v-btn flat :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
                                         </v-btn>
@@ -110,6 +121,7 @@
                                             <v-card
                                                     class="mx-auto"
                                                     elevation="0"
+                                                    v-if="n.trend.values"
                                             >
                                                 <v-sheet
                                                         class="v-sheet--offset mx-auto"
@@ -145,20 +157,31 @@
 
                                         </v-flex>
                                     </v-layout>
-                                    <v-expansion-panel>
-
+                                    <v-expansion-panel
+                                        :value="n.open"
+                                        expand
+                                    >
                                         <v-expansion-panel-content>
                                             <template v-slot:header>
                                                 <v-icon small>public</v-icon><div>Locations</div>
                                             </template>
                                             <v-card>
-                                                <v-hover v-for="c in n.locations" :key="c">
+                                                <v-hover v-for="c in n.locations" :key="c.name">
                                                     <v-btn
+                                                            v-if="c.highlighted"
+                                                            slot-scope="{ hover }"
+                                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                            class="mx-auto red"
+                                                            :to="{name:'locations', query: {source: n.host, location: c.name }}"
+                                                            small>{{c.name}}
+                                                    </v-btn>
+                                                    <v-btn
+                                                            v-else
                                                             slot-scope="{ hover }"
                                                             :class="`elevation-${hover ? 2 : 1} ml-1`"
                                                             class="mx-auto"
-                                                            :to="{name:'locations', query: {source: n.host, location: c }}"
-                                                            small>{{c}}
+                                                            :to="{name:'locations', query: {source: n.host, location: c.name }}"
+                                                            small>{{c.name}}
                                                     </v-btn>
                                                 </v-hover>
                                             </v-card>
@@ -186,12 +209,6 @@
                 </v-toolbar>
                 <v-card-text>
                     <v-layout wrap row>
-                        <!--                        <v-flex xs2 pr-2>-->
-                        <!--                            <v-switch-->
-                        <!--                                    v-model="allHosts"-->
-                        <!--                                    :label="`allHosts: ${allHosts.toString()}`"-->
-                        <!--                            ></v-switch>-->
-                        <!--                        </v-flex>-->
                         <v-flex xs6 pr-2>
                             <v-autocomplete
                                     v-if="allHosts"
@@ -223,17 +240,6 @@
                                 </template>
                             </v-autocomplete>
                         </v-flex>
-                        <!--                        <v-flex xs3 pr-2>-->
-                        <!--                            <v-autocomplete-->
-                        <!--                                v-model="HGChanged"-->
-                        <!--                                :items="HGChangedExamples"-->
-                        <!--                                label="Last Changed"-->
-                        <!--                                :disabled="!allHosts"-->
-                        <!--                                persistent-hint-->
-                        <!--                            >-->
-
-                        <!--                            </v-autocomplete>-->
-                        <!--                        </v-flex>-->
                         <v-flex xs3 pr-2 class="text-sm-center">
                             <v-btn
                                     :loading="loading"
@@ -278,8 +284,7 @@
                     <!--    ============================================ Progress ============================================    -->
                     <v-layout row wrap v-if="wipMessage">
                         <v-flex v-if="wip" xs9>
-                            <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                            <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                            <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
                         <v-flex xs3 class="pt-2">
                             {{wipMessage}}
@@ -295,8 +300,7 @@
                     </v-layout>
                     <v-layout row wrap v-else class="text-xs-center">
                         <v-flex v-if="wip" xs12>
-                            <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                            <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                            <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
                         <v-flex xs12 class="text-xs-center pt-2">
                             <fingerprint-spinner
@@ -343,6 +347,7 @@
             hostGroup: null,
             HGChanged: null,
             selHost: null,
+            locSearch: null,
             HGChangedExamples: [
                 "Today",
                 "Yesterday",
@@ -353,6 +358,9 @@
             loading: false,
             dialogTitle: "",
             hosts: [],
+            WSProgress: {
+                message: null,
+            },
         }),
 
         components: {
@@ -362,9 +370,42 @@
         async mounted() {
             // User check ==========================================
             await Common.auth(this);
+            this.wip = true;
             this.locations = (await locationsService.List()).data;
+            this.wip = false;
         },
-        watch: {},
+        watch: {
+            nowActions: {
+                async handler(val) {
+                    await Common.webSocketParser(val, this);
+                }
+            },
+            locSearch: {
+                async handler(val) {
+                    if (val) {
+                        for (let i in this.locations) {
+                            for (let k in this.locations[i].locations) {
+                                if (this.locations[i].locations[k].name.includes(val)) {
+                                    this.locations[i].open = [true];
+                                    this.locations[i].locations[k].highlighted = true;
+                                // }
+                                } else {
+                                    // this.locations[i].open = [ false ];
+                                    this.locations[i].locations[k].highlighted = false;
+                                }
+                            }
+                        }
+                    } else {
+                        for (let i in this.locations) {
+                            this.locations[i]["open"] = [ false ];
+                            for (let k in this.locations[i].locations) {
+                                this.locations[i].locations[k].highlighted = false;
+                            }
+                        }
+                    }
+                }
+            }
+        },
         methods: {
             async showSweDialog(host) {
                 this.dialogTitle = host;
@@ -497,5 +538,8 @@
         padding-top: 12px;
         padding-bottom: 12px;
         text-align: center;
+    }
+    .hostCard {
+        height: 100%;
     }
 </style>

@@ -1,6 +1,5 @@
 <template>
     <v-container>
-        <!--        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>-->
         <v-stepper v-model="e1">
             <v-stepper-header>
                 <v-stepper-step :complete="e1 > 1" step="1">Source</v-stepper-step>
@@ -101,16 +100,15 @@
                         <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks
                             Result
                         </v-card-title>
-
-                        <v-layout v-if="WSUpdate" row wrap>
-                            <v-flex xs12>
-                                <v-chip label>{{WSUpdateActions}}</v-chip>
-                                <v-chip label>{{WSUpdateState}}</v-chip>
-                                <v-chip label>{{WSState}}</v-chip>
-                            </v-flex>
+                        <v-layout v-if="checkInProgress" row wrap>
+                            <v-layout row wrap v-if="wip" class="text-xs-center">
+                                <v-flex xs12>
+                                    <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+                                </v-flex>
+                            </v-layout>
                         </v-layout>
-
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+
                         <v-card-text
                                 v-else
                                 v-for="(swes, host) in checkRes"
@@ -147,8 +145,8 @@
                                                     <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
                                                                                :rhombus-size="15" color="#607d8b"/>
                                                 </v-btn>
-                                                <v-chip label v-if="WSActions">{{WSActions}}</v-chip>
-                                                <v-chip label v-if="WSState">{{WSState}}</v-chip>
+                                                <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+
                                             </div>
                                             <div v-else-if="swe.process.done">
                                                 <v-chip label v-if="swe.foreman.targetId" color="success">Updated
@@ -222,11 +220,10 @@
             checkingSWE: null,
             checkResArray: [],
             checked: false,
-            WSState: false,
-            WSActions: false,
-            WSUpdate: false,
-            WSUpdateActions: false,
-            WSUpdateState: false,
+            checkInProgress: false,
+            WSProgress: {
+                message: null,
+            },
         }),
         async mounted() {
             // User check ==========================================
@@ -240,37 +237,7 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    let data = (await val);
-                    // ===============================
-                    if (data.hasOwnProperty("done")) {
-                        this.WSUpdate = false;
-                        this.wip = false;
-                        for (let i in this.checkRes[data.tHost]) {
-                            if (data.hgName === this.checkRes[data.tHost][i].hgName) {
-                                this.checkRes[data.tHost][i].process.done = data.done;
-                                this.checkRes[data.tHost][i].process.loadingInProgress = data.in_progress;
-                            }
-                        }
-                        this.$forceUpdate();
-                    }
-
-                    try {
-                            if (data.actions === "Updating Source HostGroups") {
-                                this.WSUpdate = true;
-                                this.WSUpdateActions = data.actions;
-                                this.WSUpdateState = data.state;
-                                this.wip = true;
-                            }
-                            this.WSActions = data.actions;
-                            this.WSState = data.state;
-
-                    } catch (e) {
-                            console.info(e);
-                            this.WSActions = false;
-                            this.WSState = false;
-                            this.WSUpdate = false;
-                            this.wip = false;
-                    }
+                    await Common.webSocketParser(val, this);
                 }
             },
         },

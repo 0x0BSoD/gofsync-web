@@ -10,6 +10,7 @@ export const hostGroupService = {
     Send,
     Create,
     BatchSend,
+    GitCommit,
 };
 
 // GET ===========================================
@@ -34,6 +35,10 @@ function FCheck(host, hgId) {
 // }
 function FUpdate(host, hgId) {
     return Api().get(`hg/foreman/update/${host}/${hgId}`);
+}
+
+function GitCommit(host, hgId) {
+    return Api().get(`/hg/git/commit/${host}/${hgId}`);
 }
 
 // POST ===========================================

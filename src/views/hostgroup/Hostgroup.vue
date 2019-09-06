@@ -21,8 +21,7 @@
         <!--    ============================================ Progress ============================================    -->
         <v-layout row wrap v-if="wipMessage">
             <v-flex v-if="wip" xs9>
-                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
             </v-flex>
             <v-flex xs3 class="pt-2">
                 {{wipMessage}}
@@ -33,8 +32,7 @@
         </v-layout>
         <v-layout row wrap v-else class="text-xs-center">
             <v-flex v-if="wip" xs12>
-                <v-chip label v-if="nowActions">{{nowActions.actions}}</v-chip>
-                <v-chip label v-if="nowActions.state">{{nowActions.state}}</v-chip>
+                <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
             </v-flex>
             <v-flex xs12>
                 <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
@@ -44,7 +42,7 @@
 
         <!--    ============================================ Top menu - selects =========================================    -->
         <v-layout wrap row class="text-xs-center" v-if="!wip">
-            <v-flex xs6>
+            <v-flex xs12 md6>
                 <v-layout wrap row>
                     <v-flex xs6 pr-2>
                         <v-autocomplete
@@ -69,7 +67,7 @@
                     </v-flex>
                 </v-layout>
             </v-flex>
-            <v-flex xs6>
+            <v-flex xs12 md6>
                 <v-layout wrap row>
                     <v-flex xs6 pr-2>
                         <v-autocomplete
@@ -111,11 +109,11 @@
         <v-layout row wrap v-if="hostGroup.id">
             <v-flex xs12 pb-2>
                 <v-card>
-                    <v-layout>
-                        <v-flex xs6>
+                    <v-layout row wrap>
+                        <v-flex xs12 md6>
                             <v-card-text>
                                 <v-layout>
-                                    <v-flex xs4>
+                                    <v-flex xs12 md4>
                                         <table>
                                             <thead>
                                             <tr><th></th></tr>
@@ -137,7 +135,7 @@
                                             </tbody>
                                         </table>
                                     </v-flex>
-                                    <v-flex xs8>
+                                    <v-flex xs12 md8>
                                         <table>
                                             <thead>
                                             <tr><th></th></tr>
@@ -162,7 +160,7 @@
                                 </v-layout>
                             </v-card-text>
                         </v-flex>
-                        <v-flex xs6 v-if="existData && !hgError" pt-3>
+                        <v-flex xs12 md6  v-if="existData && !hgError" pt-3>
                             <v-layout row wrap>
                                 <v-flex xs12 v-if="foremanCheckHG">
                                     <v-layout row wrap class="text-xs-center">
@@ -223,7 +221,7 @@
                                 </v-flex>
                             </v-layout>
                         </v-flex>
-                        <v-flex xs6 v-else pt-3 class="text-xs-center">
+                        <v-flex xs12 md6 v-else pt-3 class="text-xs-center">
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on }">
                                     <v-btn @click="updateSourceHG()" color="primary" :disabled="wip" v-on="on">Update
@@ -313,35 +311,6 @@
                         <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
                     </v-btn>
                 </div>
-
-
-                <!--                <br/>-->
-                <!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="primary">Dev</v-chip>-->
-                <!--                <br/>-->
-                <!--                <v-btn-->
-                <!--                        v-for="(val, i) in hostGroups"-->
-                <!--                        :key="i"-->
-                <!--                        v-if = "val.name !== 'SWE' && val.status === 'dev'"-->
-                <!--                        @click="setHG(val.id)"-->
-                <!--                >{{val.name}}</v-btn>-->
-                <!--                <br/>-->
-                <!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">To remove</v-chip>-->
-                <!--                <br/>-->
-                <!--                <v-btn-->
-                <!--                        v-for="(val, i) in hostGroups"-->
-                <!--                        :key="i"-->
-                <!--                        v-if = "val.name !== 'SWE' && val.status === '_toremove'"-->
-                <!--                        @click="setHG(val.id)"-->
-                <!--                >{{val.name}}</v-btn>-->
-                <!--                <br/>-->
-                <!--                <v-chip v-if="hostGroups.length > 0" class="mt-4" dark label color="warning">w/o state</v-chip>-->
-                <!--                <br/>-->
-                <!--                <v-btn-->
-                <!--                        v-for="(val, i) in hostGroups"-->
-                <!--                        :key="i"-->
-                <!--                        v-if = "val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"-->
-                <!--                        @click="setHG(val.id)"-->
-                <!--                >{{val.name}}</v-btn>-->
             </v-flex>
         </v-layout>
         <!--    ============================================ /HostGroups ============================================    -->
@@ -466,6 +435,9 @@
             link: false,
             targetDiff: false,
             toggle_status: null,
+            WSProgress: {
+                message: null,
+            },
         }),
 
         //========================================================================================================
@@ -488,12 +460,16 @@
                 this.wip = false;
                 this.hgError = true;
                 this.hgErrorMsg = "Backend not reachable or in errored state"
-                this.$router.push({name: "error"});
+                await this.$router.push({name: "error"});
             }
 
             if (this.$route.query.hasOwnProperty("source")
                 && Common.inHosts(this.hosts, this.$route.query.source)) {
                 this.sHost = this.$route.query.source;
+            }
+
+            if (this.$route.query.hasOwnProperty("env")) {
+                this.env = this.$route.query.env;
             }
         },
 
@@ -501,6 +477,68 @@
         // WATCH
         //========================================================================================================
         watch: {
+            nowActions: {
+                async handler(val) {
+                    await Common.webSocketParser(val, this);
+                    // if (val.hasOwnProperty("operation")) {
+                    //     this.wip = true;
+                    //     switch (val.operation) {
+                    //         case "getSC":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Smart Classes";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "getHG":
+                    //             this.WSProgress.operation = "Getting Host Group";
+                    //             break;
+                    //         case "getPC":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Puppet Classes";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "getHGParameters":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Host Group parameters";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "updatingHGOverrides":
+                    //             if (val.data.hasOwnProperty("item")) {
+                    //                 this.WSProgress.operation = null;
+                    //                 if (val.data.item.length > 20) {
+                    //                     let old = val.data.item;
+                    //                     val.data.item = old.substring(0,19) + " ...";
+                    //                 }
+                    //                 this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
+                    //             } else {
+                    //                 this.WSProgress.operation = "Getting Host Group overrides";
+                    //                 this.WSProgress.item = null;
+                    //             }
+                    //             break;
+                    //         case "done":
+                    //             this.wip = false;
+                    //             this.WSProgress.item = null;
+                    //             this.WSProgress.operation = null;
+                    //             break;
+                    //         default:
+                    //             this.WSProgress.item = null;
+                    //             this.WSProgress.operation = null;
+                    //             console.info(val)
+                    //     }
+                    // }
+                }
+            },
             host: {
                 handler(val) {
                     this.sHost = val;
@@ -513,7 +551,6 @@
             },
             sHost: {
                 async handler(val) {
-
                     // RESET =================================
                     PuppetMethods.resetMismatch(this);
                     this.tHost = null;
@@ -529,9 +566,7 @@
                         puppet_classes: {},
                         updated: null,
                     };
-                    // this.env = "any";
                     this.pc = {};
-                    this.targPc = {};
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
@@ -540,12 +575,12 @@
                     this.hostGroupsFull = (await hostGroupService.List(val)).data;
 
                     let tmpEnv = (await environmentService.List(val)).data;
-                    let reg = new RegExp('[0-9]');
+                    let reg = new RegExp('(([0-9]).*|v.*)');
                     let result = [];
                     for (let env in tmpEnv) {
                         if (tmpEnv.hasOwnProperty(env)) {
                             if (reg.test(tmpEnv[env])) {
-                                let uEnvId = tmpEnv[env].slice(3, 6);
+                                let uEnvId = tmpEnv[env].slice(3);
                                 if (result.indexOf(uEnvId) === -1) {
                                     result.push(uEnvId)
                                 }
@@ -574,7 +609,6 @@
                         updated: null,
                     };
                     this.pc = {};
-                    this.targPc = {};
                     this.targetLoaded = false;
                     this.sourceLoaded = false;
 
@@ -594,7 +628,7 @@
                     if (this.$route.query.hasOwnProperty("env")) {
                         this.$route.query.env = this.env;
                     } else {
-                        this.$router.push({
+                        await this.$router.push({
                             query: {
                                 "source": this.sHost,
                                 "env": this.env,
@@ -725,7 +759,6 @@
             async updateSourceHG() {
                 this.wip = true;
                 let old_th = this.tHost;
-                //this.$connect();
                 try {
                     await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     this.tHost = null;
@@ -735,6 +768,7 @@
 
                     this.hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
+                    // await hostGroupService.GitCommit(this.sHost, this.hostGroupId);
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
                 } catch (e) {
@@ -743,6 +777,10 @@
                     if (e.message.includes("404")) {
                         this.hgError = true;
                         this.hgErrorMsg = `Host group ${val} not fond on spb01-puppet`;
+                    } else {
+                        this.wip = false;
+                        this.hgError = true;
+                        this.hgErrorMsg = e.message;
                     }
                 }
 
@@ -762,7 +800,6 @@
                     this.tHost = old_th;
                     this.sourceLoaded = true;
                     this.wip = false;
-                    //this.$disconnect();
                 }
             },
 
@@ -771,7 +808,6 @@
                 //this.$connect();
                 try {
                     await hostGroupService.FUpdate(this.tHost, this.hostGroup.name);
-
                     let targetId = null;
                     let targetHgs = (await hostGroupService.List(this.tHost)).data;
                     for (let i in targetHgs) {
@@ -779,6 +815,7 @@
                             if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                         }
                     }
+                    await hostGroupService.GitCommit(this.tHost, targetId);
                     this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
@@ -840,7 +877,6 @@
             },
 
             async submit() {
-                //this.$connect();
                 // Build POST parameters
                 let data = {
                     source_host: this.sHost,
@@ -864,6 +900,7 @@
                     this.wipMessage = "Updating data ...";
                     let response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
                     if (response2.status === 200) {
+                        await hostGroupService.GitCommit(this.tHost, response2.data.id);
                         this.hgDone = true;
                         this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
                     }
