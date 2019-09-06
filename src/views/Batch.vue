@@ -94,15 +94,24 @@
                 <!--     =====================================================================================================       -->
                 <v-stepper-content step="4">
                     <v-card>
-                        <v-card-title v-if="!checked" class="headline font-weight-regular blue-grey white--text">
+
+                        <v-card-title v-if="curr_heder === 'checking'" class="headline font-weight-regular blue-grey white--text">
                             Checking
                         </v-card-title>
-                        <v-card-title v-if="checked" class="headline font-weight-regular blue-grey white--text">Checks
-                            Result
+                        <v-card-title v-if="curr_heder === 'checked'" class="headline font-weight-regular blue-grey white--text">
+                            Checks Result
                         </v-card-title>
+                        <v-card-title v-if="curr_heder === 'working'" class="headline font-weight-regular blue-grey white--text">
+                            Working
+                        </v-card-title>
+                        <v-card-title v-if="curr_heder === 'done'" class="headline font-weight-regular blue-grey white--text">
+                            Results
+                        </v-card-title>
+
                         <v-layout v-if="checkInProgress" row wrap>
                             <v-layout row wrap v-if="wip" class="text-xs-center">
                                 <v-flex xs12>
+                                    <h2 v-if="WSProgress.message">{{WSProgress.item}}</h2>
                                     <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                                 </v-flex>
                             </v-layout>
@@ -223,7 +232,9 @@
             checkInProgress: false,
             WSProgress: {
                 message: null,
+                item: null,
             },
+            curr_heder: null,
         }),
         async mounted() {
             // User check ==========================================
@@ -244,93 +255,107 @@
         methods: {
             async startJob() {
                 this.started = true;
+                this.curr_heder = "working";
                 await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
+                this.curr_heder = "done";
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
             },
             async checks() {
                 this.started = true;
+                this.curr_heder = "checking";
                 this.checked = false;
                 this.checkRes = {};
                 this.wip = true;
                 // build object for checking
                 for (let target in this.tHost) {
-                    if (this.tHost[target] !== this.sHost) {
-                        this.checkRes[this.tHost[target]] = [];
+                    if (this.tHost.hasOwnProperty(target)) {
+                        if (this.tHost[target] !== this.sHost) {
+                            this.checkRes[this.tHost[target]] = [];
+                        }
                     }
                 }
-                // HG ID's loop
+                // HG ID loop
                 for (let hg in this.hostGroupSelected) {
                     // try to get source HG
                     let hostGroup = {};
                     try {
-                        hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
+                        if (this.hostGroupSelected.hasOwnProperty(hg)) {
+                            hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
+                        }
                     } catch (e) {
                         this.wip = false;
                         return;
                     }
                     for (let target in this.tHost) {
-                        if (this.tHost[target] !== this.sHost) {
-                            this.checkRes[this.tHost[target]].push({
-                                id: hostGroup.id,
-                                hgName: hostGroup.name,
-                                tHost: this.tHost[target],
-                                sHost: this.sHost,
-                                environment: {
-                                    name: hostGroup.environment,
-                                    targetId: null,
-                                },
-                                hg_link: null,
-                                foreman: {
-                                    targetId: null,
-                                    sourceId: hostGroup.id,
-                                },
-                                process: {
-                                    checkInProgress: true,
-                                    loadingInProgress: false,
-                                    done: false,
-                                },
-                                ws: {
-                                    state: true,
-                                    msg: "",
-                                },
-                                error: {
-                                    state: false,
-                                    msg: "",
-                                },
-                            });
+                        if (this.tHost.hasOwnProperty(target)) {
+                            if (this.tHost[target] !== this.sHost) {
+                                this.checkRes[this.tHost[target]].push({
+                                    id: hostGroup.id,
+                                    hgName: hostGroup.name,
+                                    tHost: this.tHost[target],
+                                    sHost: this.sHost,
+                                    environment: {
+                                        name: hostGroup.environment,
+                                        targetId: null,
+                                    },
+                                    hg_link: null,
+                                    foreman: {
+                                        targetId: null,
+                                        sourceId: hostGroup.id,
+                                    },
+                                    process: {
+                                        checkInProgress: true,
+                                        loadingInProgress: false,
+                                        done: false,
+                                    },
+                                    ws: {
+                                        state: true,
+                                        msg: "",
+                                    },
+                                    error: {
+                                        state: false,
+                                        msg: "",
+                                    },
+                                });
+                            }
                         }
                     }
                 }
                 this.wip = false;
                 for (let target in this.checkRes) {
-                    for (let i in this.checkRes[target]) {
-                        let envData = {
-                            host: target,
-                            env: this.checkRes[target][i].environment.name
-                        };
-                        this.checkRes[target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
-                        let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes[target][i].hgName)).data;
-                        if (foremanStatus.id !== -1) {
-                            this.checkRes[target][i].foreman.targetId = foremanStatus.id;
-                            let targetHGList = (await hostGroupService.List(target)).data;
-                            for (let j in targetHGList) {
-                                if (targetHGList[j].name === this.checkRes[target][i].hgName) {
-                                    let ID = targetHGList[j].id;
-                                    let targetHG = (await hostGroupService.Get(target, ID)).data;
-                                    let HGNameLink = this.checkRes[target][i].hgName.replace(/\./g, "-");
-                                    this.checkRes[target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
+                    if (this.checkRes.hasOwnProperty(target)) {
+                        for (let i in this.checkRes[target]) {
+                            if (this.checkRes[target].hasOwnProperty(i)) {
+                                let envData = {
+                                    host: target,
+                                    env: this.checkRes[target][i].environment.name
+                                };
+                                this.checkRes[target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
+                                let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes[target][i].hgName)).data;
+                                if (foremanStatus.id !== -1) {
+                                    this.checkRes[target][i].foreman.targetId = foremanStatus.id;
+                                    let targetHGList = (await hostGroupService.List(target)).data;
+                                    for (let j in targetHGList) {
+                                        if (targetHGList[j].name === this.checkRes[target][i].hgName) {
+                                            let ID = targetHGList[j].id;
+                                            let targetHG = (await hostGroupService.Get(target, ID)).data;
+                                            let HGNameLink = this.checkRes[target][i].hgName.replace(/\./g, "-");
+                                            this.checkRes[target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
+                                        }
+                                    }
                                 }
+                                this.checkRes[target][i].process.checkInProgress = false;
+                                this.started = false;
+                                this.$forceUpdate();
                             }
                         }
-                        this.checkRes[target][i].process.checkInProgress = false;
-                        this.started = false;
-                        this.$forceUpdate();
                     }
                 }
                 this.checked = true;
+                this.curr_heder = "checked";
             },
         }
     }

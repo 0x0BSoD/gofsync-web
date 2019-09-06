@@ -79,7 +79,7 @@ async function webSocketParser(message, t) {
             // Getting/Updating Environments
             case "getEnv":
                 if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Getting Environment data: ${message.data.item}`;
+                    t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
                 } else {
                     t.WSProgress.message = "Getting Environment data";
                 }
@@ -87,7 +87,7 @@ async function webSocketParser(message, t) {
             // Getting/Updating Locations
             case "getLoc":
                 if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Getting Location data: ${message.data.item}`;
+                    t.WSProgress.message = `Processing Location data: ${message.data.item}`;
                 } else {
                     t.WSProgress.message = "Getting Location data";
                 }
@@ -95,7 +95,7 @@ async function webSocketParser(message, t) {
             // Getting/Updating Smart Classes
             case "getSC":
                 if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Getting Smart Class: ${message.data.item}`;
+                    t.WSProgress.message = `Processing Smart Class: ${message.data.item}`;
                 } else {
                     t.WSProgress.message = "Getting Smart Classes";
                 }
@@ -106,7 +106,7 @@ async function webSocketParser(message, t) {
                     if (message.data.hasOwnProperty("counter")) {
                         t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Getting: ${message.data.item}`;
                     } else {
-                        t.WSProgress.message = `Getting Puppet Class: ${message.data.item}`;
+                        t.WSProgress.message = `Processing Puppet Class: ${message.data.item}`;
                     }
                 } else {
                     t.WSProgress.message = "Getting Puppet Classes";
@@ -115,7 +115,7 @@ async function webSocketParser(message, t) {
             // Getting/Updating Host Group Parameters
             case "getHGParameters":
                 if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Getting Host Group parameter: ${message.data.item}`;
+                    t.WSProgress.message = `Processing Host Group parameter: ${message.data.item}`;
                 } else {
                     t.WSProgress.message = "Getting Host Group parameters";
                 }
@@ -127,7 +127,7 @@ async function webSocketParser(message, t) {
                         let old = message.data.item;
                         message.data.item = old.substring(0,19) + " ...";
                     }
-                    t.WSProgress.message = `Getting Host Group override: ${message.data.item}`;
+                    t.WSProgress.message = `Processing Host Group override: ${message.data.item}`;
                 } else {
                     t.WSProgress.message = "Getting Host Group overrides";
                 }
@@ -162,6 +162,7 @@ async function webSocketParser(message, t) {
                     if (message.data.hasOwnProperty("counter")) {
                         t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Updating: ${message.data.item}`;
                     } else {
+                        t.WSProgress.item = message.data.item;
                         t.WSProgress.message = `Updating: ${message.data.item}`;
                     }
                 } else {
@@ -188,8 +189,14 @@ async function webSocketParser(message, t) {
                 break;
             case "done":
                 t.WSProgress.message = null;
+                if (t.WSProgress.hasOwnProperty("item")) {
+                    t.WSProgress.item    = null;
+                }
                 break;
             default:
+                if (t.WSProgress.hasOwnProperty("item")) {
+                    t.WSProgress.item    = null;
+                }
                 t.WSProgress.message = null;
                 console.info(message)
         }
