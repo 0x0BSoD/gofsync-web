@@ -46,6 +46,11 @@
                                                     <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to
                                                         foreman</a>
                                                 </v-list-tile>
+                                                <v-divider></v-divider>
+                                                <v-list-tile @click="updateAll(n.host)">
+                                                    <v-list-tile-title>update all</v-list-tile-title>
+                                                </v-list-tile>
+                                                <v-divider></v-divider>
                                                 <v-list-tile @click="updateLoc(n.host)">
                                                     <v-list-tile-title>update locations</v-list-tile-title>
                                                 </v-list-tile>
