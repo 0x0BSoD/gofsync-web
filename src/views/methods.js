@@ -182,10 +182,10 @@ async function webSocketParser(message, t) {
                 break;
             // Index page a specific message
             case "dashboardUpdate":
-                this.wip = true;
-                this.locations = (await locationsService.List()).data;
-                this.wip = false;
-                this.$forceUpdate();
+                t.wip = true;
+                t.locations = (await locationsService.List()).data;
+                t.wip = false;
+                t.$forceUpdate();
                 break;
             case "done":
                 t.WSProgress.message = null;

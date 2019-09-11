@@ -377,7 +377,7 @@
             WSProgress: {
                 message: null,
             },
-            globalWork: true,
+            globalWork: false,
         }),
 
         components: {

@@ -624,6 +624,9 @@
                         }
                     }
                 }
+                this.environments = (await environmentService.ListAll()).data;
+                this.full_environments = (await environmentService.ListAll()).data;
+                this.$forceUpdate();
             },
 
             batchDialog () {
@@ -713,6 +716,12 @@
                 this.dialogTitle = `Add Environment to ${host}`;
                 this.dialogHost = host;
                 this.dialogAddEnvironment = true;
+                this.addSteps = {
+                    1: { title: "Checking", icon: "pause", progress: false, msg: null, show: true},
+                    2: { title: "Adding to Foreman", icon: "pause", progress: false, msg: null, show: true},
+                    3: { title: "Getting code", icon: "pause", progress: false, msg: null, show: true},
+                    4: { title: "Importing Classes", icon: "pause", progress: false, msg: null, show: true},
+                };
             },
 
             async submitRepo () {
