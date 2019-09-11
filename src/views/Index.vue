@@ -26,13 +26,24 @@
                             <v-card class="hostCard">
                                 <v-toolbar color="#f0f5f5">
                                     <v-toolbar-title>
-                                        <v-btn flat :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
+                                        <v-btn flat small :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
                                         </v-btn>
                                     </v-toolbar-title>
                                     <v-spacer></v-spacer>
-                                        <v-chip v-if="n.env === 'stage'" small color="success">STAGE</v-chip>
-                                        <v-chip v-if="n.env === 'prod'" small color="warning">PROD</v-chip>
-                                        <v-menu bottom left>
+                                        <v-chip v-if="n.env === 'stage' && !globalWork" small color="success">STAGE</v-chip>
+                                        <v-chip v-if="n.env === 'prod' && !globalWork" small color="warning">PROD</v-chip>
+
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn v-on="on" v-if="globalWork" flat icon small>
+                                            <span class="custom-loader">
+                                                <v-icon>cached</v-icon>
+                                            </span>
+                                            </v-btn>
+                                        </template>
+                                        <span>CURRENT_STEP</span>
+                                    </v-tooltip>
+                                    <v-menu bottom left>
                                             <template v-slot:activator="{ on }">
                                                 <v-btn
                                                         icon
@@ -366,6 +377,7 @@
             WSProgress: {
                 message: null,
             },
+            globalWork: true,
         }),
 
         components: {

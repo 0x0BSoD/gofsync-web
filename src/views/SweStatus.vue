@@ -510,7 +510,6 @@
                     for (let i in this.addSteps) {
                         this.addSteps[i].msg = null;
                         if (this.addSteps.hasOwnProperty(i)) {
-                            console.log(i);
                             switch (i) {
                                 case "1":
                                     this.addSteps[i].icon = "play_arrow";
@@ -560,7 +559,6 @@
                                             response = (await environmentService.Submit({host: this.dialogHost, env: this.newEnvName})).data;
                                             this.addSteps[i].msg = "updating db ...";
                                             await environmentService.Update(this.dialogHost);
-                                            console.log(response);
                                         }
                                     } catch (e) {
                                         console.log(e);
@@ -581,7 +579,11 @@
                                             "host": this.dialogHost,
                                             "environment": this.newEnvName,
                                         };
-                                        this.addSteps[i].msg = (await environmentService.SVNRepoCheckout(postParams)).data;
+
+                                        let response = (await environmentService.SVNRepoCheckout(postParams)).data;
+                                        if (response.indexOf("Checked out revision") !== -1) {
+                                            this.addSteps[i].msg = response.split(" ")[3].substring(0, response[3].length-1);
+                                        }
                                     } catch (e) {
                                         console.log(e);
                                         this.addSteps[i].icon = "warning";
@@ -598,14 +600,13 @@
                                         let postParams = {
                                             "host": this.dialogHost,
                                             "environment": this.newEnvName,
-                                            "dry_run": true,
+                                            "dry_run": false,
                                         };
                                         let response = (await environmentService.SVNForemanUpdate(postParams)).data;
                                         let jsData = JSON.parse(response);
                                         if (jsData.hasOwnProperty("message")) {
-                                            this.addSteps[i].msg = jsData.message;
+                                            this.addSteps[i].msg = "Classes imported";
                                         }
-                                        console.log(response);
                                     } catch (e) {
                                         console.log(e);
                                         this.addSteps[i].icon = "warning";
