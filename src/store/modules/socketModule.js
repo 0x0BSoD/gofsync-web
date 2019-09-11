@@ -6,6 +6,10 @@ Vue.use(Vuex);
 export default {
     state: {
         socket: {
+            globalWork: {
+                run: false,
+                current: null,
+            },
             isConnected: false,
             message: '',
             reconnectError: false,
@@ -22,16 +26,26 @@ export default {
         SOCKET_ONERROR(state, event) {
             console.info(state, event)
         },
-        // default handler called for all methods
         SOCKET_ONMESSAGE(state, message) {
             try {
-                state.socket.message = JSON.parse(message.data);
+                let msg = JSON.parse(message.data);
+                state.socket.message = msg;
+                if (msg.broadcast) {
+                    if (msg.data.state === "started") {
+                        state.socket.globalWork.run = true;
+                        state.socket.globalWork.current = msg;
+                    }
+                    if (msg.data.state === "done") {
+                        state.socket.globalWork.run = false;
+                        state.socket.globalWork.current = null;
+                    }
+                }
+
             } catch (e) {
                 console.info(message.data);
                 console.info(e);
             }
         },
-        // mutations for reconnect methods
         SOCKET_RECONNECT(state, count) {
             console.info(state, count);
         },
@@ -41,12 +55,6 @@ export default {
     },
     getters: {
         WSConnected: state => state.socket.isConnected,
+        GlobalWork: state => state.socket.globalWork,
     }
-    // actions: {
-    //     sendMessage: function(context, message) {
-    //     .....
-    //         Vue.prototype.$socket.send(message)
-    //     .....
-    //     }
-    // }
 }

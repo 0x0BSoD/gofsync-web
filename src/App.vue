@@ -93,11 +93,6 @@
                     </v-list-tile>
 
                 </v-list>
-<!--                <v-footer  absolute class="grey lighten-5 pa-3" >-->
-<!--                    <div v-if="!mini">&copy; {{ new Date().getFullYear() }}</div>-->
-<!--                    <v-spacer></v-spacer>-->
-<!--                    <div>v1</div>-->
-<!--                </v-footer>-->
             </v-navigation-drawer>
 
             <v-toolbar class="pl-1" app dense v-if="showToolBar">
@@ -109,55 +104,6 @@
                     <span>go</span>
                     <span class="font-weight-light">Fsync</span>
                 </v-toolbar-title>
-<!--                <v-btn-->
-<!--                        class="hidden-xs-only"-->
-<!--                        :disabled="!loggedIn"-->
-<!--                        flat-->
-<!--                        :to="{name:'hostgroup'}"-->
-<!--                >-->
-<!--                    hostgroup-->
-<!--                </v-btn>-->
-<!--                <v-btn-->
-<!--                        class="hidden-xs-only"-->
-<!--                        :disabled="!loggedIn"-->
-<!--                        flat-->
-<!--                        :to="{name:'batch'}"-->
-<!--                >-->
-<!--                    batch-->
-<!--                </v-btn>-->
-
-<!--                <v-menu offset-y>-->
-<!--                    <template v-slot:activator="{ on }">-->
-<!--                        <v-btn-->
-<!--                                :disabled="!loggedIn"-->
-<!--                                flat-->
-<!--                                icon-->
-<!--                                v-on="on"-->
-<!--                        >-->
-<!--                            <v-icon>-->
-<!--                                more_vert-->
-<!--                            </v-icon>-->
-<!--                        </v-btn>-->
-<!--                    </template>-->
-<!--                    <v-list>-->
-<!--                        <v-list-tile :to="{name:'hostgroup'}">-->
-<!--                            <v-list-tile-title>HostGroup</v-list-tile-title>-->
-<!--                        </v-list-tile>-->
-<!--                        <v-list-tile :to="{name:'batch'}">-->
-<!--                            <v-list-tile-title>Batch</v-list-tile-title>-->
-<!--                        </v-list-tile>-->
-<!--                        <v-list-tile :to="{name:'jsoneditor'}">-->
-<!--                            <v-list-tile-title>JSON editor</v-list-tile-title>-->
-<!--                        </v-list-tile>-->
-<!--                        <v-list-tile :to="{name:'locations'}">-->
-<!--                            <v-list-tile-title>Locations</v-list-tile-title>-->
-<!--                        </v-list-tile>-->
-<!--                        <v-list-tile :to="{name:'swe'}">-->
-<!--                            <v-list-tile-title>SWE</v-list-tile-title>-->
-<!--                        </v-list-tile>-->
-<!--                    </v-list>-->
-<!--                </v-menu>-->
-
 
                 <v-spacer></v-spacer>
                 <v-menu offset-y>
@@ -168,8 +114,56 @@
                                 v-on="on"
                         >
                             {{username}}
-                            <v-icon v-if="ws_connected" color="success" right>account_circle</v-icon>
+                            <v-icon v-if="ws_connected && !globalWork.run" color="success" right>account_circle</v-icon>
+
+                            <v-tooltip bottom v-else-if="globalWork.run">
+                                <template v-slot:activator="{ on }">
+                                    <v-btn v-on="on" icon small>
+                                            <span class="custom-loader">
+                                                <v-icon>toys</v-icon>
+                                            </span>
+                                    </v-btn>
+                                </template>
+
+                                <table>
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>
+                                           Action
+                                        </td>
+                                        <td>
+                                            {{globalWork.current.data.actions}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            User
+                                        </td>
+                                        <td>
+                                            {{globalWork.current.data.status}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            Host
+                                        </td>
+                                        <td>
+                                            {{globalWork.current.data.host}}
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </v-tooltip>
                             <v-icon v-else color="warning" right>account_circle</v-icon>
+
+
                         </v-btn>
                     </template>
                     <v-list>
@@ -196,6 +190,7 @@
             ...mapGetters({
                 username: "Username",
                 ws_connected: "WSConnected",
+                globalWork: "GlobalWork",
             }),
         },
         data() {
@@ -275,7 +270,7 @@
                 await this.$store.dispatch("setUsername", "anon");
                 localStorage.clear();
                 this.$cookies.remove("token");
-                this.$router.push({name: "login"});
+                await this.$router.push({name: "login"});
             },
         },
     }

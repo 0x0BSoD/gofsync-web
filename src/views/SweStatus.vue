@@ -36,6 +36,9 @@
                                             </v-btn>
                                         </template>
                                         <v-list>
+                                            <v-list-tile @click="addEnvironment(host)">
+                                                <v-list-tile-title>Add Environment</v-list-tile-title>
+                                            </v-list-tile>
                                             <v-list-tile @click="editRepo(host)">
                                                 <v-list-tile-title>SVN Repo</v-list-tile-title>
                                             </v-list-tile>
@@ -257,7 +260,93 @@
             </v-card>
         </v-dialog>
 
+        <!-- ======================================================================================================= -->
+        <v-dialog
+                v-model="dialogAddEnvironment"
+                max-width="800"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                    <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
 
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs12 v-if="newEnvError">
+                            <v-alert
+                                v-model="newEnvError"
+                                dismissible
+                                type="error"
+                            >{{newEnvError}}</v-alert>
+                        </v-flex>
+                        <v-flex xs12>
+                            <v-text-field
+                                    label="Environment Name"
+                                    v-model="newEnvName"
+                                    outline
+                                    clearable
+                            ></v-text-field>
+                        </v-flex>
+<!--                        <v-flex xs12>-->
+<!--                            <v-checkbox-->
+<!--                                    v-model="checkCode"-->
+<!--                                    label="Check code on host"-->
+<!--                            ></v-checkbox>-->
+<!--                            <v-checkbox-->
+<!--                                    v-model="importClasses"-->
+<!--                                    label="Import puppet classes"-->
+<!--                            ></v-checkbox>-->
+<!--                        </v-flex>-->
+                    </v-layout>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-btn @click="addNewEnvironment()">Add</v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogAddEnvironment = !dialogAddEnvironment">close</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <v-dialog
+                v-model="dialogAddEnvironmentProgress"
+                max-width="800"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                    <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
+
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs12>
+                            <table class="checkTable">
+                                <thead>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                </thead>
+                                <tbody v-for="(i, idx) in addSteps" :key="idx">
+                                    <tr v-if="i.show">
+                                        <th><v-btn icon><v-icon>{{i.icon}}</v-icon></v-btn></th>
+                                        <th>{{i.title}}</th>
+                                        <th><looping-rhombuses-spinner v-if="i.progress" class="ml-2" :animation-duration="2500"
+                                                                       :rhombus-size="15" color="#607d8b"/>
+                                            <v-chip v-if="i.msg">{{i.msg}}</v-chip>
+                                        </th>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress">close</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
         <!-- ======================================================================================================= -->
         <v-dialog
                 v-model="dialogBatchSwe"
@@ -303,7 +392,7 @@
 <script>
     import {Common} from "./methods"
     import { environmentService } from "../_services"
-    import {FingerprintSpinner} from 'epic-spinners'
+    import {FingerprintSpinner, LoopingRhombusesSpinner} from 'epic-spinners'
 
     export default {
 
@@ -334,16 +423,30 @@
             repo: null,
             dialogHost: null,
             dialogSwe: null,
+            newEnvName: null,
+            newEnvError: null,
             dialog: false,
             dialogChanges: false,
             dialogEditRepo: false,
             dialogBatchSwe: false,
+            dialogAddEnvironment: false,
+            dialogAddEnvironmentProgress: false,
             dialogTitle: null,
+            checkCode: false,
+            importClasses: false,
             wip: true,
+            addEnvStepNum: 1,
+            addSteps: {
+                1: { title: "Checking", icon: "pause", progress: false, msg: null, show: true},
+                2: { title: "Adding to Foreman", icon: "pause", progress: false, msg: null, show: true},
+                3: { title: "Getting code", icon: "pause", progress: false, msg: null, show: true},
+                4: { title: "Importing Classes", icon: "pause", progress: false, msg: null, show: true},
+            },
         }),
 
         components: {
-            FingerprintSpinner
+            FingerprintSpinner,
+            LoopingRhombusesSpinner
         },
 
         async mounted() {
@@ -396,6 +499,135 @@
             },
         },
         methods: {
+
+            async addNewEnvironment() {
+                if (!this.newEnvName || this.newEnvName === "") {
+                    this.newEnvError = "Name required";
+                } else {
+                    this.dialogAddEnvironmentProgress = true;
+                    this.dialogTitle = `Adding ${this.newEnvName} to ${this.dialogHost}`;
+
+                    for (let i in this.addSteps) {
+                        this.addSteps[i].msg = null;
+                        if (this.addSteps.hasOwnProperty(i)) {
+                            switch (i) {
+                                case "1":
+                                    this.addSteps[i].icon = "play_arrow";
+                                    this.addSteps[i].progress = true;
+                                    try {
+                                        let msg = "";
+                                        let response = (await environmentService.SVNInfo(this.dialogHost, this.newEnvName)).data;
+                                        if (response.directory.entry.path === "") {
+                                            msg += `directory ${this.newEnvName} not exist, `
+                                        } else {
+                                            msg += `directory ${this.newEnvName} already exist, `
+                                        }
+                                        if (response.repository.entry.url === "") {
+                                            msg += `code ${this.newEnvName} not exist`;
+                                            this.addSteps[i].msg = msg;
+                                            this.addSteps[i].icon = "warning";
+                                            this.addSteps[i].progress = false;
+                                            // return;
+                                        } else {
+                                            msg += `code ${this.newEnvName} exist`;
+                                        }
+                                        this.addSteps[i].msg = msg;
+                                        console.log(response);
+                                    } catch (e) {
+                                        console.log(e);
+                                        this.addSteps[i].icon = "warning";
+                                        this.addSteps[i].progress = false;
+                                        return;
+                                    }
+
+                                    this.addSteps[i].icon = "check";
+                                    this.addSteps[i].progress = false;
+                                    break;
+                                case "2":
+                                    let msg = "";
+                                    this.addSteps[i].icon = "play_arrow";
+                                    this.addSteps[i].progress = true;
+                                    try {
+                                        let response = (await environmentService.ForemanID({host: this.dialogHost, env: this.newEnvName})).data;
+                                        if (response !== -1) {
+                                            this.addSteps[i].msg = `${this.newEnvName} exist on the foreman`;
+                                            this.addSteps[i].icon = "warning";
+                                            this.addSteps[i].progress = false;
+                                            // return;
+                                        } else {
+                                            this.addSteps[i].msg = "submitting ...";
+                                            response = (await environmentService.Submit({host: this.dialogHost, env: this.newEnvName})).data;
+                                            this.addSteps[i].msg = "updating db ...";
+                                            await environmentService.Update(this.dialogHost);
+                                        }
+                                    } catch (e) {
+                                        console.log(e);
+                                        this.addSteps[i].msg = e.message;
+                                        this.addSteps[i].icon = "warning";
+                                        this.addSteps[i].progress = false;
+                                        return;
+                                    }
+                                    this.addSteps[i].msg = msg;
+                                    this.addSteps[i].icon = "check";
+                                    this.addSteps[i].progress = false;
+                                    break;
+                                case "3":
+                                    this.addSteps[i].icon = "play_arrow";
+                                    this.addSteps[i].progress = true;
+                                    try {
+                                        let postParams = {
+                                            "host": this.dialogHost,
+                                            "environment": this.newEnvName,
+                                        };
+
+                                        let response = (await environmentService.SVNRepoCheckout(postParams)).data;
+                                        if (response.indexOf("Checked out revision") !== -1) {
+                                            this.addSteps[i].msg = response.split(" ")[3].substring(0, response[3].length-1);
+                                        }
+                                    } catch (e) {
+                                        console.log(e);
+                                        this.addSteps[i].icon = "warning";
+                                        this.addSteps[i].progress = false;
+                                        return;
+                                    }
+                                    this.addSteps[i].icon = "check";
+                                    this.addSteps[i].progress = false;
+                                    break;
+                                case "4":
+                                    this.addSteps[i].icon = "play_arrow";
+                                    this.addSteps[i].progress = true;
+                                    try {
+                                        let postParams = {
+                                            "host": this.dialogHost,
+                                            "environment": this.newEnvName,
+                                            "dry_run": false,
+                                        };
+                                        let response = (await environmentService.SVNForemanUpdate(postParams)).data;
+                                        let jsData = JSON.parse(response);
+                                        if (jsData.hasOwnProperty("message")) {
+                                            this.addSteps[i].msg = "Classes imported";
+                                        }
+                                    } catch (e) {
+                                        console.log(e);
+                                        this.addSteps[i].icon = "warning";
+                                        this.addSteps[i].progress = false;
+                                        return;
+                                    }
+                                    this.addSteps[i].icon = "check";
+                                    this.addSteps[i].progress = false;
+                                    break;
+                                default:
+                                    this.addSteps[i].icon = "warning";
+                                    this.addSteps[i].progress = false;
+                                    console.error("opa");
+                            }
+                        }
+                    }
+                }
+                this.environments = (await environmentService.ListAll()).data;
+                this.full_environments = (await environmentService.ListAll()).data;
+                this.$forceUpdate();
+            },
 
             batchDialog () {
                 this.dialogBatchSwe = true;
@@ -479,6 +711,19 @@
                     this.dialogEditRepo = true;
                 }
             },
+
+            async addEnvironment (host) {
+                this.dialogTitle = `Add Environment to ${host}`;
+                this.dialogHost = host;
+                this.dialogAddEnvironment = true;
+                this.addSteps = {
+                    1: { title: "Checking", icon: "pause", progress: false, msg: null, show: true},
+                    2: { title: "Adding to Foreman", icon: "pause", progress: false, msg: null, show: true},
+                    3: { title: "Getting code", icon: "pause", progress: false, msg: null, show: true},
+                    4: { title: "Importing Classes", icon: "pause", progress: false, msg: null, show: true},
+                };
+            },
+
             async submitRepo () {
                 try {
                     await environmentService.SVNRepoSubmit(this.dialogHost, this.svn_repo);
@@ -530,4 +775,9 @@
     }
 </script>
 
-<style></style>
+<style>
+    .checkTable {
+        margin: 0 auto;
+        min-width: 400px;
+    }
+</style>
