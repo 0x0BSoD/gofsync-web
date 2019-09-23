@@ -339,6 +339,7 @@
     import {hostGroupService, hostService, pcService, SmartClassesService} from "../../_services"
     import {EditorMethods} from "../editor/methods"
     import {PuppetMethods} from "../hostgroup/methods"
+    import {socketEvents} from "../../helpers/socketEvents";
     import {Common} from "../methods";
     import _ from 'lodash'
     import UploadButton from 'vuetify-upload-button';
@@ -479,65 +480,7 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    await Common.webSocketParser(val, this);
-
-                    // if (val.hasOwnProperty("operation")) {
-                    //     this.wip = true;
-                    //     switch (val.operation) {
-                    //         case "getSC":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Smart Classes";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "getHG":
-                    //             this.WSProgress.operation = "Getting Host Group";
-                    //             break;
-                    //         case "getPC":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Puppet Classes";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "getHGParameters":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Host Group parameters";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "updatingHGOverrides":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 if (val.data.item.length > 20) {
-                    //                     let old = val.data.item;
-                    //                     val.data.item = old.substring(0,19) + " ...";
-                    //                 }
-                    //                 this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Host Group overrides";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "done":
-                    //             this.wip = false;
-                    //             this.WSProgress.item = null;
-                    //             this.WSProgress.operation = null;
-                    //             break;
-                    //         default:
-                    //             this.WSProgress.item = null;
-                    //             this.WSProgress.operation = null;
-                    //             console.info(val)
-                    //     }
-                    // }
+                    await socketEvents.webSocketParser(val, this);
                 }
             },
             tab: {

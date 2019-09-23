@@ -339,7 +339,8 @@
 
     import {FingerprintSpinner} from 'epic-spinners'
     import {environmentService, hostGroupService, hostService, locationsService, pcService} from "../_services"
-    import {Common} from "./methods"
+    import {socketEvents} from "../helpers/socketEvents";
+    import {Common} from "./methods";
 
     export default {
 
@@ -387,6 +388,7 @@
         async mounted() {
             // User check ==========================================
             await Common.auth(this);
+
             this.wip = true;
             this.locations = (await locationsService.List()).data;
             this.wip = false;
@@ -394,7 +396,7 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    await Common.webSocketParser(val, this);
+                    await socketEvents.webSocketParser(val, this);
                 }
             },
             locSearch: {

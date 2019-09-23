@@ -172,6 +172,7 @@
 </template>
 
 <script>
+    import {socketEvents} from "../../helpers/socketEvents";
     import {Common} from "../methods";
     import { hostService, locationsService, pcService, SmartClassesService } from "../../_services"
     import {FingerprintSpinner} from 'epic-spinners'
@@ -238,7 +239,7 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    await Common.webSocketParser(val, this);
+                    await socketEvents.webSocketParser(val, this);
                 }
             },
             selectedPC: {
@@ -312,20 +313,6 @@
                         res.push(tmp[i]);
 
                     }
-                    // for (let i in tmp) {
-                    //     let id = checkByName(this.allPuppetClasses, tmp[i].puppet_class, tmp[i].smart_class_name);
-                    //
-                    //     this.selectedPC.push(id);
-                    //     this.overridesIDs.push(id);
-                    //
-                    //     res[tmp[i].puppet_class].push({
-                    //         parameter: tmp[i].smart_class_name,
-                    //         type: tmp[i].type,
-                    //         value: tmp[i].value,
-                    //         foreman_sc_id: tmp[i].sc_foreman_id,
-                    //         foreman_ovr_id: tmp[i].ovr_foreman_id,
-                    //     });
-                    // }
                     this.overrides = res;
                     this.pcSync = true;
                     this.wip = false;

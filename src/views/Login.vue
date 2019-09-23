@@ -104,9 +104,6 @@
         props: {
             source: String
         },
-        async mounted() {
-            this.$disconnect();
-        },
         methods: {
             async login() {
                 this.loading = true;
@@ -121,7 +118,7 @@
                         exp = "24h";
                     }
                     await this.$store.dispatch("setUsername", userData.CN[0]);
-                    this.$router.push({name: "index"});
+                    await this.$router.push({name: "index"});
                 } catch (err) {
                     this.error = true;
                     console.error(err);

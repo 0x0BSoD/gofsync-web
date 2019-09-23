@@ -95,23 +95,24 @@
                 <v-stepper-content step="4">
                     <v-card>
 
-                        <v-card-title v-if="curr_heder === 'checking'" class="headline font-weight-regular blue-grey white--text">
+                        <v-card-title v-if="curr_header === 'checking'" class="headline font-weight-regular blue-grey white--text">
                             Checking
                         </v-card-title>
-                        <v-card-title v-if="curr_heder === 'checked'" class="headline font-weight-regular blue-grey white--text">
+                        <v-card-title v-if="curr_header === 'checked'" class="headline font-weight-regular blue-grey white--text">
                             Checks Result
                         </v-card-title>
-                        <v-card-title v-if="curr_heder === 'working'" class="headline font-weight-regular blue-grey white--text">
+                        <v-card-title v-if="curr_header === 'working'" class="headline font-weight-regular blue-grey white--text">
                             Working
                         </v-card-title>
-                        <v-card-title v-if="curr_heder === 'done'" class="headline font-weight-regular blue-grey white--text">
+                        <v-card-title v-if="curr_header === 'done'" class="headline font-weight-regular blue-grey white--text">
                             Results
                         </v-card-title>
 
                         <v-layout v-if="checkInProgress" row wrap>
                             <v-layout row wrap v-if="wip" class="text-xs-center">
                                 <v-flex xs12>
-                                    <h2 v-if="WSProgress.message">{{WSProgress.item}}</h2>
+                                    <h2 v-if="WSProgress.message">{{WSProgress.host}}</h2>
+                                    <v-chip label v-if="WSProgress.message">{{WSProgress.counter}}</v-chip>
                                     <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                                 </v-flex>
                             </v-layout>
@@ -196,6 +197,7 @@
 
 <script>
     import {environmentService, hostGroupService, hostService} from "../_services"
+    import {socketEvents} from "../helpers/socketEvents";
     import {Common} from "./methods";
     import {LoopingRhombusesSpinner} from 'epic-spinners'
 
@@ -233,8 +235,10 @@
             WSProgress: {
                 message: null,
                 item: null,
+                host: null,
+                counter: null,
             },
-            curr_heder: null,
+            curr_header: null,
         }),
         async mounted() {
             // User check ==========================================
@@ -248,24 +252,24 @@
         watch: {
             nowActions: {
                 async handler(val) {
-                    await Common.webSocketParser(val, this);
+                    await socketEvents.webSocketParser(val, this);
                 }
             },
         },
         methods: {
             async startJob() {
                 this.started = true;
-                this.curr_heder = "working";
+                this.curr_header = "working";
                 await hostGroupService.BatchSend(this.checkRes);
                 this.started = false;
-                this.curr_heder = "done";
+                this.curr_header = "done";
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
             },
             async checks() {
                 this.started = true;
-                this.curr_heder = "checking";
+                this.curr_header = "checking";
                 this.checked = false;
                 this.checkRes = {};
                 this.wip = true;
@@ -355,7 +359,7 @@
                     }
                 }
                 this.checked = true;
-                this.curr_heder = "checked";
+                this.curr_header = "checked";
             },
         }
     }

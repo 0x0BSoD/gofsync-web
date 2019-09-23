@@ -21,7 +21,7 @@
             // Load Hosts ==========================================
             try {
                 await hostService.hosts();
-                this.$router.push({name: "app"});
+                await this.$router.push({name: "app"});
             } catch (e) {
             }
         },

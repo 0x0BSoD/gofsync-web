@@ -159,22 +159,22 @@
                     </v-layout>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn v-if="!svn_get_error" @click="showSweChangesDialog()">LOG</v-btn>
+                    <v-btn :disabled="swe_loading" v-if="!svn_get_error" @click="showSweChangesDialog()">LOG</v-btn>
 
                     <v-btn
                             v-if="!svnInfo.directory.last_rev"
+                            :disabled="swe_loading"
                             @click="uploadSWE()"
                     >
                         upload
                     </v-btn>
                     <v-btn
+                            :disabled="swe_loading"
                             v-else-if="svnInfo.directory.last_rev !== svnInfo.repository.last_rev"
                             @click="updateSWE()"
                     >
                         update
                     </v-btn>
-<!--                    <v-btn v-if="!svn_get_error">update puppet classes</v-btn>-->
-
                     <v-spacer></v-spacer>
                     <v-btn @click.native="dialog = !dialog">close</v-btn>
                 </v-card-actions>
@@ -288,16 +288,6 @@
                                     clearable
                             ></v-text-field>
                         </v-flex>
-<!--                        <v-flex xs12>-->
-<!--                            <v-checkbox-->
-<!--                                    v-model="checkCode"-->
-<!--                                    label="Check code on host"-->
-<!--                            ></v-checkbox>-->
-<!--                            <v-checkbox-->
-<!--                                    v-model="importClasses"-->
-<!--                                    label="Import puppet classes"-->
-<!--                            ></v-checkbox>-->
-<!--                        </v-flex>-->
                     </v-layout>
                 </v-card-text>
 
@@ -310,7 +300,7 @@
         </v-dialog>
         <v-dialog
                 v-model="dialogAddEnvironmentProgress"
-                max-width="800"
+                max-width="950"
         >
             <v-card>
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
@@ -326,6 +316,7 @@
                                 <tr><th></th></tr>
                                 <tr><th></th></tr>
                                 <tr><th></th></tr>
+                                <tr><th></th></tr>
                                 </thead>
                                 <tbody v-for="(i, idx) in addSteps" :key="idx">
                                     <tr v-if="i.show">
@@ -333,8 +324,8 @@
                                         <th>{{i.title}}</th>
                                         <th><looping-rhombuses-spinner v-if="i.progress" class="ml-2" :animation-duration="2500"
                                                                        :rhombus-size="15" color="#607d8b"/>
-                                            <v-chip v-if="i.msg">{{i.msg}}</v-chip>
                                         </th>
+                                        <th><v-chip v-if="i.msg">{{i.msg}}</v-chip></th>
                                     </tr>
                                 </tbody>
                             </table>
@@ -343,7 +334,7 @@
                 </v-card-text>
 
                 <v-card-actions>
-                    <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress">close</v-btn>
+                    <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress; dialogAddEnvironment = !dialogAddEnvironment">close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -565,7 +556,7 @@
                                         this.addSteps[i].msg = e.message;
                                         this.addSteps[i].icon = "warning";
                                         this.addSteps[i].progress = false;
-                                        return;
+                                        // return;
                                     }
                                     this.addSteps[i].msg = msg;
                                     this.addSteps[i].icon = "check";
