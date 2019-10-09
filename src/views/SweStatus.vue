@@ -453,23 +453,25 @@
         watch: {
             nowActions: {
                 async handler (val) {
-                    if (this.environments[val.host]) {
-                        for (let i in this.environments[val.host]) {
-                            if (val.actions === this.environments[val.host][i].name) {
-                                if (val.state === "checking ...") {
-                                    this.environments[val.host][i].loading = true;
-                                } else if (val.state === "done ...") {
-                                    this.environments[val.host][i].loading = false;
-                                    this.svnInfo = (await environmentService.SVNInfo(val.host, val.actions)).data;
-                                    this.environments = (await environmentService.ListAll()).data;
-                                    this.full_environments = (await environmentService.ListAll()).data;
-                                    this.$forceUpdate();
-                                }
-                            } else {
-                                this.environments[val.host][i].ws_message = false;
-                            }
-                        }
-                    }
+                    await Common.webSocketParser(val, this);
+
+                    // if (this.environments[val.host]) {
+                    //     for (let i in this.environments[val.host]) {
+                    //         if (val.actions === this.environments[val.host][i].name) {
+                    //             if (val.state === "checking ...") {
+                    //                 this.environments[val.host][i].loading = true;
+                    //             } else if (val.state === "done ...") {
+                    //                 this.environments[val.host][i].loading = false;
+                    //                 this.svnInfo = (await environmentService.SVNInfo(val.host, val.actions)).data;
+                    //                 this.environments = (await environmentService.ListAll()).data;
+                    //                 this.full_environments = (await environmentService.ListAll()).data;
+                    //                 this.$forceUpdate();
+                    //             }
+                    //         } else {
+                    //             this.environments[val.host][i].ws_message = false;
+                    //         }
+                    //     }
+                    // }
                 }
             },
 

@@ -188,16 +188,38 @@ async function webSocketParser(message, t) {
                 t.$forceUpdate();
                 break;
             case "done":
-                t.WSProgress.message = null;
-                if (t.WSProgress.hasOwnProperty("item")) {
-                    t.WSProgress.item    = null;
+                if (t.hasOwnProperty("WSProgress")) {
+                    t.WSProgress.message = null;
+                    if (t.WSProgress.hasOwnProperty("item")) {
+                        t.WSProgress.item = null;
+                    }
+                }
+                break;
+            case "svnCheck":
+                console.log(message);
+                let currHost = message.data.host;
+                let currSwe = message.data.item;
+                let currState = message.data.state;
+                console.log(currHost, currSwe, currState);
+                for ( let i in t.environments[currHost]) {
+                    if (t.environments[currHost][i].name === currSwe) {
+                        if (currState === "checking") {
+                            t.environments[currHost][i].loading = true;
+                        }
+                        if  (currState === "done") {
+                            t.environments[currHost][i].loading = false;
+                        }
+                    }
                 }
                 break;
             default:
-                if (t.WSProgress.hasOwnProperty("item")) {
-                    t.WSProgress.item    = null;
+                if (t.hasOwnProperty("WSProgress")) {
+                    if (t.WSProgress.hasOwnProperty("item")) {
+                        t.WSProgress.item    = null;
+                    }
+                    t.WSProgress.message = null;
                 }
-                t.WSProgress.message = null;
+
                 console.info(message)
         }
     }
