@@ -363,6 +363,7 @@
                         </v-flex>
                         <v-flex xs12>
                             <v-switch
+                                    :disabled="true"
                                     v-model="checkoutIfReq"
                                     label="Auto checkout code"
                             ></v-switch>

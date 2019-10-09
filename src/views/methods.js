@@ -1,6 +1,7 @@
 // import { userService } from "../_services"
 
 import {locationsService} from "../_services/location.service";
+import {environmentService} from "../_services/environments.service";
 
 export const Common = {
     auth,
@@ -207,6 +208,13 @@ async function webSocketParser(message, t) {
                             t.environments[currHost][i].loading = true;
                         }
                         if  (currState === "done") {
+                            let postParams = {
+                                "host": currHost,
+                                "environment": currSwe,
+                                "dry_run": false,
+                            };
+                            let response = (await environmentService.SVNForemanUpdate(postParams)).data;
+                            let jsData = JSON.parse(response);
                             t.environments[currHost][i].loading = false;
                         }
                     }
