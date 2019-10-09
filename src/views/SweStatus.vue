@@ -12,7 +12,7 @@
                         ></v-text-field>
                     </v-flex>
                     <v-flex xs2>
-                        <v-btn large flat @click="batchDialog()">BATCH UPDATE</v-btn>
+                        <v-btn large flat @click="batchDialog()">BATCH</v-btn>
                     </v-flex>
                     <v-flex
                             v-for="(env, host) in environments"
@@ -236,6 +236,7 @@
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
                     <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
                     <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogEditRepo = !dialogEditRepo" icon><v-icon>close</v-icon></v-btn>
                 </v-toolbar>
 
                 <v-card-text>
@@ -254,8 +255,6 @@
 
                 <v-card-actions>
                     <v-btn @click="submitRepo()">save</v-btn>
-                    <v-spacer></v-spacer>
-                    <v-btn @click.native="dialogEditRepo = !dialogEditRepo">close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -269,6 +268,7 @@
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
                     <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
                     <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogAddEnvironment = !dialogAddEnvironment" icon><v-icon>close</v-icon></v-btn>
                 </v-toolbar>
 
                 <v-card-text>
@@ -288,23 +288,11 @@
                                     clearable
                             ></v-text-field>
                         </v-flex>
-<!--                        <v-flex xs12>-->
-<!--                            <v-checkbox-->
-<!--                                    v-model="checkCode"-->
-<!--                                    label="Check code on host"-->
-<!--                            ></v-checkbox>-->
-<!--                            <v-checkbox-->
-<!--                                    v-model="importClasses"-->
-<!--                                    label="Import puppet classes"-->
-<!--                            ></v-checkbox>-->
-<!--                        </v-flex>-->
                     </v-layout>
                 </v-card-text>
 
                 <v-card-actions>
                     <v-btn @click="addNewEnvironment()">Add</v-btn>
-                    <v-spacer></v-spacer>
-                    <v-btn @click.native="dialogAddEnvironment = !dialogAddEnvironment">close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -316,6 +304,7 @@
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
                     <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
                     <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress" icon><v-icon>close</v-icon></v-btn>
                 </v-toolbar>
 
                 <v-card-text>
@@ -331,9 +320,9 @@
                                     <tr v-if="i.show">
                                         <th><v-btn icon><v-icon>{{i.icon}}</v-icon></v-btn></th>
                                         <th>{{i.title}}</th>
-                                        <th><looping-rhombuses-spinner v-if="i.progress" class="ml-2" :animation-duration="2500"
-                                                                       :rhombus-size="15" color="#607d8b"/>
-                                            <v-chip v-if="i.msg">{{i.msg}}</v-chip>
+                                        <th>
+                                            <v-chip v-if="i.msg"> <looping-rhombuses-spinner v-if="i.progress" class="ml-2" :animation-duration="2500"
+                                                                                             :rhombus-size="15" color="#607d8b"/>{{i.msg}}</v-chip>
                                         </th>
                                     </tr>
                                 </tbody>
@@ -341,10 +330,6 @@
                         </v-flex>
                     </v-layout>
                 </v-card-text>
-
-                <v-card-actions>
-                    <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress">close</v-btn>
-                </v-card-actions>
             </v-card>
         </v-dialog>
         <!-- ======================================================================================================= -->
@@ -359,10 +344,11 @@
                     </v-btn>
                     <v-toolbar-title>Batch Update</v-toolbar-title>
                     <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogBatchSwe = !dialogBatchSwe" icon><v-icon>close</v-icon></v-btn>
                 </v-toolbar>
 
                 <v-card-text>
-                    <v-layout row>
+                    <v-layout row wrap>
                         <v-flex xs12>
                             <v-autocomplete
                                     clearable
@@ -375,13 +361,18 @@
                             >
                             </v-autocomplete>
                         </v-flex>
+                        <v-flex xs12>
+                            <v-switch
+                                    v-model="checkoutIfReq"
+                                    label="Auto checkout code"
+                            ></v-switch>
+                        </v-flex>
                     </v-layout>
                 </v-card-text>
 
                 <v-card-actions>
                     <v-btn @click="batchStart()">Update</v-btn>
                     <v-spacer></v-spacer>
-                    <v-btn @click.native="dialogBatchSwe = !dialogBatchSwe">close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -415,6 +406,7 @@
             svnLog: [],
             allSwe: [],
             toUpdate: [],
+            checkoutIfReq: false,
             swe_loading: false,
             swe_updating: false,
             svn_get_error: false,
@@ -517,12 +509,12 @@
                                     try {
                                         let msg = "";
                                         let response = (await environmentService.SVNInfo(this.dialogHost, this.newEnvName)).data;
-                                        if (response.directory.entry.path === "") {
-                                            msg += `directory ${this.newEnvName} not exist, `
+                                        if (response.directory.entry.path === "not exist") {
+                                            msg += `Directory ${this.newEnvName} not exist, `
                                         } else {
-                                            msg += `directory ${this.newEnvName} already exist, `
+                                            msg += `Directory ${this.newEnvName} already exist, `
                                         }
-                                        if (response.repository.entry.url === "") {
+                                        if (response.repository.entry.path === "not exist") {
                                             msg += `code ${this.newEnvName} not exist`;
                                             this.addSteps[i].msg = msg;
                                             this.addSteps[i].icon = "warning";
@@ -555,10 +547,11 @@
                                             this.addSteps[i].progress = false;
                                             // return;
                                         } else {
-                                            this.addSteps[i].msg = "submitting ...";
+                                            this.addSteps[i].msg = "Submitting ...";
                                             response = (await environmentService.Submit({host: this.dialogHost, env: this.newEnvName})).data;
-                                            this.addSteps[i].msg = "updating db ...";
+                                            this.addSteps[i].msg = "Updating db ...";
                                             await environmentService.Update(this.dialogHost);
+                                            this.addSteps[i].msg = "Done";
                                         }
                                     } catch (e) {
                                         console.log(e);
@@ -579,11 +572,13 @@
                                             "host": this.dialogHost,
                                             "environment": this.newEnvName,
                                         };
-
+                                        this.addSteps[i].msg = "Getting code ...";
                                         let response = (await environmentService.SVNRepoCheckout(postParams)).data;
                                         if (response.indexOf("Checked out revision") !== -1) {
                                             this.addSteps[i].msg = response.split(" ")[3].substring(0, response[3].length-1);
                                         }
+                                        this.addSteps[i].msg = "Done";
+
                                     } catch (e) {
                                         console.log(e);
                                         this.addSteps[i].icon = "warning";
@@ -602,6 +597,7 @@
                                             "environment": this.newEnvName,
                                             "dry_run": false,
                                         };
+                                        this.addSteps[i].msg = "Importing classes ...";
                                         let response = (await environmentService.SVNForemanUpdate(postParams)).data;
                                         let jsData = JSON.parse(response);
                                         if (jsData.hasOwnProperty("message")) {
