@@ -197,15 +197,16 @@ async function webSocketParser(message, t) {
                 }
                 break;
             case "svnCheck":
-                console.log(message);
                 let currHost = message.data.host;
                 let currSwe = message.data.item;
                 let currState = message.data.state;
-                console.log(currHost, currSwe, currState);
                 for ( let i in t.environments[currHost]) {
                     if (t.environments[currHost][i].name === currSwe) {
                         if (currState === "checking") {
                             t.environments[currHost][i].loading = true;
+                        }
+                        if (currState === "error") {
+                            t.environments[currHost][i].state = "error";
                         }
                         if  (currState === "done") {
                             let postParams = {
@@ -216,6 +217,7 @@ async function webSocketParser(message, t) {
                             let response = (await environmentService.SVNForemanUpdate(postParams)).data;
                             let jsData = JSON.parse(response);
                             t.environments[currHost][i].loading = false;
+                            console.log(jsData);
                         }
                     }
                 }

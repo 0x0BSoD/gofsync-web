@@ -70,6 +70,19 @@
                                                 small>{{e.name}}
                                         </v-btn>
                                         <v-btn
+                                                v-else-if="e.state==='error'"
+                                                :loading="e.loading"
+                                                :disabled="e.loading"
+                                                slot-scope="{ hover }"
+                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                class="mx-auto"
+                                                color="error"
+                                                @click="showSweDialog(host, e.name)"
+                                                small>
+                                            <v-icon dark>cancel</v-icon>
+                                            {{e.name}}
+                                        </v-btn>
+                                        <v-btn
                                                 v-else
                                                 :loading="e.loading"
                                                 :disabled="e.loading"
@@ -112,8 +125,13 @@
                             />
                         </v-flex>
                         <v-flex v-else xs12>
-                            <div v-if="svn_get_error" class="ml-5">
-                                <v-chip class="error" label>No Code</v-chip>
+                            <div v-if="svn_get_error">
+                                <v-alert
+                                        v-model="svn_get_error_msg"
+                                        type="error"
+                                >
+                                    {{svn_get_error_msg}}
+                                </v-alert>
                             </div>
                             <div v-else>
                                 <v-layout row>
@@ -411,6 +429,7 @@
             swe_loading: false,
             swe_updating: false,
             svn_get_error: false,
+            svn_get_error_msg: null,
             svn_repo: null,
             filter: null,
             repo: null,
@@ -647,20 +666,20 @@
 
                 let post_data = {};
 
+                for (let j in this.environments) {
+                    post_data[j] = [];
+                }
+
                 for (let i in this.toUpdate) {
                     for (let j in this.environments) {
-                        post_data[j] = [];
                         for (let k in this.environments[j]) {
                             if (this.environments[j][k].name === this.toUpdate[i]) {
-                                try {
-                                    post_data[j].push(this.environments[j][k].name);
-                                } catch (e) {
-                                    console.error(e);
-                                }
+                                post_data[j].push(this.environments[j][k].name);
                             }
                         }
                     }
                 }
+
 
                 environmentService.SVNBatch(post_data);
 
@@ -680,8 +699,8 @@
                 try {
                     this.svnInfo = (await environmentService.SVNInfo(host, e)).data;
                 } catch (e) {
-                    console.info(e);
                     this.svn_get_error = true;
+                    this.svn_get_error_msg = e.response.data;
                 } finally {
                     this.dialogHost = host;
                     this.dialogSwe = e;
