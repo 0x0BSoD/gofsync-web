@@ -17,7 +17,26 @@
                 <v-list class="pt-0" dense>
                     <v-divider></v-divider>
 
+                    <!-- === home btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'index'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>home</v-icon>
+                                </v-list-tile-action>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Home</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>Home</span>
+                    </v-tooltip>
+
                     <v-list-tile
+                            v-else
                             :to="{name:'index'}"
                     >
                         <v-list-tile-action>
@@ -27,10 +46,31 @@
                             <v-list-tile-title>Home</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
+                    <!-- === home btn's === -->
 
                     <v-divider></v-divider>
 
+                    <!-- === hg btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'hostgroup'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>receipt</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Host Group</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>Host Group</span>
+                    </v-tooltip>
+
                     <v-list-tile
+                            v-else
                             :to="{name:'hostgroup'}"
                     >
                         <v-list-tile-action>
@@ -41,8 +81,29 @@
                             <v-list-tile-title>Host Group</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
+                    <!-- === hg btn's === -->
+
+                    <!-- === hg batch btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'batch'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>view_module</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Host Group Batch</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>Host Group Batch</span>
+                    </v-tooltip>
 
                     <v-list-tile
+                            v-else
                             :to="{name:'batch'}"
                     >
                         <v-list-tile-action>
@@ -53,8 +114,29 @@
                             <v-list-tile-title>Host Group Batch</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
+                    <!-- === hg batch btn's === -->
+
+                    <!-- === json btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'jsoneditor'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>edit</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Host Group Editor</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>Host Group Editor</span>
+                    </v-tooltip>
 
                     <v-list-tile
+                            v-else
                             :to="{name:'jsoneditor'}"
                     >
                         <v-list-tile-action>
@@ -65,8 +147,29 @@
                             <v-list-tile-title>Host Group Editor</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
+                    <!-- === json btn's === -->
+
+                    <!-- === swe btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'swe'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>code</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>SWE Code</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>SWE Code</span>
+                    </v-tooltip>
 
                     <v-list-tile
+                            v-else
                             :to="{name:'swe'}"
                     >
                         <v-list-tile-action>
@@ -77,10 +180,31 @@
                             <v-list-tile-title>SWE Code</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
+                    <!-- === swe btn's === -->
 
                     <v-divider></v-divider>
 
+                    <!-- === loc btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'locations'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>edit_location</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Locations</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>Locations</span>
+                    </v-tooltip>
+
                     <v-list-tile
+                            v-else
                             :to="{name:'locations'}"
                     >
                         <v-list-tile-action>
