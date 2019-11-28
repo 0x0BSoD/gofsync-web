@@ -178,15 +178,14 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-btn v-if="!svn_get_error" @click="showSweChangesDialog()">LOG</v-btn>
-
                     <v-btn
-                            v-if="!svnInfo.directory.last_rev"
+                            v-if="!svnInfo.directory"
                             @click="uploadSWE()"
                     >
                         upload
                     </v-btn>
                     <v-btn
-                            v-else-if="svnInfo.directory.last_rev !== svnInfo.repository.last_rev"
+                            v-else
                             @click="updateSWE()"
                     >
                         update
@@ -763,7 +762,7 @@
                 } catch (e) {
                     console.info(e);
                 } finally {
-                    this.svnInfo = (await environmentService.SVNInfo(host, e)).data;
+                    this.svnInfo = (await environmentService.SVNInfo(this.dialogHost, this.dialogSwe)).data;
                     this.environments = (await environmentService.ListAll()).data;
                     this.full_environments = (await environmentService.ListAll()).data;
                     this.$forceUpdate();
