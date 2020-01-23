@@ -71,10 +71,14 @@
                                         solo
                                         label="Host Group name"
                                         v-model="hgName"
+                                        autocomplete="off"
+                                        autocorrect="off"
+                                        autocapitalize="off"
+                                        spellcheck="false"
                                         :disabled="tab === 1"
                                 ></v-text-field>
                             </v-flex>
-                            <v-flex xs4 mt-1>
+                            <v-flex xs2 mt-1>
                                 <v-text-field
                                         solo
                                         label="Environment name"
@@ -91,19 +95,33 @@
                                 >update
                                 </v-btn>
                             </v-flex>
-                            <v-flex xs2 v-else>
-                                <v-btn
-                                        large
-                                        @click="save()"
-                                        :loading="creatingHG"
-                                        :disabled="creatingHG || !hgName"
-                                >save
-                                </v-btn>
+                            <v-flex xs5 v-else>
+                                <v-layout row wrap>
+                                    <v-flex xs5>
+                                        <v-btn
+                                                large
+                                                @click="save()"
+                                                :loading="creatingHG"
+                                                :disabled="creatingHG || !hgName"
+                                        >save
+                                        </v-btn>
+                                    </v-flex>
+<!--                                    <v-flex xs6 v-if="renameHG">-->
+<!--                                        <v-btn-->
+<!--                                                large-->
+<!--                                                @click="save()"-->
+<!--                                                :loading="creatingHG"-->
+<!--                                                :disabled="creatingHG || !hgName"-->
+<!--                                        >update-->
+<!--                                        </v-btn>-->
+<!--                                    </v-flex>-->
+                                </v-layout>
                             </v-flex>
                         </v-layout>
                     </v-flex>
                 </v-layout>
             </v-flex>
+
             <!-- ========================================================== -->
             <v-flex xs12 mb-2>
                 <v-tabs
@@ -214,10 +232,15 @@
             >
                 {{jsonMsg}}
             </v-alert>
-            <codemirror
-                    v-model="JSONCode"
-                    :options="cmOptions">
-            </codemirror>
+<!--            <codemirror-->
+<!--                    autocomplete="off"-->
+<!--                    autocorrect="off"-->
+<!--                    autocapitalize="off"-->
+<!--                    spellcheck="false"-->
+<!--                    v-model="JSONCode"-->
+<!--                    :options="cmOptions">-->
+<!--            </codemirror>-->
+            <v-json-editor v-model="JSONObject"  height="660px" :plus="false" />
         </v-flex>
 
 
@@ -342,26 +365,28 @@
     import {Common} from "../methods";
     import _ from 'lodash'
     import UploadButton from 'vuetify-upload-button';
+    import VJsonEditor from 'v-jsoneditor'
 
-    import 'codemirror/mode/javascript/javascript.js'
-    import 'codemirror/addon/selection/active-line.js'
-    import 'codemirror/addon/edit/closebrackets.js'
-    // foldGutter
-    import 'codemirror/addon/fold/foldgutter.css'
-    import 'codemirror/addon/fold/brace-fold.js'
-    import 'codemirror/addon/fold/comment-fold.js'
-    import 'codemirror/addon/fold/foldcode.js'
-    import 'codemirror/addon/fold/foldgutter.js'
-    import 'codemirror/addon/fold/indent-fold.js'
-    import 'codemirror/addon/fold/markdown-fold.js'
-    import 'codemirror/addon/fold/xml-fold.js'
+    // import 'codemirror/mode/javascript/javascript.js'
+    // import 'codemirror/addon/selection/active-line.js'
+    // import 'codemirror/addon/edit/closebrackets.js'
+    // // foldGutter
+    // import 'codemirror/addon/fold/foldgutter.css'
+    // import 'codemirror/addon/fold/brace-fold.js'
+    // import 'codemirror/addon/fold/comment-fold.js'
+    // import 'codemirror/addon/fold/foldcode.js'
+    // import 'codemirror/addon/fold/foldgutter.js'
+    // import 'codemirror/addon/fold/indent-fold.js'
+    // import 'codemirror/addon/fold/markdown-fold.js'
+    // import 'codemirror/addon/fold/xml-fold.js'
 
     export default {
         //========================================================================================================
         // COMPONENTS
         //========================================================================================================
         components: {
-            'upload-btn': UploadButton
+            'upload-btn': UploadButton,
+            VJsonEditor
         },
 
         //========================================================================================================
@@ -371,9 +396,9 @@
             nowActions() {
                 return this.$store.state.socketModule.socket.message;
             },
-            codemirror() {
-                return this.$refs.myCm.codemirror
-            },
+            // codemirror() {
+            //     return this.$refs.myCm.codemirror
+            // },
             filter() {
                 return this.caseSensitive
                     ? (item, search, textKey) => item[textKey].indexOf(search) > -1
@@ -417,7 +442,7 @@
                 line: true,
                 gutters: ["CodeMirror-foldgutter", "CodeMirror-linenumbers"],
             },
-            JSONCode: "{}",
+            // JSONCode: "{}",
             JSONObject: "{}",
             jsonError: false,
             jsonMsg: "",
@@ -438,6 +463,8 @@
             tab: 1,
             creatingHG: false,
             existingHG: false,
+            renameHG: false,
+            oldNameHG: "",
             pcNotify: false,
             pcNotifyMsg: null,
             parameterEditTitle: null,
@@ -480,75 +507,17 @@
             nowActions: {
                 async handler(val) {
                     await Common.webSocketParser(val, this);
-
-                    // if (val.hasOwnProperty("operation")) {
-                    //     this.wip = true;
-                    //     switch (val.operation) {
-                    //         case "getSC":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Smart Class: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Smart Classes";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "getHG":
-                    //             this.WSProgress.operation = "Getting Host Group";
-                    //             break;
-                    //         case "getPC":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Puppet Class: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Puppet Classes";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "getHGParameters":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 this.WSProgress.item = `Getting Host Group parameter: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Host Group parameters";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "updatingHGOverrides":
-                    //             if (val.data.hasOwnProperty("item")) {
-                    //                 this.WSProgress.operation = null;
-                    //                 if (val.data.item.length > 20) {
-                    //                     let old = val.data.item;
-                    //                     val.data.item = old.substring(0,19) + " ...";
-                    //                 }
-                    //                 this.WSProgress.item = `Getting Host Group override: ${val.data.item}`;
-                    //             } else {
-                    //                 this.WSProgress.operation = "Getting Host Group overrides";
-                    //                 this.WSProgress.item = null;
-                    //             }
-                    //             break;
-                    //         case "done":
-                    //             this.wip = false;
-                    //             this.WSProgress.item = null;
-                    //             this.WSProgress.operation = null;
-                    //             break;
-                    //         default:
-                    //             this.WSProgress.item = null;
-                    //             this.WSProgress.operation = null;
-                    //             console.info(val)
-                    //     }
-                    // }
                 }
             },
-            tab: {
-                handler(val) {
-                    if (val === 0) {
-                        this.JSONObject = JSON.parse(this.JSONCode);
-                    } else {
-                        this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
-                    }
-                }
-            },
+            // tab: {
+            //     handler(val) {
+            //         if (val === 0) {
+            //             this.JSONObject = JSON.parse(this.JSONCode);
+            //         } else {
+            //             this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+            //         }
+            //     }
+            // },
             host: {
                 async handler(val) {
                     this.loadingPC = true;
@@ -587,8 +556,14 @@
                         let fchg = (await hostGroupService.FCheck(t.host, t.hgName)).data;
                         t.existingHG = fchg.id !== -1;
                         t.creatingHG = false;
+                        console.log(t.existingHG);
+                        if (!t.existingHG) {
+                        let fchgId = (await hostGroupService.FCheckID(t.host, t.JSONObject.id)).data;
+                            if (fchgId.name !== "") {
+                                t.renameHG = true;
+                            }
+                        }
                     }, 1000, this);
-
                 }
             },
             envName: {
@@ -596,28 +571,20 @@
                     this.JSONObject.environment = val;
                 }
             },
-            JSONCode: {
+            JSONObject: {
                 async handler(val) {
-                    try {
-                        let HGObject = JSON.parse(val);
-                        this.jsonError = false;
-                        this.hgName = HGObject.name;
-                        this.envName = HGObject.environment;
+                    this.jsonError = false;
+                    this.hgName = val.name;
+                    this.envName = val.environment;
 
-                        if (!HGObject.hasOwnProperty("name")) {
-                            this.jsonError = true;
-                            this.jsonMsg = "Name required";
-                        }
-                        if (!HGObject.hasOwnProperty("environment")) {
-                            this.jsonError = true;
-                            this.jsonMsg = "Environment required";
-                        }
-                    } catch (e) {
-                        let err_msg = e.message;
-                        let msg = err_msg.split(":");
-                        console.info("Error in JSON ", msg);
+                    if (!val.hasOwnProperty("name")) {
                         this.jsonError = true;
-                        this.jsonMsg = msg[1];
+                        this.jsonMsg = "Name required";
+                    }
+
+                    if (!val.hasOwnProperty("environment")) {
+                        this.jsonError = true;
+                        this.jsonMsg = "Environment required";
                     }
                 }
             },
@@ -631,8 +598,9 @@
                         this.SourceName = this.hostGroup.name;
                         this.JSONObject = this.hostGroup;
                         let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                        this.oldNameHG = pcData.name;
                         this.puppetClasses = pcData.PuppetClasses;
-                        this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+                        // this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
                         EditorMethods.resetPC(this);
                         EditorMethods.checkPC(this);
                         EditorMethods.sortPC(this);
@@ -677,14 +645,16 @@
                 this.hgError = false;
                 this.hgDone = false;
                 this.creatingHG = true;
-                this.JSONObject = JSON.parse(this.JSONCode);
+                // this.JSONObject = JSON.parse(this.JSONCode);
                 this.JSONObject["source_name"] = this.SourceName;
+                // this.JSONObject["rename"] = rename;
+
                 try {
                     await hostGroupService.Create(this.JSONObject, this.host);
                     let response = (await hostGroupService.FUpdate(this.host, this.hgName)).data;
                     this.hostGroups = (await hostGroupService.List(this.host)).data;
                     await hostGroupService.GitCommit(this.host, response.id);
-                    this.JSONCode = JSON.stringify(response, " ", "  ");
+                    // this.JSONCode = JSON.stringify(response, " ", "  ");
                     this.hgDone = true;
                     this.hgDoneMsg = `${this.JSONObject.name} Created`
                 } catch (e) {
@@ -729,7 +699,7 @@
                 }
 
                 EditorMethods.sortPC(this);
-                this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+                // this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
                 this.pcNotifyMsg = `${data.class} => ${data.sub_class} Added`;
                 this.pcNotify = true;
             },
@@ -802,7 +772,7 @@
                 EditorMethods.checkPC(this);
                 EditorMethods.sortPC(this);
                 this.JSONObject = Common.pruneEmpty(this.JSONObject);
-                this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
+                // this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
 
                 this.pcNotifyMsg = `${_class} => ${subClass} Removed`;
                 this.pcNotify = true;
@@ -810,11 +780,11 @@
             fileChanged(file) {
                 if (window.File && window.FileReader && window.FileList && window.Blob) {
                     let reader = new FileReader();
-                    reader.onload = (function (t) {
-                        return function (e) {
-                            t.JSONCode = e.target.result;
-                        };
-                    })(this);
+                    // reader.onload = (function (t) {
+                    //     return function (e) {
+                    //         t.JSONCode = e.target.result;
+                    //     };
+                    // })(this);
                     reader.readAsText(file);
                 } else {
                     console.error('The File APIs is not a fully supported in this browser.');

@@ -83,126 +83,127 @@
                                 <v-divider></v-divider>
 
                                 <v-card-text>
-                                    <v-layout row wrap  class="mb-4">
-                                        <v-flex
-                                                xs12
-                                                md6
-                                                xl5
-                                        >
-                                            <v-card
-                                                    class="mx-auto"
-                                                    elevation="0"
-                                            >
-                                            <table class="info_table">
-                                                <thead>
-                                                <tr>
-                                                    <th>Last Hosts</th>
-                                                    <th></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <tr>
-                                                    <td>
-                                                        <v-chip color="success" label>Success:</v-chip>
-                                                    </td>
-                                                    <td>
-                                                        {{n.success}}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <v-chip color="warning" label>Restart Failures:</v-chip>
-                                                    </td>
-                                                    <td>
-                                                        {{n.r_failed}}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <v-chip color="error" label>Failed:</v-chip>
-                                                    </td>
-                                                    <td>
-                                                        {{n.failed}}
-                                                    </td>
-                                                </tr>
-                                                </tbody>
-                                            </table>
-                                            </v-card>
-                                        </v-flex>
-                                        <v-flex
-                                                xs12
-                                                md6
-                                                xl7
-                                        >
-                                            <v-card
-                                                    class="mx-auto"
-                                                    elevation="0"
-                                                    v-if="n.trend.values"
-                                            >
-                                                <v-sheet
-                                                        class="v-sheet--offset mx-auto"
-                                                        color="cyan dark-1"
-                                                        elevation="2"
-                                                        max-width="calc(100% - 32px)"
-                                                >
-                                                    <v-sparkline
-                                                            :labels="n.trend.labels"
-                                                            :value="n.trend.values"
-                                                            color="white"
-                                                            line-width="2"
-                                                            padding="16"
-                                                    >
-                                                    </v-sparkline>
-                                                </v-sheet>
+<!--                                    <v-layout row wrap  class="mb-4">-->
+<!--                                        <v-flex-->
+<!--                                                xs12-->
+<!--                                                md6-->
+<!--                                                xl5-->
+<!--                                        >-->
+<!--                                            <v-card-->
+<!--                                                    class="mx-auto"-->
+<!--                                                    elevation="0"-->
+<!--                                            >-->
+<!--                                            <table class="info_table">-->
+<!--                                                <thead>-->
+<!--                                                <tr>-->
+<!--                                                    <th>Last Hosts</th>-->
+<!--                                                    <th></th>-->
+<!--                                                </tr>-->
+<!--                                                </thead>-->
+<!--                                                <tbody>-->
+<!--                                                <tr>-->
+<!--                                                    <td>-->
+<!--                                                        <v-chip color="success" label>Success:</v-chip>-->
+<!--                                                    </td>-->
+<!--                                                    <td>-->
+<!--                                                        {{n.success}}-->
+<!--                                                    </td>-->
+<!--                                                </tr>-->
+<!--                                                <tr>-->
+<!--                                                    <td>-->
+<!--                                                        <v-chip color="warning" label>Restart Failures:</v-chip>-->
+<!--                                                    </td>-->
+<!--                                                    <td>-->
+<!--                                                        {{n.r_failed}}-->
+<!--                                                    </td>-->
+<!--                                                </tr>-->
+<!--                                                <tr>-->
+<!--                                                    <td>-->
+<!--                                                        <v-chip color="error" label>Failed:</v-chip>-->
+<!--                                                    </td>-->
+<!--                                                    <td>-->
+<!--                                                        {{n.failed}}-->
+<!--                                                    </td>-->
+<!--                                                </tr>-->
+<!--                                                </tbody>-->
+<!--                                            </table>-->
+<!--                                            </v-card>-->
+<!--                                        </v-flex>-->
+<!--                                        <v-flex-->
+<!--                                                xs12-->
+<!--                                                md6-->
+<!--                                                xl7-->
+<!--                                        >-->
+<!--                                            <v-card-->
+<!--                                                    class="mx-auto"-->
+<!--                                                    elevation="0"-->
+<!--                                                    v-if="n.trend.values"-->
+<!--                                            >-->
+<!--                                                <v-sheet-->
+<!--                                                        class="v-sheet&#45;&#45;offset mx-auto"-->
+<!--                                                        color="cyan dark-1"-->
+<!--                                                        elevation="2"-->
+<!--                                                        max-width="calc(100% - 32px)"-->
+<!--                                                >-->
+<!--                                                    <v-sparkline-->
+<!--                                                            :labels="n.trend.labels"-->
+<!--                                                            :value="n.trend.values"-->
+<!--                                                            color="white"-->
+<!--                                                            line-width="2"-->
+<!--                                                            padding="16"-->
+<!--                                                    >-->
+<!--                                                    </v-sparkline>-->
+<!--                                                </v-sheet>-->
 
-                                                <v-card-text class="pt-2">
-                                                    <div class="title font-weight-light mb-2">Runs in the last 24 hours</div>
-                                                    <div class="subheading font-weight-light grey--text">UTC time</div>
-                                                    <v-divider class="my-2"></v-divider>
-                                                    <v-icon
-                                                            class="mr-2"
-                                                            small
-                                                    >
-                                                        alarm
-                                                    </v-icon>
-                                                    <span class="caption grey--text font-weight-light">
-                                                        last run <strong><a target="_blank" :rel="n.host" :href="`https://${n.host}/hosts/${n.last_host}/reports`">{{n.last_host}}</a></strong>
-                                                    </span>
-                                                </v-card-text>
-                                            </v-card>
+<!--                                                <v-card-text class="pt-2">-->
+<!--                                                    <div class="title font-weight-light mb-2">Runs in the last 24 hours</div>-->
+<!--                                                    <div class="subheading font-weight-light grey&#45;&#45;text">UTC time</div>-->
+<!--                                                    <v-divider class="my-2"></v-divider>-->
+<!--                                                    <v-icon-->
+<!--                                                            class="mr-2"-->
+<!--                                                            small-->
+<!--                                                    >-->
+<!--                                                        alarm-->
+<!--                                                    </v-icon>-->
+<!--                                                    <span class="caption grey&#45;&#45;text font-weight-light">-->
+<!--                                                        last run <strong><a target="_blank" :rel="n.host" :href="`https://${n.host}/hosts/${n.last_host}/reports`">{{n.last_host}}</a></strong>-->
+<!--                                                    </span>-->
+<!--                                                </v-card-text>-->
+<!--                                            </v-card>-->
 
-                                        </v-flex>
-                                    </v-layout>
-                                    <v-expansion-panel
-                                        :value="n.open"
-                                        expand
-                                    >
-                                        <v-expansion-panel-content>
-                                            <template v-slot:header>
-                                                <v-icon small>public</v-icon><div>Locations</div>
-                                            </template>
-                                            <v-card>
-                                                <v-hover v-for="c in n.locations" :key="c.name">
-                                                    <v-btn
-                                                            v-if="c.highlighted"
-                                                            slot-scope="{ hover }"
-                                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
-                                                            class="mx-auto red"
-                                                            :to="{name:'locations', query: {source: n.host, location: c.name }}"
-                                                            small>{{c.name}}
-                                                    </v-btn>
-                                                    <v-btn
-                                                            v-else
-                                                            slot-scope="{ hover }"
-                                                            :class="`elevation-${hover ? 2 : 1} ml-1`"
-                                                            class="mx-auto"
-                                                            :to="{name:'locations', query: {source: n.host, location: c.name }}"
-                                                            small>{{c.name}}
-                                                    </v-btn>
-                                                </v-hover>
-                                            </v-card>
-                                        </v-expansion-panel-content>
-                                    </v-expansion-panel>
+<!--                                        </v-flex>-->
+<!--                                    </v-layout>-->
+                                    <v-hover v-for="c in n.locations" :key="c.name">
+                                        <v-btn
+                                                v-if="c.highlighted"
+                                                slot-scope="{ hover }"
+                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                class="mx-auto red"
+                                                :to="{name:'locations', query: {source: n.host, location: c.name }}"
+                                                small>{{c.name}}
+                                        </v-btn>
+                                        <v-btn
+                                                v-else
+                                                slot-scope="{ hover }"
+                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
+                                                class="mx-auto"
+                                                :to="{name:'locations', query: {source: n.host, location: c.name }}"
+                                                small>{{c.name}}
+                                        </v-btn>
+                                    </v-hover>
+<!--                                    <v-expansion-panel-->
+<!--                                        :value="n.open"-->
+<!--                                        expand-->
+<!--                                    >-->
+<!--                                        <v-expansion-panel-content>-->
+<!--                                            <template v-slot:header>-->
+<!--                                                <v-icon small>public</v-icon><div>Locations</div>-->
+<!--                                            </template>-->
+<!--                                            <v-card>-->
+<!--                                                -->
+<!--                                            </v-card>-->
+<!--                                        </v-expansion-panel-content>-->
+<!--                                    </v-expansion-panel>-->
                                 </v-card-text>
 
 
@@ -298,6 +299,7 @@
 
                 <v-card-text>
                     <!--    ============================================ Progress ============================================    -->
+
                     <v-layout row wrap v-if="wipMessage">
                         <v-flex v-if="wip" xs9>
                             <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
@@ -305,7 +307,7 @@
                         <v-flex xs3 class="pt-2">
                             {{wipMessage}}
                         </v-flex>
-                        <v-flex xs12 class="text-xs-center pt-2">
+                        <v-flex xs12 v-if="wip" class="text-xs-center pt-2">
                             <fingerprint-spinner
                                     class="spinner"
                                     :animation-duration="1500"
@@ -314,11 +316,12 @@
                             />
                         </v-flex>
                     </v-layout>
+
                     <v-layout row wrap v-else class="text-xs-center">
                         <v-flex v-if="wip" xs12>
                             <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
-                        <v-flex xs12 class="text-xs-center pt-2">
+                        <v-flex xs12 v-if="wip" class="text-xs-center pt-2">
                             <fingerprint-spinner
                                     class="spinner"
                                     :animation-duration="1500"
@@ -326,7 +329,15 @@
                                     color="#7ac2ff"
                             />
                         </v-flex>
+
                     </v-layout>
+                    <v-flex xs12 class="text-xs-center pt-2"
+                            v-for="(v,k) in WSProgress.errors" :key="k"
+                    >
+<!--                        <v-alert type="error">-->
+                        <v-chip color="warning" label>{{v.env}}</v-chip>{{v.error.split("::")[1]}}
+<!--                        </v-alert>-->
+                    </v-flex>
                     <!--    ============================================ /Progress ============================================    -->
                 </v-card-text>
             </v-card>
@@ -376,6 +387,7 @@
             hosts: [],
             WSProgress: {
                 message: null,
+                errors: [],
             },
             globalWork: false,
         }),
@@ -461,11 +473,14 @@
                 await this.$store.dispatch("setHost", host);
             },
             async updateEnv(host) {
-                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating Environments";
+                this.WSProgress = {
+                    message: null,
+                            errors: [],
+                };
                 try {
                     await environmentService.Update(host);
                     this.$emit('envUpdated');
@@ -474,8 +489,10 @@
                 } finally {
                     this.wip = false;
                     this.wipMessage = false;
-                    this.dialog = false;
-                    //this.$disconnect();
+                    if (this.WSProgress.errors.length === 0) {
+                        this.dialog = false;
+                    }
+                    console.log(this.WSProgress.errors);
                 }
             },
             async updateLoc(host) {

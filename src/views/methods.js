@@ -80,7 +80,13 @@ async function webSocketParser(message, t) {
             // Getting/Updating Environments
             case "getEnv":
                 if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
+                    if (message.data.hasOwnProperty("status")) {
+                        if (message.data.status === "saving") {
+                            t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
+                        } else if (message.data.status.startsWith("error::")) {
+                            t.WSProgress.errors.push({"error":message.data.status, "env":message.data.item});
+                        }
+                    }
                 } else {
                     t.WSProgress.message = "Getting Environment data";
                 }
@@ -217,7 +223,6 @@ async function webSocketParser(message, t) {
                             let response = (await environmentService.SVNForemanUpdate(postParams)).data;
                             let jsData = JSON.parse(response);
                             t.environments[currHost][i].loading = false;
-                            console.log(jsData);
                         }
                     }
                 }
@@ -229,8 +234,6 @@ async function webSocketParser(message, t) {
                     }
                     t.WSProgress.message = null;
                 }
-
-                console.info(message)
         }
     }
 }

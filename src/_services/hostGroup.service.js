@@ -4,6 +4,7 @@ export const hostGroupService = {
     Get,
     List,
     FCheck,
+    FCheckID,
     Update,
     FUpdate,
     Check,
@@ -26,13 +27,14 @@ function AllList() {
     return Api().get("hg");
 }
 
-function FCheck(host, hgId) {
-    return Api().get(`hg/foreman/check/${host}/${hgId}`);
+function FCheck(host, hgName) {
+    return Api().get(`hg/foreman/check/${host}/${hgName}`);
 }
 
-// function FGet(host, hgId) {
-//     return Api().get(`hg/foreman/get/${host}/${hgId}`);
-// }
+function FCheckID(host, hgId) {
+    return Api().get(`hg/foreman/check/id/${host}/${hgId}`);
+}
+
 function FUpdate(host, hgId) {
     return Api().get(`hg/foreman/update/${host}/${hgId}`);
 }

@@ -11,6 +11,7 @@
     "epic-spinners": "^1.1.0",
     "lodash": "^4.17.11",
     "material-design-icons-iconfont": "^5.0.1",
+    "v-jsoneditor": "^1.2.3",
     "vue": "^2.6.6",
     "vue-codemirror": "^4.0.6",
     "vue-cookies": "^1.5.13",

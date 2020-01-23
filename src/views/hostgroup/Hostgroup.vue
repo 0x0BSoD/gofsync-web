@@ -888,8 +888,8 @@
                 // Commit new data
                 try {
                     this.wip = true;
-                    this.wipMessage = "Updating source ...";
-                    await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
+                    // this.wipMessage = "Updating source ...";
+                    // await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     this.wipMessage = "Uploading to target host ...";
                     let response = (await hostGroupService.Send(data));
                     if (response.status === 200) {
