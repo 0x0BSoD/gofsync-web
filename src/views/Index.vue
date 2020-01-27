@@ -14,203 +14,37 @@
                                 clearable
                         ></v-text-field>
                     </v-flex>
+
+                    <!-- ================= STAGE ================= -->
+                    <div class="ribbonS">STAGING</div>
                     <v-flex
-                            v-for="n in locations"
+                            v-for="(n) in locations"
                             :key="n.host"
+                            v-if="n.env === 'stage'"
                             xs12
                             md6
                             xl4
                     >
                         <v-item>
-
-                            <v-card class="hostCard">
-                                <v-toolbar color="#f0f5f5">
-                                    <v-toolbar-title>
-                                        <v-btn flat small :to="{name:'hostgroup', query: {source: n.host }}">{{n.host}}
-                                        </v-btn>
-                                    </v-toolbar-title>
-                                    <v-spacer></v-spacer>
-                                        <v-chip v-if="n.env === 'stage' && !globalWork" small color="success">STAGE</v-chip>
-                                        <v-chip v-if="n.env === 'prod' && !globalWork" small color="warning">PROD</v-chip>
-
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
-                                            <v-btn v-on="on" v-if="globalWork" flat icon small>
-                                            <span class="custom-loader">
-                                                <v-icon>cached</v-icon>
-                                            </span>
-                                            </v-btn>
-                                        </template>
-                                        <span>CURRENT_STEP</span>
-                                    </v-tooltip>
-                                    <v-menu bottom left>
-                                            <template v-slot:activator="{ on }">
-                                                <v-btn
-                                                        icon
-                                                        v-on="on"
-                                                >
-                                                    <v-icon>more_vert</v-icon>
-                                                </v-btn>
-                                            </template>
-                                            <v-list>
-                                                <v-list-tile @click="">
-                                                    <a target="_blank" :rel="n.host" :href="`https://${n.host}`">to
-                                                        foreman</a>
-                                                </v-list-tile>
-                                                <v-divider></v-divider>
-                                                <v-list-tile @click="updateAll(n.host)">
-                                                    <v-list-tile-title>update all</v-list-tile-title>
-                                                </v-list-tile>
-                                                <v-divider></v-divider>
-                                                <v-list-tile @click="updateLoc(n.host)">
-                                                    <v-list-tile-title>update locations</v-list-tile-title>
-                                                </v-list-tile>
-                                                <v-list-tile @click="updateEnv(n.host)">
-                                                    <v-list-tile-title>update environments</v-list-tile-title>
-                                                </v-list-tile>
-                                                <v-list-tile @click="updatePC(n.host)">
-                                                    <v-list-tile-title>update puppet classes</v-list-tile-title>
-                                                </v-list-tile>
-                                                <v-list-tile @click="updateHG(n.host)">
-                                                    <v-list-tile-title>update hostgroups</v-list-tile-title>
-                                                </v-list-tile>
-                                                <v-list-tile @click="showSweDialog(n.host)">
-                                                    <v-list-tile-title>hosts by HG</v-list-tile-title>
-                                                </v-list-tile>
-                                            </v-list>
-                                        </v-menu>
-                                </v-toolbar>
-                                <v-divider></v-divider>
-
-                                <v-card-text>
-<!--                                    <v-layout row wrap  class="mb-4">-->
-<!--                                        <v-flex-->
-<!--                                                xs12-->
-<!--                                                md6-->
-<!--                                                xl5-->
-<!--                                        >-->
-<!--                                            <v-card-->
-<!--                                                    class="mx-auto"-->
-<!--                                                    elevation="0"-->
-<!--                                            >-->
-<!--                                            <table class="info_table">-->
-<!--                                                <thead>-->
-<!--                                                <tr>-->
-<!--                                                    <th>Last Hosts</th>-->
-<!--                                                    <th></th>-->
-<!--                                                </tr>-->
-<!--                                                </thead>-->
-<!--                                                <tbody>-->
-<!--                                                <tr>-->
-<!--                                                    <td>-->
-<!--                                                        <v-chip color="success" label>Success:</v-chip>-->
-<!--                                                    </td>-->
-<!--                                                    <td>-->
-<!--                                                        {{n.success}}-->
-<!--                                                    </td>-->
-<!--                                                </tr>-->
-<!--                                                <tr>-->
-<!--                                                    <td>-->
-<!--                                                        <v-chip color="warning" label>Restart Failures:</v-chip>-->
-<!--                                                    </td>-->
-<!--                                                    <td>-->
-<!--                                                        {{n.r_failed}}-->
-<!--                                                    </td>-->
-<!--                                                </tr>-->
-<!--                                                <tr>-->
-<!--                                                    <td>-->
-<!--                                                        <v-chip color="error" label>Failed:</v-chip>-->
-<!--                                                    </td>-->
-<!--                                                    <td>-->
-<!--                                                        {{n.failed}}-->
-<!--                                                    </td>-->
-<!--                                                </tr>-->
-<!--                                                </tbody>-->
-<!--                                            </table>-->
-<!--                                            </v-card>-->
-<!--                                        </v-flex>-->
-<!--                                        <v-flex-->
-<!--                                                xs12-->
-<!--                                                md6-->
-<!--                                                xl7-->
-<!--                                        >-->
-<!--                                            <v-card-->
-<!--                                                    class="mx-auto"-->
-<!--                                                    elevation="0"-->
-<!--                                                    v-if="n.trend.values"-->
-<!--                                            >-->
-<!--                                                <v-sheet-->
-<!--                                                        class="v-sheet&#45;&#45;offset mx-auto"-->
-<!--                                                        color="cyan dark-1"-->
-<!--                                                        elevation="2"-->
-<!--                                                        max-width="calc(100% - 32px)"-->
-<!--                                                >-->
-<!--                                                    <v-sparkline-->
-<!--                                                            :labels="n.trend.labels"-->
-<!--                                                            :value="n.trend.values"-->
-<!--                                                            color="white"-->
-<!--                                                            line-width="2"-->
-<!--                                                            padding="16"-->
-<!--                                                    >-->
-<!--                                                    </v-sparkline>-->
-<!--                                                </v-sheet>-->
-
-<!--                                                <v-card-text class="pt-2">-->
-<!--                                                    <div class="title font-weight-light mb-2">Runs in the last 24 hours</div>-->
-<!--                                                    <div class="subheading font-weight-light grey&#45;&#45;text">UTC time</div>-->
-<!--                                                    <v-divider class="my-2"></v-divider>-->
-<!--                                                    <v-icon-->
-<!--                                                            class="mr-2"-->
-<!--                                                            small-->
-<!--                                                    >-->
-<!--                                                        alarm-->
-<!--                                                    </v-icon>-->
-<!--                                                    <span class="caption grey&#45;&#45;text font-weight-light">-->
-<!--                                                        last run <strong><a target="_blank" :rel="n.host" :href="`https://${n.host}/hosts/${n.last_host}/reports`">{{n.last_host}}</a></strong>-->
-<!--                                                    </span>-->
-<!--                                                </v-card-text>-->
-<!--                                            </v-card>-->
-
-<!--                                        </v-flex>-->
-<!--                                    </v-layout>-->
-                                    <v-hover v-for="c in n.locations" :key="c.name">
-                                        <v-btn
-                                                v-if="c.highlighted"
-                                                slot-scope="{ hover }"
-                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
-                                                class="mx-auto red"
-                                                :to="{name:'locations', query: {source: n.host, location: c.name }}"
-                                                small>{{c.name}}
-                                        </v-btn>
-                                        <v-btn
-                                                v-else
-                                                slot-scope="{ hover }"
-                                                :class="`elevation-${hover ? 2 : 1} ml-1`"
-                                                class="mx-auto"
-                                                :to="{name:'locations', query: {source: n.host, location: c.name }}"
-                                                small>{{c.name}}
-                                        </v-btn>
-                                    </v-hover>
-<!--                                    <v-expansion-panel-->
-<!--                                        :value="n.open"-->
-<!--                                        expand-->
-<!--                                    >-->
-<!--                                        <v-expansion-panel-content>-->
-<!--                                            <template v-slot:header>-->
-<!--                                                <v-icon small>public</v-icon><div>Locations</div>-->
-<!--                                            </template>-->
-<!--                                            <v-card>-->
-<!--                                                -->
-<!--                                            </v-card>-->
-<!--                                        </v-expansion-panel-content>-->
-<!--                                    </v-expansion-panel>-->
-                                </v-card-text>
-
-
-                            </v-card>
-
+                            <HostCard  :hg="n"/>
                         </v-item>
                     </v-flex>
+
+                    <!-- ================= PROD ================= -->
+                    <div class="ribbonP">PRODUCTION</div>
+                    <v-flex
+                            v-for="n in locations"
+                            :key="n.host"
+                            v-if="n.env === 'prod'"
+                            xs12
+                            md6
+                            xl4
+                    >
+                        <v-item>
+                            <HostCard  :hg="n"/>
+                        </v-item>
+                    </v-flex>
+
                 </v-layout>
             </v-container>
         </v-item-group>
@@ -334,9 +168,7 @@
                     <v-flex xs12 class="text-xs-center pt-2"
                             v-for="(v,k) in WSProgress.errors" :key="k"
                     >
-<!--                        <v-alert type="error">-->
                         <v-chip color="warning" label>{{v.env}}</v-chip>{{v.error.split("::")[1]}}
-<!--                        </v-alert>-->
                     </v-flex>
                     <!--    ============================================ /Progress ============================================    -->
                 </v-card-text>
@@ -351,6 +183,7 @@
     import {FingerprintSpinner} from 'epic-spinners'
     import {environmentService, hostGroupService, hostService, locationsService, pcService} from "../_services"
     import {Common} from "./methods"
+    import HostCard from "../components/hostgroups/hostCard"
 
     export default {
 
@@ -393,14 +226,16 @@
         }),
 
         components: {
-            FingerprintSpinner
+            FingerprintSpinner,
+            HostCard
         },
 
         async mounted() {
             // User check ==========================================
             await Common.auth(this);
             this.wip = true;
-            this.locations = (await locationsService.List()).data;
+            this.locations  = (await locationsService.List()).data;
+            this.locations.sort(Common.dynamicSort("host"));
             this.wip = false;
         },
         watch: {
@@ -554,6 +389,47 @@
 </script>
 
 <style>
+
+    .ribbonS {
+        display: block;
+        width: 100%;
+        margin: 0 15px 15px 0;
+        padding: 0 5px 0 15px;
+        font-family: Roboto, sans-serif;
+        font-size: 2rem;
+
+
+        background: rgba(76,175,80,1);
+        background: -moz-linear-gradient(left, rgba(76,175,80,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: -webkit-gradient(left top, right top, color-stop(0%, rgba(76,175,80,1)), color-stop(65%, rgba(191,223,192,0)), color-stop(96%, rgba(246,246,246,0)), color-stop(100%, rgba(237,237,237,0)));
+        background: -webkit-linear-gradient(left, rgba(76,175,80,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: -o-linear-gradient(left, rgba(76,175,80,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: -ms-linear-gradient(left, rgba(76,175,80,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: linear-gradient(to right, rgba(76,175,80,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4caf50', endColorstr='#ededed', GradientType=1 );
+
+    }
+
+    .ribbonP {
+        display: block;
+        width: 100%;
+        margin: 15px 15px 15px 0;
+        padding: 0 5px 0 15px;
+        font-family: Roboto, sans-serif;
+        font-size: 2rem;
+
+
+        background: rgba(241,231,103,1);
+        background: -moz-linear-gradient(left, rgba(241,231,103,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: -webkit-gradient(left top, right top, color-stop(0%, rgba(241,231,103,1)), color-stop(65%, rgba(191,223,192,0)), color-stop(96%, rgba(246,246,246,0)), color-stop(100%, rgba(237,237,237,0)));
+        background: -webkit-linear-gradient(left, rgba(241,231,103,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: -o-linear-gradient(left, rgba(241,231,103,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: -ms-linear-gradient(left, rgba(241,231,103,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        background: linear-gradient(to right, rgba(241,231,103,1) 0%, rgba(191,223,192,0) 65%, rgba(246,246,246,0) 96%, rgba(237,237,237,0) 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4caf50', endColorstr='#ededed', GradientType=1 );
+
+    }
+
     .spinner {
         margin: 0 auto;
     }

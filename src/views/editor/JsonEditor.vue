@@ -367,19 +367,6 @@
     import UploadButton from 'vuetify-upload-button';
     import VJsonEditor from 'v-jsoneditor'
 
-    // import 'codemirror/mode/javascript/javascript.js'
-    // import 'codemirror/addon/selection/active-line.js'
-    // import 'codemirror/addon/edit/closebrackets.js'
-    // // foldGutter
-    // import 'codemirror/addon/fold/foldgutter.css'
-    // import 'codemirror/addon/fold/brace-fold.js'
-    // import 'codemirror/addon/fold/comment-fold.js'
-    // import 'codemirror/addon/fold/foldcode.js'
-    // import 'codemirror/addon/fold/foldgutter.js'
-    // import 'codemirror/addon/fold/indent-fold.js'
-    // import 'codemirror/addon/fold/markdown-fold.js'
-    // import 'codemirror/addon/fold/xml-fold.js'
-
     export default {
         //========================================================================================================
         // COMPONENTS
@@ -460,7 +447,7 @@
             SourceName: null,
             hosts: [],
             loadingPC: false,
-            tab: 1,
+            tab: 0,
             creatingHG: false,
             existingHG: false,
             renameHG: false,
@@ -521,20 +508,32 @@
             host: {
                 async handler(val) {
                     this.loadingPC = true;
+
+                    console.time("get HG");
                     this.hostGroups = (await hostGroupService.List(val)).data;
+                    console.timeEnd("get HG");
+
+                    console.time("get PC");
                     this.allPuppetClassesFull = (await pcService.All(val)).data;
+                    console.timeEnd("get PC");
+
+                    console.time("copy PC");
                     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
+                    console.timeEnd("copy PC");
+
                     this.search = null;
                     this.loadingPC = false;
 
                     if (this.$route.query.hasOwnProperty("hg")) {
                         this.hostGroupId = this.hostGroups.filter(i => i.name === this.$route.query.hg)[0].id;
                     }
+
+                    console.log("host end");
                 }
             },
             search: {
                 async handler(val) {
-                    if (this.search) {
+                    // if (this.search) {
                         this.allPuppetClasses = {};
                         for (let i in this.allPuppetClassesFull) {
                             for (let j in this.allPuppetClassesFull[i]) {
@@ -543,9 +542,9 @@
                                 }
                             }
                         }
-                    } else {
-                        this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
-                    }
+                    // } else {
+                    //     this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
+                    // }
                 }
             },
             hgName: {

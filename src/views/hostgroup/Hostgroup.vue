@@ -343,7 +343,7 @@
 
 <script>
     import {environmentService, hostGroupService, hostService, locationsService} from "../../_services"
-    import Locations from "../../components/hostgroups/locations"
+    import Locations from "../../components/hostgroups/hostCard"
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
     import {Common} from "../methods";
