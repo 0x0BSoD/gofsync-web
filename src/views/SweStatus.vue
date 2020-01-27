@@ -377,12 +377,30 @@
                                     box
                             >
                             </v-autocomplete>
+
+                            <v-autocomplete
+                                    clearable
+                                    multiple
+                                    v-if="checkoutIfReq"
+                                    v-model="selectHosts"
+                                    :items="hosts"
+                                    label="Select hosts"
+                                    persistent-hint
+                                    box
+                            >
+                            </v-autocomplete>
+
+                            <div v-if="checkoutIfReq">
+                                <v-btn small @click="fillHosts('all')">ALL</v-btn>
+                                <v-btn small @click="fillHosts('prod')">PRO</v-btn>
+                                <v-btn small @click="fillHosts('stage')">STAGE</v-btn>
+                            </div>
+
                         </v-flex>
                         <v-flex xs12>
                             <v-switch
-                                    :disabled="true"
                                     v-model="checkoutIfReq"
-                                    label="Auto checkout code"
+                                    label="Checkout code"
                             ></v-switch>
                         </v-flex>
                     </v-layout>
@@ -392,6 +410,54 @@
                     <v-btn @click="batchStart()">Update</v-btn>
                     <v-spacer></v-spacer>
                 </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-dialog
+                v-model="dialogBatchSweRunning"
+                max-width="800"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                    <v-btn icon>
+                        <v-icon>accessible_forward</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>Batch Update</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogBatchSwe = !dialogBatchSwe" icon><v-icon>close</v-icon></v-btn>
+                </v-toolbar>
+
+                <v-card-text
+                    v-for="(envs, host) in batchArguments"
+                    :key="host"
+                >
+                    {{batchArguments}}
+                    <v-layout v-if="envs.length > 0" row wrap>
+                        <v-flex xs12>
+                            <v-chip>
+                                {{host}}
+                            </v-chip>
+
+                            <table class="checkTable">
+                                <thead>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                </thead>
+                                <tbody v-for="(env, idx) in envs" :key="idx">
+                                <tr>
+                                    <th><v-btn icon><v-icon>{{env.icon}}</v-icon></v-btn></th>
+                                    <th>{{env.name}}</th>
+                                    <th>
+                                        <v-chip v-if="env.msg"> <looping-rhombuses-spinner v-if="env.progress" class="ml-2" :animation-duration="2500"
+                                                                                         :rhombus-size="15" color="#607d8b"/>{{env.msg}}</v-chip>
+                                    </th>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
             </v-card>
         </v-dialog>
 
@@ -415,6 +481,8 @@
         },
 
         data: () => ({
+            hosts: [],
+            selectHosts: [],
             environments: [],
             full_environments: [],
             svnInfo: {
@@ -440,8 +508,10 @@
             dialogChanges: false,
             dialogEditRepo: false,
             dialogBatchSwe: false,
+            dialogBatchSweRunning: false,
             dialogAddEnvironment: false,
             dialogAddEnvironmentProgress: false,
+            batchArguments: {},
             dialogTitle: null,
             checkCode: false,
             importClasses: false,
@@ -467,30 +537,15 @@
             // ======
             this.environments = (await environmentService.ListAll()).data;
             this.full_environments = (await environmentService.ListAll()).data;
+            for (let i in this.environments) {
+                this.hosts.push(i);
+            }
         },
 
         watch: {
             nowActions: {
                 async handler (val) {
                     await Common.webSocketParser(val, this);
-
-                    // if (this.environments[val.host]) {
-                    //     for (let i in this.environments[val.host]) {
-                    //         if (val.actions === this.environments[val.host][i].name) {
-                    //             if (val.state === "checking ...") {
-                    //                 this.environments[val.host][i].loading = true;
-                    //             } else if (val.state === "done ...") {
-                    //                 this.environments[val.host][i].loading = false;
-                    //                 this.svnInfo = (await environmentService.SVNInfo(val.host, val.actions)).data;
-                    //                 this.environments = (await environmentService.ListAll()).data;
-                    //                 this.full_environments = (await environmentService.ListAll()).data;
-                    //                 this.$forceUpdate();
-                    //             }
-                    //         } else {
-                    //             this.environments[val.host][i].ws_message = false;
-                    //         }
-                    //     }
-                    // }
                 }
             },
 
@@ -513,7 +568,24 @@
         },
         methods: {
 
+            fillHosts(env) {
+                this.selectHosts = [];
+                if (env === "all") {
+                    this.selectHosts = this.hosts;
+                } else {
+                    for (let i in this.environments) {
+                        for (let k in this.environments[i]) {
+                            if (this.environments[i][k].env === env) {
+                                this.selectHosts.push(i);
+                                break
+                            }
+                        }
+                    }
+                }
+            },
+
             async addNewEnvironment() {
+                this.checkoutIfReq = false;
                 if (!this.newEnvName || this.newEnvName === "") {
                     this.newEnvError = "Name required";
                 } else {
@@ -662,28 +734,50 @@
             },
 
             async batchStart() {
-
-                let post_data = {};
+                let postParams = {};
 
                 for (let j in this.environments) {
-                    post_data[j] = [];
+                    postParams[j] = [];
+                    this.batchArguments[j] = [];
                 }
 
                 for (let i in this.toUpdate) {
                     for (let j in this.environments) {
-                        for (let k in this.environments[j]) {
-                            if (this.environments[j][k].name === this.toUpdate[i]) {
-                                post_data[j].push(this.environments[j][k].name);
+                        let envItem = {
+                            icon: "pause",
+                            name: "",
+                            msg: "",
+                            progress: false,
+                        };
+                        if (this.checkoutIfReq) {
+                            if (this.selectHosts.includes(j)) {
+                                postParams[j].push(this.toUpdate[i]);
+                                envItem.name = this.toUpdate[i];
+                                this.batchArguments[j].push(envItem);
+                            }
+                        } else {
+                            for (let k in this.environments[j]) {
+                                if (this.environments[j][k].name === this.toUpdate[i])  {
+                                    postParams[j].push(this.environments[j][k].name);
+                                    envItem.name = this.environments[j][k].name;
+                                    this.batchArguments[j].push(envItem);
+                                }
                             }
                         }
                     }
                 }
 
+                console.log(postParams);
+                console.log(this.batchArguments);
 
-                environmentService.SVNBatch(post_data);
+                this.dialogBatchSwe = false;
+                if (this.checkoutIfReq) {
+                    this.dialogBatchSweRunning = true;
+                }
+
+                environmentService.SVNBatch(postParams);
 
                 this.$forceUpdate();
-                this.dialogBatchSwe = false;
             },
 
             async showSweDialog (host, e) {
@@ -794,7 +888,7 @@
 
 <style>
     .checkTable {
-        margin: 0 auto;
+        /*margin: 0 auto;*/
         min-width: 400px;
     }
 </style>

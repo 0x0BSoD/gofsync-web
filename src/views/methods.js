@@ -207,23 +207,46 @@ async function webSocketParser(message, t) {
                 let currHost = message.data.host;
                 let currSwe = message.data.item;
                 let currState = message.data.state;
-                for ( let i in t.environments[currHost]) {
-                    if (t.environments[currHost][i].name === currSwe) {
-                        if (currState === "checking") {
-                            t.environments[currHost][i].loading = true;
+                if (t.checkoutIfReq) {
+                    for (let i in t.batchArguments[currHost]) {
+                        if (t.batchArguments[currHost][i].name === currSwe) {
+                            if (currState === "checking") {
+                                t.batchArguments[currHost][i].icon = "play";
+                                t.batchArguments[currHost][i].progress = true;
+                            }
+                            if (currState === "done") {
+                                let postParams = {
+                                    "host": currHost,
+                                    "environment": currSwe,
+                                    "dry_run": false,
+                                };
+                                (await environmentService.SVNForemanUpdate(postParams)).data;
+                                t.batchArguments[currHost][i].icon = "check";
+                                t.batchArguments[currHost][i].progress = false;
+                            }
+
+                            t.batchArguments[currHost][i].msg = currState;
                         }
-                        if (currState === "error") {
-                            t.environments[currHost][i].state = "error";
-                        }
-                        if  (currState === "done") {
-                            let postParams = {
-                                "host": currHost,
-                                "environment": currSwe,
-                                "dry_run": false,
-                            };
-                            let response = (await environmentService.SVNForemanUpdate(postParams)).data;
-                            let jsData = JSON.parse(response);
-                            t.environments[currHost][i].loading = false;
+                    }
+                } else {
+                    for (let i in t.environments[currHost]) {
+                        if (t.environments[currHost][i].name === currSwe) {
+                            if (currState === "checking") {
+                                t.environments[currHost][i].loading = true;
+                            }
+                            if (currState === "error") {
+                                t.environments[currHost][i].state = "error";
+                            }
+                            if  (currState === "done") {
+                                let postParams = {
+                                    "host": currHost,
+                                    "environment": currSwe,
+                                    "dry_run": false,
+                                };
+                                (await environmentService.SVNForemanUpdate(postParams)).data;
+                                // let jsData = JSON.parse(response);
+                                t.environments[currHost][i].loading = false;
+                            }
                         }
                     }
                 }
