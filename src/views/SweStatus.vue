@@ -420,7 +420,7 @@
             <v-toolbar class="text-xs-center" dark color="#7ac2ff">
                 <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress" icon><v-icon>close</v-icon></v-btn>
+                <v-btn @click.native="dialogBatchSweRunning = !dialogBatchSweRunning" icon><v-icon>close</v-icon></v-btn>
             </v-toolbar>
 
             <v-card>
