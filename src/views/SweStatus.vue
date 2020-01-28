@@ -309,7 +309,7 @@
                 </v-card-text>
 
                 <v-card-actions>
-                    <v-btn @click="addNewEnvironment()">Add</v-btn>
+                    <v-btn @click="addNewEnvironment(true)">Add</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -417,45 +417,81 @@
                 v-model="dialogBatchSweRunning"
                 max-width="800"
         >
-            <v-card>
-                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
-                    <v-btn icon>
-                        <v-icon>accessible_forward</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>Batch Update</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-btn @click.native="dialogBatchSwe = !dialogBatchSwe" icon><v-icon>close</v-icon></v-btn>
-                </v-toolbar>
-                {{addSteps}}
-<!--                <v-card-text-->
-<!--                    v-for="(host, key) in selectHosts"-->
-<!--                    :key="key"-->
-<!--                >-->
-<!--                    <v-layout v-if="envs.length > 0" row wrap>-->
-<!--                        <v-flex xs12>-->
-<!--                            <v-chip>-->
-<!--                                {{host}}-->
-<!--                            </v-chip>-->
+            <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress" icon><v-icon>close</v-icon></v-btn>
+            </v-toolbar>
 
-<!--                            <table class="checkTable">-->
-<!--                                <thead>-->
-<!--                                <tr><th></th></tr>-->
-<!--                                <tr><th></th></tr>-->
-<!--                                <tr><th></th></tr>-->
-<!--                                </thead>-->
-<!--                                <tbody v-for="(env, idx) in envs" :key="idx">-->
-<!--                                <tr>-->
-<!--                                    <th><v-btn icon><v-icon>paused</v-icon></v-btn></th>-->
-<!--                                    <th>{{env.name}}</th>-->
-<!--                                    <th>-->
-<!--                                        {{addSteps}}-->
-<!--                                    </th>-->
-<!--                                </tr>-->
-<!--                                </tbody>-->
-<!--                            </table>-->
-<!--                        </v-flex>-->
-<!--                    </v-layout>-->
-<!--                </v-card-text>-->
+            <v-card>
+                <v-card-text>
+                    <v-layout row wrap v-for="(envs, host) in progressStruct" :key="host">
+                        <v-flex xs12>
+                            <v-chip label>{{host}}</v-chip>
+                        </v-flex>
+                        <v-flex xs2 v-for="(env, idx) in envs" :key="idx">
+                            <v-btn
+                                    v-if="env.started"
+                                    :loading="true"
+                                    :disabled="true"
+                                    small>
+                                {{env.name}}
+                            </v-btn>
+                            <v-btn
+                                    v-else-if="env.done && env.error"
+                                    color="error"
+                                    @click="showSweDialog(host, env.name)"
+                                    small>
+                                <v-icon dark>cancel</v-icon>
+                                {{env.name}}
+                            </v-btn>
+                            <v-btn
+                                    v-else-if="env.done && !env.error"
+                                    color="success"
+                                    @click="showSweDialog(host, env.name)"
+                                    small>
+                                <v-icon dark>check</v-icon>
+                                {{env.name}}
+                            </v-btn>
+                            <v-btn
+                                    v-else
+                                    class="mx-auto"
+                                    @click="showSweDialog(host, env.name)"
+                                    small>
+                                {{env.name}}
+                            </v-btn>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+            </v-card>
+
+            <hr>
+
+            <v-card>
+
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs12>
+                            <table class="checkTable">
+                                <thead>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                </thead>
+                                <tbody v-for="(i, idx) in addSteps" :key="idx">
+                                <tr v-if="i.show">
+                                    <th><v-btn icon><v-icon>{{i.icon}}</v-icon></v-btn></th>
+                                    <th>{{i.title}}</th>
+                                    <th>
+                                        <v-chip v-if="i.msg"> <looping-rhombuses-spinner v-if="i.progress" class="ml-2" :animation-duration="2500"
+                                                                                         :rhombus-size="15" color="#607d8b"/>{{i.msg}}</v-chip>
+                                    </th>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
             </v-card>
         </v-dialog>
 
@@ -509,7 +545,7 @@
             dialogBatchSweRunning: false,
             dialogAddEnvironment: false,
             dialogAddEnvironmentProgress: false,
-            batchArguments: {},
+            progressStruct: {},
             dialogTitle: null,
             checkCode: false,
             importClasses: false,
@@ -615,7 +651,6 @@
                         this.addSteps[step].msg = `${envName} exist on the foreman`;
                         this.addSteps[step].icon = "warning";
                         this.addSteps[step].progress = false;
-                        // return;
                     } else {
                         this.addSteps[step].msg = "Submitting ...";
                         response = (await environmentService.Submit({host: hostname, env: envName})).data;
@@ -626,7 +661,7 @@
                     this.addSteps[step].msg = e.message;
                     this.addSteps[step].icon = "warning";
                     this.addSteps[step].progress = false;
-                    return;
+                    return e;
                 }
                 this.addSteps[step].msg = msg;
                 this.addSteps[step].icon = "check";
@@ -684,7 +719,7 @@
                 this.addSteps[step].progress = false;
             },
 
-            async addNewEnvironment() {
+            async addNewEnvironment(showDialog) {
                 let envName = this.newEnvName;
                 let hostname = this.dialogHost;
 
@@ -692,7 +727,9 @@
                 if (!envName || envName === "") {
                     this.newEnvError = "Name required";
                 } else {
-                    this.dialogAddEnvironmentProgress = true;
+                    if (showDialog) {
+                        this.dialogAddEnvironmentProgress = true;
+                    }
                     this.dialogTitle = `Adding ${envName} to ${hostname}`;
 
                     for (let i in this.addSteps) {
@@ -700,34 +737,30 @@
                         if (this.addSteps.hasOwnProperty(i)) {
                             switch (i) {
                                 case "1":
-                                    try {
-                                        await this.checks(i, hostname, envName);
-                                    } catch (e) {
-                                        return
+                                    let err1 = await this.checks(i, hostname, envName);
+                                    if (err1) {
+                                        return err1;
                                     }
                                     break;
 
                                 case "2":
-                                    try {
-                                        await this.submitNewEnv(i, hostname, envName);
-                                    } catch (e) {
-                                        return
+                                    let err2 = await this.submitNewEnv(i, hostname, envName);
+                                    if (err2) {
+                                        return err2;
                                     }
                                     break;
 
                                 case "3":
-                                    try {
-                                        await this.svnCode(i, hostname, envName);
-                                    } catch (e) {
-                                        return
+                                    let err3 = await this.svnCode(i, hostname, envName);
+                                    if (err3) {
+                                        return err3;
                                     }
                                     break;
 
                                 case "4":
-                                    try {
-                                        await this.foremanImport(i, hostname, envName);
-                                    } catch (e) {
-                                        return
+                                    let err4 = await this.foremanImport(i, hostname, envName);
+                                    if (err4) {
+                                        return err4;
                                     }
                                     break;
 
@@ -762,13 +795,56 @@
             async batchStart() {
                 if (this.checkoutIfReq) {
                     this.dialogBatchSwe = false;
+
+                    this.progressStruct = {};
+
+                    for (let h in this.selectHosts) {
+                        this.progressStruct[this.selectHosts[h]] = [];
+                    }
+
                     for (let h in this.selectHosts) {
                         for (let e in this.toUpdate) {
-                            this.newEnvName = this.toUpdate[e];
-                            this.dialogHost = this.selectHosts[h];
-                            await this.addNewEnvironment()
+                            this.progressStruct[this.selectHosts[h]].push({
+                                name: this.toUpdate[e],
+                                started: false,
+                                done: false,
+                                error: false,
+                            });
                         }
                     }
+
+                    this.dialogBatchSweRunning = true;
+
+                    console.time("be");
+
+                    for (let h in this.progressStruct) {
+                        for (let e in this.progressStruct[h]) {
+                            this.addSteps = {
+                                1: {title: "Checking", icon: "pause", progress: false, msg: null, show: true},
+                                2: {title: "Adding to Foreman", icon: "pause", progress: false, msg: null, show: true},
+                                3: {title: "Getting code", icon: "pause", progress: false, msg: null, show: true},
+                                4: {title: "Importing Classes", icon: "pause", progress: false, msg: null, show: true},
+                            };
+
+                            try {
+                                this.newEnvName = this.progressStruct[h][e].name;
+                                this.dialogHost = h;
+                                this.progressStruct[h][e].started = true;
+                                let err = await this.addNewEnvironment(false);
+                                if (err) {
+                                    this.progressStruct[h][e].error = true;
+                                }
+                                this.progressStruct[h][e].started = false;
+                            } catch (e) {
+                                console.warn(e);
+                            } finally {
+                                this.progressStruct[h][e].done = true;
+                                this.$forceUpdate();
+                            }
+                        }
+                    }
+
+                    console.timeEnd("be");
 
                 } else {
                     let postParams = {};
@@ -784,7 +860,7 @@
                                 progress: false,
                             };
                             for (let k in this.environments[j]) {
-                                if (this.environments[j][k].name === this.toUpdate[i])  {
+                                if (this.environments[j][k].name === this.toUpdate[i]) {
                                     postParams[j].push(this.environments[j][k].name);
                                     envItem.name = this.environments[j][k].name;
                                 }
