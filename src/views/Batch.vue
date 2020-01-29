@@ -46,6 +46,7 @@
                         <v-card-title class="headline font-weight-regular blue-grey white--text">Host Group
                         </v-card-title>
                         <v-card-text>
+                            {{hostGroupSelected}}
                             <v-subheader class="pa-0">Select host groups for transfer</v-subheader>
                             <v-autocomplete
                                     clearable
@@ -115,19 +116,38 @@
                             Results
                         </v-card-title>
 
-                        <v-layout v-if="checkInProgress" row wrap>
-                            <v-layout row wrap v-if="wip" class="text-xs-center">
-                                <v-flex xs12>
-                                    <h2 v-if="WSProgress.message">{{WSProgress.item}}</h2>
-                                    <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
-                                </v-flex>
-                            </v-layout>
-                        </v-layout>
+<!--                        <v-layout v-if="checkInProgress" row wrap>-->
+<!--                            <v-layout row wrap v-if="wip" class="text-xs-center">-->
+<!--                                <v-flex xs12>-->
+<!--                                    <h2 v-if="WSProgress.message">{{WSProgress.item}}</h2>-->
+<!--                                    <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>-->
+<!--                                </v-flex>-->
+<!--                            </v-layout>-->
+<!--                        </v-layout>-->
+
+                        <v-card>
+                            <v-card-text>
+                                <v-layout row wrap>
+                                    <v-flex xs12
+                                            v-for="(h, k) in hgUniq"
+                                            :key="k"
+                                    >
+                                        <v-layout row wrap>
+                                            <v-flex xs2>{{h.name}}</v-flex>
+                                            <v-flex xs2>Updated: {{h.updated}}</v-flex>
+                                            <v-flex xs8 v-if="h.updating">Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" rhombus-size="15" color="#607d8b"/></v-flex>
+                                        </v-layout>
+                                    </v-flex>
+                                </v-layout>
+                            </v-card-text>
+                        </v-card>
+
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+
 
                         <v-card-text
                                 v-else
-                                v-for="(swes, host) in checkRes"
+                                v-for="(swes, host) in checkRes.batch"
                                 :key="host"
                         >
                             <v-card
@@ -188,6 +208,7 @@
                         </v-card-text>
                     </v-card>
 
+                    <v-checkbox v-if="!wip" v-model="updateSource" label="Update Source HostGroups"></v-checkbox>
                     <v-card-actions>
                         <v-btn v-if="!wip" flat color="warning" @click="e1 = 3">back</v-btn>
                         <v-btn v-if="!wip" flat color="success" :disabled="started || !checked" @click="startJob()">start</v-btn>
@@ -231,14 +252,16 @@
             hostGroupSelected: [],
             targetHostGroup: {},
             wip: false,
-            checkRes: [],
+            checkRes: {},
             started: false,
+            updateSource: true,
             wipUploading: true,
             checkingHost: null,
             checkingSWE: null,
             checkResArray: [],
             checked: false,
             checkInProgress: false,
+            hgUniq: [],
             WSProgress: {
                 message: null,
                 item: null,
@@ -277,9 +300,10 @@
             async startJob() {
                 this.started = true;
                 this.curr_heder = "working";
-                await hostGroupService.BatchSend(this.checkRes);
-                this.started = false;
-                this.curr_heder = "done";
+                this.checkRes["updateSource"] = this.updateSource;
+                hostGroupService.BatchSend(this.checkRes);
+                // this.started = false;
+                // this.curr_heder = "done";
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
@@ -295,23 +319,25 @@
                 this.started = true;
                 this.curr_heder = "checking";
                 this.checked = false;
-                this.checkRes = {};
+                this.checkRes["batch"] = {};
                 this.wip = true;
                 // build object for checking
                 for (let target in this.tHost) {
                     if (this.tHost.hasOwnProperty(target)) {
                         if (this.tHost[target] !== this.sHost) {
-                            this.checkRes[this.tHost[target]] = [];
+                            this.checkRes["batch"][this.tHost[target]] = [];
                         }
                     }
                 }
                 // HG ID loop
+                this.hgUniq = [];
                 for (let hg in this.hostGroupSelected) {
                     // try to get source HG
                     let hostGroup = {};
                     try {
                         if (this.hostGroupSelected.hasOwnProperty(hg)) {
                             hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
+                            this.hgUniq.push({"name":hostGroup.name, "updated":hostGroup.updated, "updating":false});
                         }
                     } catch (e) {
                         this.wip = false;
@@ -320,7 +346,7 @@
                     for (let target in this.tHost) {
                         if (this.tHost.hasOwnProperty(target)) {
                             if (this.tHost[target] !== this.sHost) {
-                                this.checkRes[this.tHost[target]].push({
+                                this.checkRes["batch"][this.tHost[target]].push({
                                     id: hostGroup.id,
                                     hgName: hostGroup.name,
                                     tHost: this.tHost[target],
@@ -353,29 +379,29 @@
                     }
                 }
                 this.wip = false;
-                for (let target in this.checkRes) {
-                    if (this.checkRes.hasOwnProperty(target)) {
-                        for (let i in this.checkRes[target]) {
-                            if (this.checkRes[target].hasOwnProperty(i)) {
+                for (let target in this.checkRes["batch"]) {
+                    if (this.checkRes["batch"].hasOwnProperty(target)) {
+                        for (let i in this.checkRes["batch"][target]) {
+                            if (this.checkRes["batch"][target].hasOwnProperty(i)) {
                                 let envData = {
                                     host: target,
-                                    env: this.checkRes[target][i].environment.name
+                                    env: this.checkRes["batch"][target][i].environment.name
                                 };
-                                this.checkRes[target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
-                                let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes[target][i].hgName)).data;
+                                this.checkRes["batch"][target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
+                                let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes["batch"][target][i].hgName)).data;
                                 if (foremanStatus.id !== -1) {
-                                    this.checkRes[target][i].foreman.targetId = foremanStatus.id;
+                                    this.checkRes["batch"][target][i].foreman.targetId = foremanStatus.id;
                                     let targetHGList = (await hostGroupService.List(target)).data;
                                     for (let j in targetHGList) {
-                                        if (targetHGList[j].name === this.checkRes[target][i].hgName) {
+                                        if (targetHGList[j].name === this.checkRes["batch"][target][i].hgName) {
                                             let ID = targetHGList[j].id;
                                             let targetHG = (await hostGroupService.Get(target, ID)).data;
-                                            let HGNameLink = this.checkRes[target][i].hgName.replace(/\./g, "-");
-                                            this.checkRes[target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
+                                            let HGNameLink = this.checkRes["batch"][target][i].hgName.replace(/\./g, "-");
+                                            this.checkRes["batch"][target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
                                         }
                                     }
                                 }
-                                this.checkRes[target][i].process.checkInProgress = false;
+                                this.checkRes["batch"][target][i].process.checkInProgress = false;
                                 this.started = false;
                                 this.$forceUpdate();
                             }
