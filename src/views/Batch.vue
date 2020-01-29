@@ -14,7 +14,7 @@
 
                 <v-divider></v-divider>
 
-                <v-stepper-step step="4">Checks</v-stepper-step>
+                <v-stepper-step step="4">Run</v-stepper-step>
             </v-stepper-header>
 
             <!--     =====================================================================================================       -->
@@ -56,6 +56,13 @@
                                     multiple
                                     item-text="name"
                                     item-value="id"
+                            ></v-autocomplete>
+                            <v-subheader class="pa-0">Select by environment</v-subheader>
+                            <v-autocomplete
+                                    clearable
+                                    v-model="envsSelected"
+                                    :items="environments"
+                                    multiple
                             ></v-autocomplete>
                         </v-card-text>
                     </v-card>
@@ -183,11 +190,11 @@
 
                     <v-card-actions>
                         <v-btn v-if="!wip" flat color="warning" @click="e1 = 3">back</v-btn>
-                        <v-btn v-if="!wip" flat color="success" :disabled="started || !checked" @click="startJob()">upload</v-btn>
+                        <v-btn v-if="!wip" flat color="success" :disabled="started || !checked" @click="startJob()">start</v-btn>
                     </v-card-actions>
 
-
                 </v-stepper-content>
+
             </v-stepper-items>
 
         </v-stepper>
@@ -215,10 +222,12 @@
 
         data: () => ({
             e1: 0,
-            sHost: null,
+            sHost: "spb01-puppet.lab.nordigy.ru",
             tHost: [],
             hosts: [],
             hostGroups: [],
+            environments: [],
+            envsSelected: [],
             hostGroupSelected: [],
             targetHostGroup: {},
             wip: false,
@@ -251,6 +260,18 @@
                     await Common.webSocketParser(val, this);
                 }
             },
+            envsSelected: {
+                async handler(val) {
+                    this.hostGroupSelected = [];
+                    for (let env in val) {
+                        for (let h in this.hostGroups) {
+                            if (this.hostGroups[h].name.match(`.*${val[env]}$`)) {
+                                this.hostGroupSelected.push(this.hostGroups[h].id)
+                            }
+                        }
+                    }
+                }
+            }
         },
         methods: {
             async startJob() {
@@ -262,6 +283,13 @@
             },
             async getHostGroups() {
                 this.hostGroups = (await hostGroupService.List(this.sHost)).data;
+                this.environments = [];
+                for (let h in this.hostGroups) {
+                    let tmp = this.hostGroups[h].name.split(".");
+                    if (tmp.length > 1 && this.environments.indexOf(tmp[1]) === -1) {
+                        this.environments.push(tmp[1])
+                    }
+                }
             },
             async checks() {
                 this.started = true;
