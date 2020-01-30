@@ -172,27 +172,10 @@ async function webSocketParser(message, t) {
                     }
                 }
                 break;
-            // case "batchUpdateHG":
-            //     if (message.data.hasOwnProperty("item")) {
-            //         if (message.data.hasOwnProperty("counter")) {
-            //             t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Updating: ${message.data.item}`;
-            //         } else {
-            //             t.WSProgress.item = message.data.item;
-            //             t.WSProgress.message = `Updating: ${message.data.item}`;
-            //         }
-            //     } else {
-            //         t.WSProgress.message = "Updating Host Groups";
-            //     }
-            //     break;
             case "batchHostGroupSaving":
                 t.WSProgress.message = null;
-
-                for (let i in t.checkRes.batch[message.data.tHost]) {
-                    if (message.data.hgName === t.checkRes.batch[message.data.tHost][i].hgName) {
-                        t.checkRes.batch[message.data.tHost][i].process.done = message.data.done;
-                        t.checkRes.batch[message.data.tHost][i].process.loadingInProgress = message.data.in_progress;
-                    }
-                }
+                t.checkRes.batch[message.data.tHost][message.data.hgName].process.done = message.data.done;
+                t.checkRes.batch[message.data.tHost][message.data.hgName].process.loadingInProgress = message.data.in_progress;
                 t.$forceUpdate();
                 break;
             // Index page a specific message

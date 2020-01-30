@@ -46,7 +46,6 @@
                         <v-card-title class="headline font-weight-regular blue-grey white--text">Host Group
                         </v-card-title>
                         <v-card-text>
-                            {{hostGroupSelected}}
                             <v-subheader class="pa-0">Select host groups for transfer</v-subheader>
                             <v-autocomplete
                                     clearable
@@ -325,7 +324,7 @@
                 for (let target in this.tHost) {
                     if (this.tHost.hasOwnProperty(target)) {
                         if (this.tHost[target] !== this.sHost) {
-                            this.checkRes["batch"][this.tHost[target]] = [];
+                            this.checkRes["batch"][this.tHost[target]] = {};
                         }
                     }
                 }
@@ -343,10 +342,12 @@
                         this.wip = false;
                         return;
                     }
+
+                    // build check struct
                     for (let target in this.tHost) {
                         if (this.tHost.hasOwnProperty(target)) {
                             if (this.tHost[target] !== this.sHost) {
-                                this.checkRes["batch"][this.tHost[target]].push({
+                                this.checkRes["batch"][this.tHost[target]][hostGroup.name] = {
                                     id: hostGroup.id,
                                     hgName: hostGroup.name,
                                     tHost: this.tHost[target],
@@ -373,12 +374,14 @@
                                         state: false,
                                         msg: "",
                                     },
-                                });
+                                };
                             }
                         }
                     }
                 }
                 this.wip = false;
+
+                // do check itself
                 for (let target in this.checkRes["batch"]) {
                     if (this.checkRes["batch"].hasOwnProperty(target)) {
                         for (let i in this.checkRes["batch"][target]) {
@@ -388,15 +391,15 @@
                                     env: this.checkRes["batch"][target][i].environment.name
                                 };
                                 this.checkRes["batch"][target][i].environment.targetId = (await environmentService.ForemanID(envData)).data;
-                                let foremanStatus = (await hostGroupService.FCheck(target, this.checkRes["batch"][target][i].hgName)).data;
+                                let foremanStatus = (await hostGroupService.FCheck(target, i)).data;
                                 if (foremanStatus.id !== -1) {
                                     this.checkRes["batch"][target][i].foreman.targetId = foremanStatus.id;
                                     let targetHGList = (await hostGroupService.List(target)).data;
                                     for (let j in targetHGList) {
-                                        if (targetHGList[j].name === this.checkRes["batch"][target][i].hgName) {
+                                        if (targetHGList[j].name === i) {
                                             let ID = targetHGList[j].id;
                                             let targetHG = (await hostGroupService.Get(target, ID)).data;
-                                            let HGNameLink = this.checkRes["batch"][target][i].hgName.replace(/\./g, "-");
+                                            let HGNameLink = i.replace(/\./g, "-");
                                             this.checkRes["batch"][target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
                                         }
                                     }
