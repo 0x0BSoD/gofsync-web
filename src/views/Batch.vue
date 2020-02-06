@@ -299,7 +299,7 @@
             async startJob() {
                 this.started = true;
                 this.curr_heder = "working";
-                this.checkRes["updateSource"] = this.updateSource;
+                this.checkRes["update_source"] = this.updateSource;
                 hostGroupService.BatchSend(this.checkRes);
                 // this.started = false;
                 // this.curr_heder = "done";
