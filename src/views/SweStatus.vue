@@ -635,7 +635,7 @@
                     console.warn(e);
                     this.addSteps[step].icon = "warning";
                     this.addSteps[step].progress = false;
-                    return;
+                    return e;
                 }
                 this.addSteps[step].icon = "check";
                 this.addSteps[step].progress = false;
@@ -688,7 +688,7 @@
                     this.addSteps[step].icon = "warning";
                     this.addSteps[step].msg = e.message;
                     this.addSteps[step].progress = false;
-                    return;
+                    return e;
                 }
                 this.addSteps[step].icon = "check";
                 this.addSteps[step].progress = false;
@@ -713,7 +713,7 @@
                     console.log(e);
                     this.addSteps[step].icon = "warning";
                     this.addSteps[step].progress = false;
-                    return;
+                    return e;
                 }
                 this.addSteps[step].icon = "check";
                 this.addSteps[step].progress = false;
