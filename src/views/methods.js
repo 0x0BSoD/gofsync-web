@@ -8,6 +8,7 @@ export const Common = {
     pruneEmpty,
     inHosts,
     webSocketParser,
+    dynamicSort,
 };
 
 async function auth(t) {
@@ -80,7 +81,13 @@ async function webSocketParser(message, t) {
             // Getting/Updating Environments
             case "getEnv":
                 if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
+                    if (message.data.hasOwnProperty("status")) {
+                        if (message.data.status === "saving") {
+                            t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
+                        } else if (message.data.status.startsWith("error::")) {
+                            t.WSProgress.errors.push({"error":message.data.status, "env":message.data.item});
+                        }
+                    }
                 } else {
                     t.WSProgress.message = "Getting Environment data";
                 }
@@ -149,36 +156,26 @@ async function webSocketParser(message, t) {
             // Updating Host Group
             case "batchUpdateSource":
                 t.WSProgress.message = "Updating Source Host Group";
+
                 if (message.data.state === "running") {
-                    t.wip = true;
-                    t.checkInProgress = true;
+                    for (let i in t.hgUniq) {
+                        if (message.data.item === t.hgUniq[i].name) {
+                            t.hgUniq[i].updating = true;
+                        }
+                    }
                 }
                 if (message.data.state === "done") {
-                    t.wip = false;
-                    t.checkInProgress = false;
-                }
-                break;
-            case "batchUpdateHG":
-                if (message.data.hasOwnProperty("item")) {
-                    if (message.data.hasOwnProperty("counter")) {
-                        t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Updating: ${message.data.item}`;
-                    } else {
-                        t.WSProgress.item = message.data.item;
-                        t.WSProgress.message = `Updating: ${message.data.item}`;
+                    for (let i in t.hgUniq) {
+                        if (message.data.item === t.hgUniq[i].name) {
+                            t.hgUniq[i].updating = false;
+                        }
                     }
-                } else {
-                    t.WSProgress.message = "Updating Host Groups";
                 }
                 break;
             case "batchHostGroupSaving":
                 t.WSProgress.message = null;
-
-                for (let i in t.checkRes[message.data.tHost]) {
-                    if (message.data.hgName === t.checkRes[message.data.tHost][i].hgName) {
-                        t.checkRes[message.data.tHost][i].process.done = message.data.done;
-                        t.checkRes[message.data.tHost][i].process.loadingInProgress = message.data.in_progress;
-                    }
-                }
+                t.checkRes.batch[message.data.tHost][message.data.hgName].process.done = message.data.done;
+                t.checkRes.batch[message.data.tHost][message.data.hgName].process.loadingInProgress = message.data.in_progress;
                 t.$forceUpdate();
                 break;
             // Index page a specific message
@@ -200,7 +197,7 @@ async function webSocketParser(message, t) {
                 let currHost = message.data.host;
                 let currSwe = message.data.item;
                 let currState = message.data.state;
-                for ( let i in t.environments[currHost]) {
+                for (let i in t.environments[currHost]) {
                     if (t.environments[currHost][i].name === currSwe) {
                         if (currState === "checking") {
                             t.environments[currHost][i].loading = true;
@@ -214,10 +211,8 @@ async function webSocketParser(message, t) {
                                 "environment": currSwe,
                                 "dry_run": false,
                             };
-                            let response = (await environmentService.SVNForemanUpdate(postParams)).data;
-                            let jsData = JSON.parse(response);
+                            (await environmentService.SVNForemanUpdate(postParams)).data;
                             t.environments[currHost][i].loading = false;
-                            console.log(jsData);
                         }
                     }
                 }
@@ -229,12 +224,23 @@ async function webSocketParser(message, t) {
                     }
                     t.WSProgress.message = null;
                 }
-
-                console.info(message)
         }
     }
 }
 
-function sortEnv(envs) {
+function dynamicSort(property) {
+    let sortOrder = 1;
 
+    if(property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+
+    return function (a,b) {
+        if(sortOrder == -1){
+            return b[property].localeCompare(a[property]);
+        }else{
+            return a[property].localeCompare(b[property]);
+        }
+    }
 }

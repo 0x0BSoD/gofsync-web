@@ -309,7 +309,7 @@
                 </v-card-text>
 
                 <v-card-actions>
-                    <v-btn @click="addNewEnvironment()">Add</v-btn>
+                    <v-btn @click="addNewEnvironment(true)">Add</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -377,12 +377,30 @@
                                     box
                             >
                             </v-autocomplete>
+
+                            <v-autocomplete
+                                    clearable
+                                    multiple
+                                    v-if="checkoutIfReq"
+                                    v-model="selectHosts"
+                                    :items="hosts"
+                                    label="Select hosts"
+                                    persistent-hint
+                                    box
+                            >
+                            </v-autocomplete>
+
+                            <div v-if="checkoutIfReq">
+                                <v-btn small @click="fillHosts('all')">ALL</v-btn>
+                                <v-btn small @click="fillHosts('prod')">PRO</v-btn>
+                                <v-btn small @click="fillHosts('stage')">STAGE</v-btn>
+                            </div>
+
                         </v-flex>
                         <v-flex xs12>
                             <v-switch
-                                    :disabled="true"
                                     v-model="checkoutIfReq"
-                                    label="Auto checkout code"
+                                    label="Checkout code"
                             ></v-switch>
                         </v-flex>
                     </v-layout>
@@ -392,6 +410,88 @@
                     <v-btn @click="batchStart()">Update</v-btn>
                     <v-spacer></v-spacer>
                 </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-dialog
+                v-model="dialogBatchSweRunning"
+                max-width="800"
+        >
+            <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn @click.native="dialogBatchSweRunning = !dialogBatchSweRunning" icon><v-icon>close</v-icon></v-btn>
+            </v-toolbar>
+
+            <v-card>
+                <v-card-text>
+                    <v-layout row wrap v-for="(envs, host) in progressStruct" :key="host">
+                        <v-flex xs12>
+                            <v-chip label>{{host}}</v-chip>
+                        </v-flex>
+                        <v-flex xs2 v-for="(env, idx) in envs" :key="idx">
+                            <v-btn
+                                    v-if="env.started"
+                                    :loading="true"
+                                    :disabled="true"
+                                    small>
+                                {{env.name}}
+                            </v-btn>
+                            <v-btn
+                                    v-else-if="env.done && env.error"
+                                    color="error"
+                                    @click="showSweDialog(host, env.name)"
+                                    small>
+                                <v-icon dark>cancel</v-icon>
+                                {{env.name}}
+                            </v-btn>
+                            <v-btn
+                                    v-else-if="env.done && !env.error"
+                                    color="success"
+                                    @click="showSweDialog(host, env.name)"
+                                    small>
+                                <v-icon dark>check</v-icon>
+                                {{env.name}}
+                            </v-btn>
+                            <v-btn
+                                    v-else
+                                    class="mx-auto"
+                                    @click="showSweDialog(host, env.name)"
+                                    small>
+                                {{env.name}}
+                            </v-btn>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+            </v-card>
+
+            <hr>
+
+            <v-card>
+
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs12>
+                            <table class="checkTable">
+                                <thead>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                </thead>
+                                <tbody v-for="(i, idx) in addSteps" :key="idx">
+                                <tr v-if="i.show">
+                                    <th><v-btn icon><v-icon>{{i.icon}}</v-icon></v-btn></th>
+                                    <th>{{i.title}}</th>
+                                    <th>
+                                        <v-chip v-if="i.msg"> <looping-rhombuses-spinner v-if="i.progress" class="ml-2" :animation-duration="2500"
+                                                                                         :rhombus-size="15" color="#607d8b"/>{{i.msg}}</v-chip>
+                                    </th>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
             </v-card>
         </v-dialog>
 
@@ -415,6 +515,8 @@
         },
 
         data: () => ({
+            hosts: [],
+            selectHosts: [],
             environments: [],
             full_environments: [],
             svnInfo: {
@@ -440,8 +542,10 @@
             dialogChanges: false,
             dialogEditRepo: false,
             dialogBatchSwe: false,
+            dialogBatchSweRunning: false,
             dialogAddEnvironment: false,
             dialogAddEnvironmentProgress: false,
+            progressStruct: {},
             dialogTitle: null,
             checkCode: false,
             importClasses: false,
@@ -467,30 +571,15 @@
             // ======
             this.environments = (await environmentService.ListAll()).data;
             this.full_environments = (await environmentService.ListAll()).data;
+            for (let i in this.environments) {
+                this.hosts.push(i);
+            }
         },
 
         watch: {
             nowActions: {
                 async handler (val) {
                     await Common.webSocketParser(val, this);
-
-                    // if (this.environments[val.host]) {
-                    //     for (let i in this.environments[val.host]) {
-                    //         if (val.actions === this.environments[val.host][i].name) {
-                    //             if (val.state === "checking ...") {
-                    //                 this.environments[val.host][i].loading = true;
-                    //             } else if (val.state === "done ...") {
-                    //                 this.environments[val.host][i].loading = false;
-                    //                 this.svnInfo = (await environmentService.SVNInfo(val.host, val.actions)).data;
-                    //                 this.environments = (await environmentService.ListAll()).data;
-                    //                 this.full_environments = (await environmentService.ListAll()).data;
-                    //                 this.$forceUpdate();
-                    //             }
-                    //         } else {
-                    //             this.environments[val.host][i].ws_message = false;
-                    //         }
-                    //     }
-                    // }
                 }
             },
 
@@ -513,126 +602,168 @@
         },
         methods: {
 
-            async addNewEnvironment() {
-                if (!this.newEnvName || this.newEnvName === "") {
+            fillHosts(env) {
+                this.selectHosts = [];
+                if (env === "all") {
+                    this.selectHosts = this.hosts;
+                } else {
+                    for (let i in this.environments) {
+                        for (let k in this.environments[i]) {
+                            if (this.environments[i][k].env === env) {
+                                this.selectHosts.push(i);
+                                break
+                            }
+                        }
+                    }
+                }
+            },
+
+            async checks(step, hostname, envName) {
+                this.addSteps[step].icon = "play_arrow";
+                this.addSteps[step].progress = true;
+                try {
+                    let msg = "";
+                    let response = (await environmentService.SVNInfo(hostname, envName)).data;
+                    if (response.directory.entry.path === "not exist") {
+                        msg += `Directory ${envName} not exist, `
+                    } else {
+                        msg += `Directory ${envName} already exist, `
+                    }
+                    this.addSteps[step].msg = msg;
+                    console.log(response);
+                } catch (e) {
+                    console.warn(e);
+                    this.addSteps[step].icon = "warning";
+                    this.addSteps[step].progress = false;
+                    return;
+                }
+                this.addSteps[step].icon = "check";
+                this.addSteps[step].progress = false;
+            },
+
+            async submitNewEnv(step, hostname, envName) {
+                let msg = "";
+                this.addSteps[step].icon = "play_arrow";
+                this.addSteps[step].progress = true;
+                try {
+                    let response = (await environmentService.ForemanID({host: hostname, env: envName})).data;
+                    if (response !== -1) {
+                        this.addSteps[step].msg = `${envName} exist on the foreman`;
+                        this.addSteps[step].icon = "warning";
+                        this.addSteps[step].progress = false;
+                    } else {
+                        this.addSteps[step].msg = "Submitting ...";
+                        response = (await environmentService.Submit({host: hostname, env: envName})).data;
+                        this.addSteps[step].msg = "Done";
+                    }
+                } catch (e) {
+                    console.log(e);
+                    this.addSteps[step].msg = e.message;
+                    this.addSteps[step].icon = "warning";
+                    this.addSteps[step].progress = false;
+                    return e;
+                }
+                this.addSteps[step].msg = msg;
+                this.addSteps[step].icon = "check";
+                this.addSteps[step].progress = false;
+            },
+
+            async svnCode(step, hostname, envName) {
+                this.addSteps[step].icon = "play_arrow";
+                this.addSteps[step].progress = true;
+                try {
+                    let postParams = {
+                        "host": hostname,
+                        "environment": envName,
+                    };
+                    this.addSteps[step].msg = "Getting code ...";
+                    let response = (await environmentService.SVNRepoCheckout(postParams)).data;
+                    if (response.indexOf("Checked out revision") !== -1) {
+                        this.addSteps[step].msg = response.split(" ")[3].substring(0, response[3].length-1);
+                    }
+                    this.addSteps[step].msg = "Done";
+
+                } catch (e) {
+                    console.log(e);
+                    this.addSteps[step].icon = "warning";
+                    this.addSteps[step].msg = e.message;
+                    this.addSteps[step].progress = false;
+                    return;
+                }
+                this.addSteps[step].icon = "check";
+                this.addSteps[step].progress = false;
+            },
+
+            async foremanImport(step, hostname, envName) {
+                this.addSteps[step].icon = "play_arrow";
+                this.addSteps[step].progress = true;
+                try {
+                    let postParams = {
+                        "host": hostname,
+                        "environment": envName,
+                        "dry_run": false,
+                    };
+                    this.addSteps[step].msg = "Importing classes ...";
+                    let response = (await environmentService.SVNForemanUpdate(postParams)).data;
+                    let jsData = JSON.parse(response);
+                    if (jsData.hasOwnProperty("message")) {
+                        this.addSteps[step].msg = "Classes imported";
+                    }
+                } catch (e) {
+                    console.log(e);
+                    this.addSteps[step].icon = "warning";
+                    this.addSteps[step].progress = false;
+                    return;
+                }
+                this.addSteps[step].icon = "check";
+                this.addSteps[step].progress = false;
+            },
+
+            async addNewEnvironment(showDialog) {
+                let envName = this.newEnvName;
+                let hostname = this.dialogHost;
+
+                this.checkoutIfReq = false;
+                if (!envName || envName === "") {
                     this.newEnvError = "Name required";
                 } else {
-                    this.dialogAddEnvironmentProgress = true;
-                    this.dialogTitle = `Adding ${this.newEnvName} to ${this.dialogHost}`;
+                    if (showDialog) {
+                        this.dialogAddEnvironmentProgress = true;
+                    }
+                    this.dialogTitle = `Adding ${envName} to ${hostname}`;
 
                     for (let i in this.addSteps) {
                         this.addSteps[i].msg = null;
                         if (this.addSteps.hasOwnProperty(i)) {
                             switch (i) {
                                 case "1":
-                                    this.addSteps[i].icon = "play_arrow";
-                                    this.addSteps[i].progress = true;
-                                    try {
-                                        let msg = "";
-                                        let response = (await environmentService.SVNInfo(this.dialogHost, this.newEnvName)).data;
-                                        if (response.directory.entry.path === "not exist") {
-                                            msg += `Directory ${this.newEnvName} not exist, `
-                                        } else {
-                                            msg += `Directory ${this.newEnvName} already exist, `
-                                        }
-                                        if (response.repository.entry.path === "not exist") {
-                                            msg += `code ${this.newEnvName} not exist`;
-                                            this.addSteps[i].msg = msg;
-                                            this.addSteps[i].icon = "warning";
-                                            this.addSteps[i].progress = false;
-                                            // return;
-                                        } else {
-                                            msg += `code ${this.newEnvName} exist`;
-                                        }
-                                        this.addSteps[i].msg = msg;
-                                        console.log(response);
-                                    } catch (e) {
-                                        console.log(e);
-                                        this.addSteps[i].icon = "warning";
-                                        this.addSteps[i].progress = false;
-                                        return;
+                                    let err1 = await this.checks(i, hostname, envName);
+                                    if (err1) {
+                                        return err1;
                                     }
-
-                                    this.addSteps[i].icon = "check";
-                                    this.addSteps[i].progress = false;
                                     break;
+
                                 case "2":
-                                    let msg = "";
-                                    this.addSteps[i].icon = "play_arrow";
-                                    this.addSteps[i].progress = true;
-                                    try {
-                                        let response = (await environmentService.ForemanID({host: this.dialogHost, env: this.newEnvName})).data;
-                                        if (response !== -1) {
-                                            this.addSteps[i].msg = `${this.newEnvName} exist on the foreman`;
-                                            this.addSteps[i].icon = "warning";
-                                            this.addSteps[i].progress = false;
-                                            // return;
-                                        } else {
-                                            this.addSteps[i].msg = "Submitting ...";
-                                            response = (await environmentService.Submit({host: this.dialogHost, env: this.newEnvName})).data;
-                                            this.addSteps[i].msg = "Updating db ...";
-                                            await environmentService.Update(this.dialogHost);
-                                            this.addSteps[i].msg = "Done";
-                                        }
-                                    } catch (e) {
-                                        console.log(e);
-                                        this.addSteps[i].msg = e.message;
-                                        this.addSteps[i].icon = "warning";
-                                        this.addSteps[i].progress = false;
-                                        return;
+                                    let err2 = await this.submitNewEnv(i, hostname, envName);
+                                    if (err2) {
+                                        return err2;
                                     }
-                                    this.addSteps[i].msg = msg;
-                                    this.addSteps[i].icon = "check";
-                                    this.addSteps[i].progress = false;
                                     break;
-                                case "3":
-                                    this.addSteps[i].icon = "play_arrow";
-                                    this.addSteps[i].progress = true;
-                                    try {
-                                        let postParams = {
-                                            "host": this.dialogHost,
-                                            "environment": this.newEnvName,
-                                        };
-                                        this.addSteps[i].msg = "Getting code ...";
-                                        let response = (await environmentService.SVNRepoCheckout(postParams)).data;
-                                        if (response.indexOf("Checked out revision") !== -1) {
-                                            this.addSteps[i].msg = response.split(" ")[3].substring(0, response[3].length-1);
-                                        }
-                                        this.addSteps[i].msg = "Done";
 
-                                    } catch (e) {
-                                        console.log(e);
-                                        this.addSteps[i].icon = "warning";
-                                        this.addSteps[i].progress = false;
-                                        return;
+                                case "3":
+                                    let err3 = await this.svnCode(i, hostname, envName);
+                                    if (err3) {
+                                        return err3;
                                     }
-                                    this.addSteps[i].icon = "check";
-                                    this.addSteps[i].progress = false;
                                     break;
+
                                 case "4":
-                                    this.addSteps[i].icon = "play_arrow";
-                                    this.addSteps[i].progress = true;
-                                    try {
-                                        let postParams = {
-                                            "host": this.dialogHost,
-                                            "environment": this.newEnvName,
-                                            "dry_run": false,
-                                        };
-                                        this.addSteps[i].msg = "Importing classes ...";
-                                        let response = (await environmentService.SVNForemanUpdate(postParams)).data;
-                                        let jsData = JSON.parse(response);
-                                        if (jsData.hasOwnProperty("message")) {
-                                            this.addSteps[i].msg = "Classes imported";
-                                        }
-                                    } catch (e) {
-                                        console.log(e);
-                                        this.addSteps[i].icon = "warning";
-                                        this.addSteps[i].progress = false;
-                                        return;
+                                    let err4 = await this.foremanImport(i, hostname, envName);
+                                    if (err4) {
+                                        return err4;
                                     }
-                                    this.addSteps[i].icon = "check";
-                                    this.addSteps[i].progress = false;
                                     break;
+
                                 default:
                                     this.addSteps[i].icon = "warning";
                                     this.addSteps[i].progress = false;
@@ -662,28 +793,84 @@
             },
 
             async batchStart() {
+                if (this.checkoutIfReq) {
+                    this.dialogBatchSwe = false;
 
-                let post_data = {};
+                    this.progressStruct = {};
 
-                for (let j in this.environments) {
-                    post_data[j] = [];
-                }
+                    for (let h in this.selectHosts) {
+                        this.progressStruct[this.selectHosts[h]] = [];
+                    }
 
-                for (let i in this.toUpdate) {
-                    for (let j in this.environments) {
-                        for (let k in this.environments[j]) {
-                            if (this.environments[j][k].name === this.toUpdate[i]) {
-                                post_data[j].push(this.environments[j][k].name);
+                    for (let h in this.selectHosts) {
+                        for (let e in this.toUpdate) {
+                            this.progressStruct[this.selectHosts[h]].push({
+                                name: this.toUpdate[e],
+                                started: false,
+                                done: false,
+                                error: false,
+                            });
+                        }
+                    }
+
+                    this.dialogBatchSweRunning = true;
+
+                    console.time("be");
+
+                    for (let h in this.progressStruct) {
+                        for (let e in this.progressStruct[h]) {
+                            this.addSteps = {
+                                1: {title: "Checking", icon: "pause", progress: false, msg: null, show: true},
+                                2: {title: "Adding to Foreman", icon: "pause", progress: false, msg: null, show: true},
+                                3: {title: "Getting code", icon: "pause", progress: false, msg: null, show: true},
+                                4: {title: "Importing Classes", icon: "pause", progress: false, msg: null, show: true},
+                            };
+
+                            try {
+                                this.newEnvName = this.progressStruct[h][e].name;
+                                this.dialogHost = h;
+                                this.progressStruct[h][e].started = true;
+                                let err = await this.addNewEnvironment(false);
+                                if (err) {
+                                    this.progressStruct[h][e].error = true;
+                                }
+                                this.progressStruct[h][e].started = false;
+                            } catch (e) {
+                                console.warn(e);
+                            } finally {
+                                this.progressStruct[h][e].done = true;
+                                this.$forceUpdate();
                             }
                         }
                     }
+
+                    console.timeEnd("be");
+
+                } else {
+                    let postParams = {};
+                    for (let j in this.environments) {
+                        postParams[j] = [];
+                    }
+                    for (let i in this.toUpdate) {
+                        for (let j in this.environments) {
+                            let envItem = {
+                                icon: "pause",
+                                name: "",
+                                msg: "",
+                                progress: false,
+                            };
+                            for (let k in this.environments[j]) {
+                                if (this.environments[j][k].name === this.toUpdate[i]) {
+                                    postParams[j].push(this.environments[j][k].name);
+                                    envItem.name = this.environments[j][k].name;
+                                }
+                            }
+                        }
+                    }
+                    this.dialogBatchSwe = false;
+                    environmentService.SVNBatch(postParams);
+                    this.$forceUpdate();
                 }
-
-
-                environmentService.SVNBatch(post_data);
-
-                this.$forceUpdate();
-                this.dialogBatchSwe = false;
             },
 
             async showSweDialog (host, e) {
@@ -794,7 +981,7 @@
 
 <style>
     .checkTable {
-        margin: 0 auto;
+        /*margin: 0 auto;*/
         min-width: 400px;
     }
 </style>

@@ -34,7 +34,7 @@
                                 dismissible
                                 type="error"
                         >
-                            User or password invalid.
+                            {{errorMsg}}
                         </v-alert>
                         <v-form autocomplete="yes">
                             <v-text-field
@@ -96,6 +96,7 @@
             password: null,
             remember_me: null,
             error: false,
+            errorMsg: "User or password invalid.",
             loading: false,
             rules: {
                 required: value => !!value || 'Required.',
@@ -124,7 +125,9 @@
                     this.$router.push({name: "index"});
                 } catch (err) {
                     this.error = true;
-                    console.error(err);
+                    if (err.message === "Network Error") {
+                        this.errorMsg = "Server error";
+                    }
                 } finally {
                     this.loading = false;
                 }

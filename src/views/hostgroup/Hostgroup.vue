@@ -343,7 +343,7 @@
 
 <script>
     import {environmentService, hostGroupService, hostService, locationsService} from "../../_services"
-    import Locations from "../../components/hostgroups/locations"
+    import Locations from "../../components/hostgroups/hostCard"
     import HGInfo from "../../components/hostgroups/hgInfo"
     import HGDiff from "../../components/hostgroups/hgdiff"
     import {Common} from "../methods";
@@ -888,8 +888,8 @@
                 // Commit new data
                 try {
                     this.wip = true;
-                    this.wipMessage = "Updating source ...";
-                    await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
+                    // this.wipMessage = "Updating source ...";
+                    // await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
                     this.wipMessage = "Uploading to target host ...";
                     let response = (await hostGroupService.Send(data));
                     if (response.status === 200) {
