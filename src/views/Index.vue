@@ -26,7 +26,7 @@
                             xl4
                     >
                         <v-item>
-                            <HostCard  :hg="n"/>
+                            <HostCard  :hg="n" @menuEvent="menuEvent"/>
                         </v-item>
                     </v-flex>
 
@@ -41,7 +41,7 @@
                             xl4
                     >
                         <v-item>
-                            <HostCard  :hg="n"/>
+                            <HostCard  :hg="n" @menuEvent="menuEvent"/>
                         </v-item>
                     </v-flex>
 
@@ -271,6 +271,31 @@
             }
         },
         methods: {
+            async menuEvent (val) {
+                let[method, arg] = val.split("::");
+                switch (method) {
+                    case "hostgroup":
+                        await this.showSweDialog(arg);
+                        break;
+                    case "updateAll":
+                        break;
+                    case "updateLoc":
+                        await this.updateLoc(arg);
+                        break;
+                    case "updateEnv":
+                        await this.updateEnv(arg);
+                        break;
+                    case "updatePC":
+                        await this.updatePC(arg);
+                        break;
+                    case "updateHG":
+                        await this.updateHG(arg);
+                        break;
+                    default:
+                        console.log(method);
+                        console.log(arg);
+                }
+            },
             async showSweDialog(host) {
                 this.dialogTitle = host;
                 this.hosts = [];
@@ -316,6 +341,7 @@
                     message: null,
                             errors: [],
                 };
+
                 try {
                     await environmentService.Update(host);
                     this.$emit('envUpdated');
@@ -331,11 +357,15 @@
                 }
             },
             async updateLoc(host) {
-                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating Locations";
+                this.WSProgress = {
+                    message: null,
+                    errors: [],
+                };
+
                 try {
                     await locationsService.Update(host);
                     this.$emit('locUpdated');
@@ -345,15 +375,18 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    //this.$disconnect();
                 }
             },
             async updateHG(host) {
-                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating HostGroups";
+                this.WSProgress = {
+                    message: null,
+                    errors: [],
+                };
+
                 try {
                     await hostGroupService.Update(host);
                     this.$emit('hgUpdated');
@@ -363,15 +396,18 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    //this.$disconnect();
                 }
             },
             async updatePC(host) {
-                //this.$connect();
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating Puppet Classes";
+                this.WSProgress = {
+                    message: null,
+                    errors: [],
+                };
+
                 try {
                     await pcService.Update(host);
                     this.$emit('pcUpdated');
@@ -381,7 +417,6 @@
                     this.wip = false;
                     this.wipMessage = false;
                     this.dialog = false;
-                    //this.$disconnect();
                 }
             }
         }
