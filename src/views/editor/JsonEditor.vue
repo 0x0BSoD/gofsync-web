@@ -1,10 +1,28 @@
 <template>
     <v-container fluid>
-        <v-layout row wrap v-if="wip" class="text-xs-center">
-            <v-flex xs12>
+
+        <!--    ============================================ Progress ============================================    -->
+        <v-layout row wrap v-if="wipMessage">
+            <v-flex v-if="wip" xs9>
                 <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
             </v-flex>
+            <v-flex xs3 class="pt-2">
+                {{wipMessage}}
+            </v-flex>
+            <v-flex xs12>
+                <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+            </v-flex>
         </v-layout>
+        <v-layout row wrap v-else class="text-xs-center">
+            <v-flex v-if="wip" xs12>
+                <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+            </v-flex>
+            <v-flex xs12>
+                <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+            </v-flex>
+        </v-layout>
+        <!--    ============================================ /Progress ============================================    -->
+
         <v-label>NOTE: all ID's will be ignored</v-label>
         <!-- ============================================= Top Panel ============================================= -->
         <v-layout row wrap>
@@ -383,9 +401,6 @@
             nowActions() {
                 return this.$store.state.socketModule.socket.message;
             },
-            // codemirror() {
-            //     return this.$refs.myCm.codemirror
-            // },
             filter() {
                 return this.caseSensitive
                     ? (item, search, textKey) => item[textKey].indexOf(search) > -1
@@ -458,6 +473,7 @@
             parameterEditType: null,
             parameterEditValue: null,
             parameterEditDefaultValue: null,
+            wipMessage: false,
             WSProgress: {
                 message: null,
             },
@@ -496,15 +512,6 @@
                     await Common.webSocketParser(val, this);
                 }
             },
-            // tab: {
-            //     handler(val) {
-            //         if (val === 0) {
-            //             this.JSONObject = JSON.parse(this.JSONCode);
-            //         } else {
-            //             this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
-            //         }
-            //     }
-            // },
             host: {
                 async handler(val) {
                     this.loadingPC = true;
@@ -513,13 +520,9 @@
                     this.hostGroups = (await hostGroupService.List(val)).data;
                     console.timeEnd("get HG");
 
-                    console.time("get PC");
-                    this.allPuppetClassesFull = (await pcService.All(val)).data;
-                    console.timeEnd("get PC");
-
-                    console.time("copy PC");
-                    this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
-                    console.timeEnd("copy PC");
+                    // console.time("copy PC");
+                    // this.allPuppetClasses = _.clone(this.allPuppetClassesFull);
+                    // console.timeEnd("copy PC");
 
                     this.search = null;
                     this.loadingPC = false;
@@ -592,6 +595,9 @@
                     this.allPuppetClasses = {};
                     this.loadingPC = true;
                     try {
+                        console.time("get PC");
+                        this.allPuppetClassesFull = (await pcService.All(this.host)).data;
+                        console.timeEnd("get PC");
                         this.search = null;
                         this.hostGroup = (await hostGroupService.Get(this.host, val)).data;
                         this.SourceName = this.hostGroup.name;
@@ -599,7 +605,6 @@
                         let pcData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                         this.oldNameHG = pcData.name;
                         this.puppetClasses = pcData.PuppetClasses;
-                        // this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
                         EditorMethods.resetPC(this);
                         EditorMethods.checkPC(this);
                         EditorMethods.sortPC(this);
@@ -644,23 +649,25 @@
                 this.hgError = false;
                 this.hgDone = false;
                 this.creatingHG = true;
-                // this.JSONObject = JSON.parse(this.JSONCode);
                 this.JSONObject["source_name"] = this.SourceName;
-                // this.JSONObject["rename"] = rename;
 
                 try {
+                    this.wipMessage = "Uploading to foreman";
                     await hostGroupService.Create(this.JSONObject, this.host);
+                    this.wipMessage = "Updating goFsync DB";
                     let response = (await hostGroupService.FUpdate(this.host, this.hgName)).data;
+                    this.wipMessage = "Getting HG list";
                     this.hostGroups = (await hostGroupService.List(this.host)).data;
+                    this.wipMessage = "Committing HG to Git";
                     await hostGroupService.GitCommit(this.host, response.id);
-                    // this.JSONCode = JSON.stringify(response, " ", "  ");
                     this.hgDone = true;
-                    this.hgDoneMsg = `${this.JSONObject.name} Created`
+                    this.hgDoneMsg = `${this.JSONObject.name} Uploaded`
                 } catch (e) {
                     this.hgError = true;
                     console.info(e.response);
                     this.hgErrorMsg = e.response.data;
                 } finally {
+                    this.wipMessage = false;
                     this.creatingHG = false;
                     this.wip = false;
                 }

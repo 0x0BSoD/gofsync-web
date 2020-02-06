@@ -103,8 +103,6 @@
         </v-layout>
         <!--    ============================================ /Top menu - selects =========================================    -->
 
-        <!--        <Locations v-if="!sHost" :locations="locations" @envUpdated="envUpdated()" @locUpdated="locUpdated()" />-->
-
         <!--    ======================================== Middle menu - HG control========================================    -->
         <v-layout row wrap v-if="hostGroup.id">
             <v-flex xs12 pb-2>
