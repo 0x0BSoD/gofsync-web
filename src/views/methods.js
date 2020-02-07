@@ -59,174 +59,231 @@ function inHosts(hosts, s) {
     }
     return false
 }
-
 async function webSocketParser(message, t) {
-    if (message.hasOwnProperty("operation")) {
-        switch (message.operation) {
-            case "getHG":
-                t.WSProgress.message = "Getting Host Groups data";
+    if (message.hasOwnProperty("resource")) {
+        t.WSProgress = {
+            message: null,
+            counter: {
+                current: null,
+                total: null,
+            },
+        };
+        switch (message.resource) {
+            case 0:
+                console.info("Operation: environment", message.operation);
+                console.info("Data:", message.additional_data);
                 break;
-            // Updating Host Groups in a database
-            case "submitHG":
-                if (message.data.hasOwnProperty("item")) {
-                    if (message.data.hasOwnProperty("counter")) {
-                        t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Updating: ${message.data.item}`;
-                    } else {
-                        t.WSProgress.message = `Updating: ${message.data.item}`;
-                    }
-                } else {
-                    t.WSProgress.message = "Updating host groups";
-                }
-                break;
-            // Getting/Updating Environments
-            case "getEnv":
-                if (message.data.hasOwnProperty("item")) {
-                    if (message.data.hasOwnProperty("status")) {
-                        if (message.data.status === "saving") {
-                            t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
-                        } else if (message.data.status.startsWith("error::")) {
-                            t.WSProgress.errors.push({"error":message.data.status, "env":message.data.item});
-                        }
-                    }
-                } else {
-                    t.WSProgress.message = "Getting Environment data";
-                }
-                break;
-            // Getting/Updating Locations
-            case "getLoc":
-                if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Processing Location data: ${message.data.item}`;
-                } else {
-                    t.WSProgress.message = "Getting Location data";
-                }
-                break;
-            // Getting/Updating Smart Classes
-            case "getSC":
-                if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Processing Smart Class: ${message.data.item}`;
-                } else {
-                    t.WSProgress.message = "Getting Smart Classes";
-                }
-                break;
-            // Getting/Updating Puppet Classes
-            case "getPC":
-                if (message.data.hasOwnProperty("item")) {
-                    if (message.data.hasOwnProperty("counter")) {
-                        t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Getting: ${message.data.item}`;
-                    } else {
-                        t.WSProgress.message = `Processing Puppet Class: ${message.data.item}`;
-                    }
-                } else {
-                    t.WSProgress.message = "Getting Puppet Classes";
-                }
-                break;
-            // Getting/Updating Host Group Parameters
-            case "getHGParameters":
-                if (message.data.hasOwnProperty("item")) {
-                    t.WSProgress.message = `Processing Host Group parameter: ${message.data.item}`;
-                } else {
-                    t.WSProgress.message = "Getting Host Group parameters";
-                }
-                break;
-            // Getting/Updating Smart Class Overrides
-            case "updatingHGOverrides":
-                if (message.data.hasOwnProperty("item")) {
-                    if (message.data.item.length > 20) {
-                        let old = message.data.item;
-                        message.data.item = old.substring(0,19) + " ...";
-                    }
-                    t.WSProgress.message = `Processing Host Group override: ${message.data.item}`;
-                } else {
-                    t.WSProgress.message = "Getting Host Group overrides";
-                }
-                break;
-            // Submitting Smart Class Overrides
-            case "submitHGOverrides":
-                if (message.data.hasOwnProperty("item")) {
-                    if (message.data.hasOwnProperty("counter")) {
-                        t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Submitting: ${message.data.item}`;
-                    } else {
-                        t.WSProgress.message = `Submitting Host Group override: ${message.data.item}`;
-                    }
-                } else {
-                    t.WSProgress.message = "Submitting Host Group overrides";
-                }
-                break;
-            // Working with Host Group in batch mode
-            // Updating Host Group
-            case "batchUpdateSource":
-                t.WSProgress.message = "Updating Source Host Group";
+            case 1:
+                console.info("Operation: hostgroup", message.operation);
+                console.info("Data:", message.additional_data);
 
-                if (message.data.state === "running") {
-                    for (let i in t.hgUniq) {
-                        if (message.data.item === t.hgUniq[i].name) {
-                            t.hgUniq[i].updating = true;
-                        }
-                    }
+                if (message.additional_data.hasOwnProperty("message")) {
+                    t.WSProgress.message = message.additional_data.message;
                 }
-                if (message.data.state === "done") {
-                    for (let i in t.hgUniq) {
-                        if (message.data.item === t.hgUniq[i].name) {
-                            t.hgUniq[i].updating = false;
-                        }
-                    }
+                if (message.additional_data.hasOwnProperty("item")) {
+                    t.WSProgress.message += "[" + message.additional_data.item + "]"
                 }
-                break;
-            case "batchHostGroupSaving":
-                t.WSProgress.message = null;
-                t.checkRes.batch[message.data.tHost][message.data.hgName].process.done = message.data.done;
-                t.checkRes.batch[message.data.tHost][message.data.hgName].process.loadingInProgress = message.data.in_progress;
-                t.$forceUpdate();
-                break;
-            // Index page a specific message
-            case "dashboardUpdate":
-                t.wip = true;
-                t.locations = (await locationsService.List()).data;
-                t.wip = false;
-                t.$forceUpdate();
-                break;
-            case "done":
-                if (t.hasOwnProperty("WSProgress")) {
-                    t.WSProgress.message = null;
-                    if (t.WSProgress.hasOwnProperty("item")) {
-                        t.WSProgress.item = null;
+                if (message.additional_data.hasOwnProperty("total")) {
+                    t.WSProgress.counter.current = message.additional_data.current;
+                    t.WSProgress.counter.total = message.additional_data.total;
+                }
+                if (message.additional_data.hasOwnProperty("done")) {
+                    if (message.additional_data.done) {
+                        t.WSProgress = {
+                            message: null,
+                            counter: {
+                                current: null,
+                                total: null,
+                            },
+                        };
                     }
                 }
                 break;
-            case "svnCheck":
-                let currHost = message.data.host;
-                let currSwe = message.data.item;
-                let currState = message.data.state;
-                for (let i in t.environments[currHost]) {
-                    if (t.environments[currHost][i].name === currSwe) {
-                        if (currState === "checking") {
-                            t.environments[currHost][i].loading = true;
-                        }
-                        if (currState === "error") {
-                            t.environments[currHost][i].state = "error";
-                        }
-                        if  (currState === "done") {
-                            let postParams = {
-                                "host": currHost,
-                                "environment": currSwe,
-                                "dry_run": false,
-                            };
-                            (await environmentService.SVNForemanUpdate(postParams)).data;
-                            t.environments[currHost][i].loading = false;
-                        }
-                    }
-                }
+            case 2:
+                console.info("Operation: location", message.operation);
+                console.info("Data:", message.additional_data);
                 break;
+            case 3:
+                console.info("Operation: puppetclass", message.operation);
+                console.info("Data:", message.additional_data);
+                break;
+            case 4:
+                console.info("Operation: smartclass", message.operation);
+                console.info("Data:", message.additional_data);
+                break;
+
             default:
-                if (t.hasOwnProperty("WSProgress")) {
-                    if (t.WSProgress.hasOwnProperty("item")) {
-                        t.WSProgress.item    = null;
-                    }
-                    t.WSProgress.message = null;
-                }
+                console.warn(message);
         }
     }
 }
+// async function webSocketParser(message, t) {
+//     if (message.hasOwnProperty("operation")) {
+//         switch (message.operation) {
+//             case "getHG":
+//                 t.WSProgress.message = "Getting Host Groups data";
+//                 break;
+//             // Updating Host Groups in a database
+//             case "submitHG":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     if (message.data.hasOwnProperty("counter")) {
+//                         t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Updating: ${message.data.item}`;
+//                     } else {
+//                         t.WSProgress.message = `Updating: ${message.data.item}`;
+//                     }
+//                 } else {
+//                     t.WSProgress.message = "Updating host groups";
+//                 }
+//                 break;
+//             // Getting/Updating Environments
+//             case "getEnv":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     if (message.data.hasOwnProperty("status")) {
+//                         if (message.data.status === "saving") {
+//                             t.WSProgress.message = `Processing Environment data: ${message.data.item}`;
+//                         } else if (message.data.status.startsWith("error::")) {
+//                             t.WSProgress.errors.push({"error":message.data.status, "env":message.data.item});
+//                         }
+//                     }
+//                 } else {
+//                     t.WSProgress.message = "Getting Environment data";
+//                 }
+//                 break;
+//             // Getting/Updating Locations
+//             case "getLoc":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     t.WSProgress.message = `Processing Location data: ${message.data.item}`;
+//                 } else {
+//                     t.WSProgress.message = "Getting Location data";
+//                 }
+//                 break;
+//             // Getting/Updating Smart Classes
+//             case "getSC":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     t.WSProgress.message = `Processing Smart Class: ${message.data.item}`;
+//                 } else {
+//                     t.WSProgress.message = "Getting Smart Classes";
+//                 }
+//                 break;
+//             // Getting/Updating Puppet Classes
+//             case "getPC":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     if (message.data.hasOwnProperty("counter")) {
+//                         t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Getting: ${message.data.item}`;
+//                     } else {
+//                         t.WSProgress.message = `Processing Puppet Class: ${message.data.item}`;
+//                     }
+//                 } else {
+//                     t.WSProgress.message = "Getting Puppet Classes";
+//                 }
+//                 break;
+//             // Getting/Updating Host Group Parameters
+//             case "getHGParameters":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     t.WSProgress.message = `Processing Host Group parameter: ${message.data.item}`;
+//                 } else {
+//                     t.WSProgress.message = "Getting Host Group parameters";
+//                 }
+//                 break;
+//             // Getting/Updating Smart Class Overrides
+//             case "updatingHGOverrides":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     if (message.data.item.length > 20) {
+//                         let old = message.data.item;
+//                         message.data.item = old.substring(0,19) + " ...";
+//                     }
+//                     t.WSProgress.message = `Processing Host Group override: ${message.data.item}`;
+//                 } else {
+//                     t.WSProgress.message = "Getting Host Group overrides";
+//                 }
+//                 break;
+//             // Submitting Smart Class Overrides
+//             case "submitHGOverrides":
+//                 if (message.data.hasOwnProperty("item")) {
+//                     if (message.data.hasOwnProperty("counter")) {
+//                         t.WSProgress.message = `[${message.data.counter.current}/${message.data.counter.total}] Submitting: ${message.data.item}`;
+//                     } else {
+//                         t.WSProgress.message = `Submitting Host Group override: ${message.data.item}`;
+//                     }
+//                 } else {
+//                     t.WSProgress.message = "Submitting Host Group overrides";
+//                 }
+//                 break;
+//             // Working with Host Group in batch mode
+//             // Updating Host Group
+//             case "batchUpdateSource":
+//                 t.WSProgress.message = "Updating Source Host Group";
+//
+//                 if (message.data.state === "running") {
+//                     for (let i in t.hgUniq) {
+//                         if (message.data.item === t.hgUniq[i].name) {
+//                             t.hgUniq[i].updating = true;
+//                         }
+//                     }
+//                 }
+//                 if (message.data.state === "done") {
+//                     for (let i in t.hgUniq) {
+//                         if (message.data.item === t.hgUniq[i].name) {
+//                             t.hgUniq[i].updating = false;
+//                         }
+//                     }
+//                 }
+//                 break;
+//             case "batchHostGroupSaving":
+//                 t.WSProgress.message = null;
+//                 t.checkRes.batch[message.data.tHost][message.data.hgName].process.done = message.data.done;
+//                 t.checkRes.batch[message.data.tHost][message.data.hgName].process.loadingInProgress = message.data.in_progress;
+//                 t.$forceUpdate();
+//                 break;
+//             // Index page a specific message
+//             case "dashboardUpdate":
+//                 t.wip = true;
+//                 t.locations = (await locationsService.List()).data;
+//                 t.wip = false;
+//                 t.$forceUpdate();
+//                 break;
+//             case "done":
+//                 if (t.hasOwnProperty("WSProgress")) {
+//                     t.WSProgress.message = null;
+//                     if (t.WSProgress.hasOwnProperty("item")) {
+//                         t.WSProgress.item = null;
+//                     }
+//                 }
+//                 break;
+//             case "svnCheck":
+//                 let currHost = message.data.host;
+//                 let currSwe = message.data.item;
+//                 let currState = message.data.state;
+//                 for (let i in t.environments[currHost]) {
+//                     if (t.environments[currHost][i].name === currSwe) {
+//                         if (currState === "checking") {
+//                             t.environments[currHost][i].loading = true;
+//                         }
+//                         if (currState === "error") {
+//                             t.environments[currHost][i].state = "error";
+//                         }
+//                         if  (currState === "done") {
+//                             let postParams = {
+//                                 "host": currHost,
+//                                 "environment": currSwe,
+//                                 "dry_run": false,
+//                             };
+//                             (await environmentService.SVNForemanUpdate(postParams)).data;
+//                             t.environments[currHost][i].loading = false;
+//                         }
+//                     }
+//                 }
+//                 break;
+//             default:
+//                 if (t.hasOwnProperty("WSProgress")) {
+//                     if (t.WSProgress.hasOwnProperty("item")) {
+//                         t.WSProgress.item    = null;
+//                     }
+//                     t.WSProgress.message = null;
+//                 }
+//         }
+//     }
+// }
 
 function dynamicSort(property) {
     let sortOrder = 1;
