@@ -61,17 +61,31 @@ function inHosts(hosts, s) {
 }
 async function webSocketParser(message, t) {
     if (message.hasOwnProperty("resource")) {
-        t.WSProgress = {
-            message: null,
-            counter: {
-                current: null,
-                total: null,
-            },
-        };
         switch (message.resource) {
             case 0:
                 console.info("Operation: environment", message.operation);
                 console.info("Data:", message.additional_data);
+
+                if (message.additional_data.hasOwnProperty("message")) {
+                    t.WSProgress.message = message.additional_data.message;
+                }
+                if (message.additional_data.hasOwnProperty("item")) {
+                    t.WSProgress.message += " [ " + message.additional_data.item + " ]"
+                }
+                if (message.additional_data.hasOwnProperty("total")) {
+                    t.WSProgress.counter.current = message.additional_data.current;
+                    t.WSProgress.counter.total = message.additional_data.total;
+                }
+                if (message.additional_data.hasOwnProperty("done")) {
+                    if (message.additional_data.done) {
+                        t.WSProgress.done.push(message.additional_data.item)
+                    }
+                }
+                if (message.additional_data.hasOwnProperty("failed")) {
+                    if (message.additional_data.failed) {
+                        t.WSProgress.errors.push(message.additional_data.item)
+                    }
+                }
                 break;
             case 1:
                 console.info("Operation: hostgroup", message.operation);
@@ -81,7 +95,7 @@ async function webSocketParser(message, t) {
                     t.WSProgress.message = message.additional_data.message;
                 }
                 if (message.additional_data.hasOwnProperty("item")) {
-                    t.WSProgress.message += "[" + message.additional_data.item + "]"
+                    t.WSProgress.message += " [ " + message.additional_data.item + " ]"
                 }
                 if (message.additional_data.hasOwnProperty("total")) {
                     t.WSProgress.counter.current = message.additional_data.current;
@@ -89,13 +103,12 @@ async function webSocketParser(message, t) {
                 }
                 if (message.additional_data.hasOwnProperty("done")) {
                     if (message.additional_data.done) {
-                        t.WSProgress = {
-                            message: null,
-                            counter: {
-                                current: null,
-                                total: null,
-                            },
-                        };
+                        t.WSProgress.done.push(message.additional_data.item)
+                    }
+                }
+                if (message.additional_data.hasOwnProperty("failed")) {
+                    if (message.additional_data.failed) {
+                        t.WSProgress.errors.push(message.additional_data.item)
                     }
                 }
                 break;
