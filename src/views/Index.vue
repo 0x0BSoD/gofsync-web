@@ -136,7 +136,7 @@
 
                     <v-layout row wrap v-if="wipMessage">
                         <v-flex v-if="wip" xs9>
-                            <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+                            <v-chip label v-if="WSProgress.counter.total">{{WSProgress.counter.current}}/{{WSProgress.counter.total}}</v-chip><v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
                         <v-flex xs3 class="pt-2">
                             {{wipMessage}}
@@ -153,7 +153,7 @@
 
                     <v-layout row wrap v-else class="text-xs-center">
                         <v-flex v-if="wip" xs12>
-                            <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+                            <v-chip label v-if="WSProgress.counter.total">{{WSProgress.counter.current}}/{{WSProgress.counter.total}}</v-chip><v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
                         </v-flex>
                         <v-flex xs12 v-if="wip" class="text-xs-center pt-2">
                             <fingerprint-spinner
@@ -165,10 +165,9 @@
                         </v-flex>
 
                     </v-layout>
-                    <v-flex xs12 class="text-xs-center pt-2"
-                            v-for="(v,k) in WSProgress.errors" :key="k"
-                    >
-                        <v-chip color="warning" label>{{v.env}}</v-chip>{{v.error.split("::")[1]}}
+                    <v-flex xs12 class="pt-2">
+                        <v-chip  v-for="(v,k) in WSProgress.errors" :key="k" color="warning" label>{{v}}</v-chip>
+                        <v-chip  v-for="(v,k) in WSProgress.done" :key="k" color="success" label>{{v}}</v-chip>
                     </v-flex>
                     <!--    ============================================ /Progress ============================================    -->
                 </v-card-text>
@@ -219,8 +218,13 @@
             dialogTitle: "",
             hosts: [],
             WSProgress: {
-                message: null,
                 errors: [],
+                done: [],
+                message: null,
+                counter: {
+                    current: null,
+                    total: null,
+                },
             },
             globalWork: false,
         }),
@@ -333,14 +337,19 @@
                 await this.$store.dispatch("setHost", host);
             },
             async updateEnv(host) {
+                this.WSProgress = {
+                    errors: [],
+                    done: [],
+                    message: null,
+                    counter: {
+                        current: null,
+                        total: null,
+                    },
+                };
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating Environments";
-                this.WSProgress = {
-                    message: null,
-                            errors: [],
-                };
 
                 try {
                     await environmentService.Update(host);
@@ -357,6 +366,15 @@
                 }
             },
             async updateLoc(host) {
+                this.WSProgress = {
+                    errors: [],
+                    done: [],
+                    message: null,
+                    counter: {
+                        current: null,
+                        total: null,
+                    },
+                };
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
@@ -378,14 +396,19 @@
                 }
             },
             async updateHG(host) {
+                this.WSProgress = {
+                    errors: [],
+                    done: [],
+                    message: null,
+                    counter: {
+                        current: null,
+                        total: null,
+                    },
+                };
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating HostGroups";
-                this.WSProgress = {
-                    message: null,
-                    errors: [],
-                };
 
                 try {
                     await hostGroupService.Update(host);
@@ -399,14 +422,19 @@
                 }
             },
             async updatePC(host) {
+                this.WSProgress = {
+                    errors: [],
+                    done: [],
+                    message: null,
+                    counter: {
+                        current: null,
+                        total: null,
+                    },
+                };
                 this.dialogTitle = host;
                 this.dialog = true;
                 this.wip = true;
                 this.wipMessage = "Updating Puppet Classes";
-                this.WSProgress = {
-                    message: null,
-                    errors: [],
-                };
 
                 try {
                     await pcService.Update(host);
@@ -421,7 +449,7 @@
             }
         }
     }
-</script>
+</script>час
 
 <style>
 

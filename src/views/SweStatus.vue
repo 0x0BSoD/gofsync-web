@@ -515,6 +515,15 @@
         },
 
         data: () => ({
+            WSProgress: {
+                errors: [],
+                done: [],
+                message: null,
+                counter: {
+                    current: null,
+                    total: null,
+                },
+            },
             hosts: [],
             selectHosts: [],
             environments: [],
@@ -578,11 +587,26 @@
 
         watch: {
             nowActions: {
-                async handler (val) {
-                    await Common.webSocketParser(val, this);
+                async handler (message) {
+                    if (message.hasOwnProperty("host_name")) {
+                        if (message.additional_data.hasOwnProperty("item")) {
+
+                            if (message.additional_data.hasOwnProperty("done")) {
+                                if (message.additional_data.done) {
+                                    (this.environments[message.host_name].filter(i => i.name === message.additional_data.item))[0]["loading"] = false;
+                                }
+                            } else if (message.additional_data.hasOwnProperty("failed")) {
+                                if (message.additional_data.failed) {
+                                    (this.environments[message.host_name].filter(i => i.name === message.additional_data.item))[0]["state"] = "error";
+                                }
+                            } else {
+                                (this.environments[message.host_name].filter(i => i.name === message.additional_data.item))[0]["loading"] = true;
+                            }
+                            this.$forceUpdate();
+                        }
+                    }
                 }
             },
-
             filter: {
                 async handler (val) {
                     if (val && this.full_environments) {

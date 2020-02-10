@@ -475,7 +475,13 @@
             parameterEditDefaultValue: null,
             wipMessage: false,
             WSProgress: {
+                errors: [],
+                done: [],
                 message: null,
+                counter: {
+                    current: null,
+                    total: null,
+                },
             },
         }),
 
@@ -664,7 +670,7 @@
                     this.hgDoneMsg = `${this.JSONObject.name} Uploaded`
                 } catch (e) {
                     this.hgError = true;
-                    console.info(e.response);
+                    console.info(e);
                     this.hgErrorMsg = e.response.data;
                 } finally {
                     this.wipMessage = false;
@@ -705,7 +711,6 @@
                 }
 
                 EditorMethods.sortPC(this);
-                // this.JSONCode = JSON.stringify(this.JSONObject, " ", "  ");
                 this.pcNotifyMsg = `${data.class} => ${data.sub_class} Added`;
                 this.pcNotify = true;
             },

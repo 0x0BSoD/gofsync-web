@@ -1,7 +1,28 @@
 <template>
     <v-container>
 
-        <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+        <!--    ============================================ Progress ============================================    -->
+        <v-layout row wrap v-if="wipMessage">
+            <v-flex v-if="wip" xs9>
+                <v-chip label v-if="WSProgress.counter.total">{{WSProgress.counter.current}}/{{WSProgress.counter.total}}</v-chip><v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+            </v-flex>
+            <v-flex xs3 class="pt-2">
+                {{wipMessage}}
+            </v-flex>
+            <v-flex xs12>
+                <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+            </v-flex>
+        </v-layout>
+        <v-layout row wrap v-else class="text-xs-center">
+            <v-flex v-if="wip" xs12>
+                <v-chip label v-if="WSProgress.counter.total">{{WSProgress.counter.current}}/{{WSProgress.counter.total}}</v-chip><v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+            </v-flex>
+            <v-flex xs12>
+                <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+            </v-flex>
+        </v-layout>
+        <!--    ============================================ /Progress ============================================    -->
+
         <!-- ============================================= Top Panel ============================================= -->
         <v-layout row wrap>
             <v-flex v-if="wip" xs12>
@@ -218,7 +239,16 @@
             search: null,
             caseSensitive: false,
             pcSync: false,
-
+            wipMessage: null,
+            WSProgress: {
+                errors: [],
+                done: [],
+                message: null,
+                counter: {
+                    current: null,
+                    total: null,
+                },
+            },
         }),
 
         //========================================================================================================
