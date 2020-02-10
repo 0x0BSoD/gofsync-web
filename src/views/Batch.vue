@@ -180,7 +180,9 @@
                                                     <looping-rhombuses-spinner class="ml-2" :animation-duration="2500"
                                                                                :rhombus-size="15" color="#607d8b"/>
                                                 </v-btn>
-                                                <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>
+                                                <v-chip label v-if="swe.ws.msg.length > 0">{{swe.ws.msg}}</v-chip>
+                                                <v-chip label v-if="swe.ws.count.length > 0">{{swe.ws.count}}</v-chip>
+                                                <v-chip label v-if="swe.ws.item.length > 0">{{swe.ws.item}}</v-chip>
 
                                             </div>
                                             <div v-else-if="swe.process.done">
@@ -262,8 +264,13 @@
             checkInProgress: false,
             hgUniq: [],
             WSProgress: {
+                errors: [],
+                done: [],
                 message: null,
-                item: null,
+                counter: {
+                    current: null,
+                    total: null,
+                },
             },
             curr_heder: null,
         }),
@@ -278,8 +285,37 @@
         },
         watch: {
             nowActions: {
-                async handler(val) {
-                    await Common.webSocketParser(val, this);
+                async handler (message) {
+                    if (message.additional_data.hasOwnProperty("done")) {
+                        if (message.additional_data.message !== "Updating HG") {
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].process.loadingInProgress = false;
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].process.done = true;
+                        }
+                    }
+
+                    if (message.additional_data.hasOwnProperty("host_group")) {
+                        if (message.additional_data.message === "Uploading HG") {
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].process.loadingInProgress = true;
+                        }
+                        // slitted for future
+                        if (message.additional_data.message === "Updating HG") {
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].process.loadingInProgress = true;
+                        }
+
+                        if (message.additional_data.hasOwnProperty("message")) {
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].ws.msg = message.additional_data.message;
+                        }
+
+                        if (message.additional_data.hasOwnProperty("item")) {
+                            console.log(message.additional_data.item);
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].ws.item = message.additional_data.item;
+                        }
+                        if (message.additional_data.hasOwnProperty("total")) {
+                            console.log(`${message.additional_data.current}/${message.additional_data.total}`);
+                            this.checkRes.batch[message.host_name][message.additional_data.host_group].ws.count = `${message.additional_data.current}/${message.additional_data.total}`;
+                        }
+                    }
+                    this.$forceUpdate();
                 }
             },
             envsSelected: {
@@ -369,6 +405,8 @@
                                     ws: {
                                         state: true,
                                         msg: "",
+                                        item: "",
+                                        count: "",
                                     },
                                     error: {
                                         state: false,

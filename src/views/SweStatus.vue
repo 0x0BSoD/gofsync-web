@@ -605,7 +605,7 @@
                             this.$forceUpdate();
                         }
                     }
-                                    }
+                }
             },
             filter: {
                 async handler (val) {
