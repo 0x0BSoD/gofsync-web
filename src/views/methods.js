@@ -63,6 +63,9 @@ async function webSocketParser(message, t) {
     if (message.hasOwnProperty("resource")) {
         switch (message.resource) {
             case 0:
+                // ===============================
+                // =       environment           =
+                // ===============================
                 console.info("Operation: environment", message.operation);
                 console.info("Data:", message.additional_data);
 
@@ -88,6 +91,9 @@ async function webSocketParser(message, t) {
                 }
                 break;
             case 1:
+                // ===============================
+                // =       hostgroup             =
+                // ===============================
                 console.info("Operation: hostgroup", message.operation);
                 console.info("Data:", message.additional_data);
 
@@ -113,16 +119,88 @@ async function webSocketParser(message, t) {
                 }
                 break;
             case 2:
+                // ===============================
+                // =       location              =
+                // ===============================
                 console.info("Operation: location", message.operation);
                 console.info("Data:", message.additional_data);
+
+                if (message.additional_data.hasOwnProperty("message")) {
+                    t.WSProgress.message = message.additional_data.message;
+                }
+                if (message.additional_data.hasOwnProperty("item")) {
+                    t.WSProgress.message += " [ " + message.additional_data.item + " ]"
+                }
+                if (message.additional_data.hasOwnProperty("total")) {
+                    t.WSProgress.counter.current = message.additional_data.current;
+                    t.WSProgress.counter.total = message.additional_data.total;
+                }
+                if (message.additional_data.hasOwnProperty("done")) {
+                    if (message.additional_data.done) {
+                        t.WSProgress.done.push(message.additional_data.item)
+                    }
+                }
+                if (message.additional_data.hasOwnProperty("failed")) {
+                    if (message.additional_data.failed) {
+                        t.WSProgress.errors.push(message.additional_data.item)
+                    }
+                }
                 break;
             case 3:
+                // ===============================
+                // =       puppetclass           =
+                // ===============================
                 console.info("Operation: puppetclass", message.operation);
                 console.info("Data:", message.additional_data);
+
+                if (message.additional_data.hasOwnProperty("message")) {
+                    t.WSProgress.message = message.additional_data.message;
+                }
+                if (message.additional_data.hasOwnProperty("item")) {
+                    t.WSProgress.message += " [ " + message.additional_data.item + " ]"
+                }
+                if (message.additional_data.hasOwnProperty("total")) {
+                    t.WSProgress.counter.current = message.additional_data.current;
+                    t.WSProgress.counter.total = message.additional_data.total;
+                }
+                if (message.additional_data.hasOwnProperty("done")) {
+                    if (message.additional_data.done) {
+                        t.WSProgress.done.push(message.additional_data.item)
+                    }
+                }
+                if (message.additional_data.hasOwnProperty("failed")) {
+                    if (message.additional_data.failed) {
+                        t.WSProgress.errors.push(message.additional_data.item)
+                    }
+                }
                 break;
             case 4:
+                // ===============================
+                // =       smartclass            =
+                // ===============================
                 console.info("Operation: smartclass", message.operation);
                 console.info("Data:", message.additional_data);
+
+                if (message.additional_data.hasOwnProperty("message")) {
+                    t.WSProgress.message = message.additional_data.message;
+                }
+                if (message.additional_data.hasOwnProperty("item")) {
+                    t.WSProgress.message += " [ " + message.additional_data.item + " ]"
+                }
+                if (message.additional_data.hasOwnProperty("total")) {
+                    t.WSProgress.counter.current = message.additional_data.current;
+                    t.WSProgress.counter.total = message.additional_data.total;
+                }
+                if (message.additional_data.hasOwnProperty("done")) {
+                    if (message.additional_data.done) {
+                        t.WSProgress.done.push(message.additional_data.item)
+                    }
+                }
+                if (message.additional_data.hasOwnProperty("failed")) {
+                    if (message.additional_data.failed) {
+                        t.WSProgress.errors.push(message.additional_data.item)
+                    }
+                }
                 break;
 
             default:

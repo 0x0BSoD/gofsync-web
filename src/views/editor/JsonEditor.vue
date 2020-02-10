@@ -475,7 +475,13 @@
             parameterEditDefaultValue: null,
             wipMessage: false,
             WSProgress: {
+                errors: [],
+                done: [],
                 message: null,
+                counter: {
+                    current: null,
+                    total: null,
+                },
             },
         }),
 

@@ -130,6 +130,10 @@
                                                 <td><v-chip label>Updated:</v-chip></td>
                                                 <td>{{hostGroup.updated}}</td>
                                             </tr>
+                                            <tr>
+                                                <td><v-switch v-model="hgUpdate"/></td>
+                                                <td>Update source first</td>
+                                            </tr>
                                             </tbody>
                                         </table>
                                     </v-flex>
@@ -432,8 +436,11 @@
             foremanCheckHG: false,
             link: false,
             targetDiff: false,
+            hgUpdate: true,
             toggle_status: null,
             WSProgress: {
+                errors: [],
+                done: [],
                 message: null,
                 counter: {
                     current: null,
@@ -469,10 +476,9 @@
                 && Common.inHosts(this.hosts, this.$route.query.source)) {
                 this.sHost = this.$route.query.source;
             }
-
-            if (this.$route.query.hasOwnProperty("env")) {
-                this.env = this.$route.query.env;
-            }
+            // if (this.$route.query.hasOwnProperty("env")) {
+            //     this.env = this.$route.query.env;
+            // }
         },
 
         //========================================================================================================
@@ -484,20 +490,11 @@
                     await Common.webSocketParser(val, this);
                 }
             },
-            host: {
-                handler(val) {
-                    this.sHost = val;
-                }
-            },
-            socket: {
-                async handler(val) {
-                    console.log(val);
-                }
-            },
             sHost: {
                 async handler(val) {
                     // RESET =================================
                     PuppetMethods.resetMismatch(this);
+                    this.env = "any";
                     this.tHost = null;
                     this.existData = null;
                     this.hgExist = null;
@@ -534,6 +531,12 @@
                     }
                     this.Environments = result;
                     this.Environments.push("any");
+
+                    await this.$router.push({
+                        query: {
+                            "source": this.sHost,
+                        }
+                    });
                 }
             },
             env: {
@@ -562,26 +565,25 @@
                         this.hostGroups = this.hostGroupsFull;
                     } else {
                         let parsedHG = [];
+                        let r = new RegExp(`${val}$`);
                         for (let i in this.hostGroupsFull) {
-                            if (this.hostGroupsFull[i].name.includes(val)) {
+                            if (r.test(this.hostGroupsFull[i].name)) {
                                 parsedHG.push(this.hostGroupsFull[i]);
                             }
                         }
                         this.hostGroups = parsedHG;
                     }
 
-                    if (this.$route.query.hasOwnProperty("env")) {
-                        this.$route.query.env = this.env;
-                    } else {
-                        await this.$router.push({
-                            query: {
-                                "source": this.sHost,
-                                "env": this.env,
-                            }
-                        });
-                    }
-
-
+                    // if (this.$route.query.hasOwnProperty("env")) {
+                    //     this.$route.query.env = this.env;
+                    // } else {
+                    //     await this.$router.push({
+                    //         query: {
+                    //             "source": this.sHost,
+                    //             "env": this.env,
+                    //         }
+                    //     });
+                    // }
                 }
             },
             hostGroupId: {
@@ -676,12 +678,12 @@
 
                             this.targetLoaded = true;
 
-                            try {
-                                PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                            } catch (e) {
-                                console.error(e);
-                                this.wip = false;
-                            }
+                            // try {
+                            //     PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                            // } catch (e) {
+                            //     console.error(e);
+                            //     this.wip = false;
+                            // }
 
                             let name = this.hostGroup.name.replace(/\./g, "-");
                             this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
@@ -737,7 +739,7 @@
                 try {
                     if (this.tHost) {
                         let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                        PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                        // PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
                     }
                 } catch (e) {
                     console.error(e);
@@ -802,11 +804,12 @@
                     this.targPc = targetPCData.PuppetClasses;
                     this.targetLoaded = true;
 
-                    try {
-                        PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                    } catch (e) {
-                        console.error(e);
-                    }
+                    // try {
+                    //     PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                    // } catch (e) {
+                    //     console.error(e);
+                    // }
+
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
@@ -829,34 +832,41 @@
                     source_hg_id: this.hostGroupId,
                     db_update: this.updateDB,
                 };
-
+                let response2;
                 // Commit new data
                 try {
                     this.wip = true;
-                    // this.wipMessage = "Updating source ...";
-                    // await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
-                    this.wipMessage = "Uploading to target host ...";
-                    let response = (await hostGroupService.Send(data));
-                    if (response.status === 200) {
-                    }
-                    this.wip = false;
 
-                    this.wip = true;
-                    this.wipMessage = "Updating data ...";
-                    let response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
-                    if (response2.status === 200) {
-                        await hostGroupService.GitCommit(this.tHost, response2.data.id);
-                        this.hgDone = true;
-                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
+                    if (this.hgUpdate) {
+                        this.wipMessage = "Updating source ...";
+                        await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
+                        this.wipMessage = "Uploading to target host ...";
+                        let response = (await hostGroupService.Send(data));
+                        if (response.status === 200) {
+                        }
                     }
+
+                    this.wipMessage = "Updating data ...";
+                    response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
                     this.wipMessage = false;
                     this.wip = false;
-
                 } catch (e) {
                     this.wipMessage = false;
                     this.wip = false;
                     this.hgError = true;
                     this.hgErrorMsg = e.message;
+                }
+
+                try {
+                    this.wipMessage = "Committing HG Json to Git ...";
+                    await hostGroupService.GitCommit(this.tHost, response2.data.id);
+                    if (response2.status === 200) {
+                        this.hgDone = true;
+                        this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}`;
+                    }
+                } catch (e) {
+                    this.hgDone = true;
+                    this.hgDoneMsg = `HostGroup ${this.hostGroup.name} updated on ${this.tHost}, commit failed`;
                 }
 
                 // =====================================================================================================
@@ -877,11 +887,12 @@
                     let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
                     this.targPc = targetPCData.PuppetClasses;
                     this.targetLoaded = true;
-                    try {
-                        PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                    } catch (e) {
-                        console.error(e);
-                    }
+
+                    // try {
+                    //     PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
+                    // } catch (e) {
+                    //     console.error(e);
+                    // }
 
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
