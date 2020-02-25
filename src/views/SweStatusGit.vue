@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid>
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout row wrap>
@@ -105,21 +105,64 @@
         >
             <v-card>
                 <v-toolbar class="text-xs-center" dark color="#0066ff">
-                    <v-toolbar-title>Code Info</v-toolbar-title>
+                    <v-toolbar-title>{{currentEnv}}</v-toolbar-title>
                     <v-spacer></v-spacer>
+                    <div><span class="grey--text">{{currentHost}}</span><br></div>
                 </v-toolbar>
 
                 <v-card-text>
-                    <v-layout row
-                        v-for="(i, k) in repoData"
-                          :key="k"
-                    >
-                        <v-flex xs12>
-                            <v-btn @click="showFullLog(i.commit)" label>{{i.ticket}}</v-btn> {{i.msg}}
+                    <v-layout row wrap v-if="commitLoading">
+                        <v-flex xs12 >
+                            <fingerprint-spinner
+                                    class="spinner"
+                                    :animation-duration="1500"
+                                    :size="64"
+                                    color="#7ac2ff"
+                            />
+                        </v-flex>
+                    </v-layout>
+
+                    <v-layout row wrap v-else>
+                        <v-flex xs12 v-if="lastCommit">
+                            <table>
+                                <thead>
+                                <tr><th></th></tr>
+                                <tr><th></th></tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><v-chip label>Date:</v-chip></td>
+                                    <td>{{lastCommit.Date}}</td>
+                                </tr>
+                                <tr>
+                                    <td><v-chip label>Author:</v-chip></td>
+                                    <td>{{lastCommit.Author}}</td>
+                                </tr>
+                                <tr>
+                                    <td><v-chip label>Comment:</v-chip></td>
+                                    <td>{{lastCommit.Comment}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </v-flex>
+                        <v-flex xs12 v-if="lastCommit">
+                            <v-card v-for="(d, k) in lastCommit.Diffs" :key="k">
+                                <v-card-text>
+                                    <v-layout row wrap>
+                                        <v-flex xs12 v-for="(s, j) in d.split('\n')" :key="j">
+                                            <pre v-if="s.startsWith('+')" class="added">{{s}}</pre>
+                                            <pre v-else-if="s.startsWith('-')" class="removed">{{s}}</pre>
+                                            <pre v-else>{{s}}</pre>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-card-text>
+                            </v-card>
                         </v-flex>
                     </v-layout>
                 </v-card-text>
                 <v-card-actions>
+                    <v-btn @click.native="dialog = !dialog">Update</v-btn>
+                    <v-btn @click="showLogDialog()">Log</v-btn>
                     <v-spacer></v-spacer>
                     <v-btn @click.native="dialog = !dialog">close</v-btn>
                 </v-card-actions>
@@ -151,7 +194,59 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <!-- ======================================================================================================= -->
+        <v-dialog
+                v-model="dialogCommitsLog"
+                max-width="1000"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#0066ff">
+                    <v-toolbar-title>Log of Commits</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
 
+                <v-card-text>
+
+                    <v-layout row wrap v-if="logLoading">
+                        <v-flex xs12 >
+                            <fingerprint-spinner
+                                    class="spinner"
+                                    :animation-duration="1500"
+                                    :size="64"
+                                    color="#7ac2ff"
+                            />
+                        </v-flex>
+                    </v-layout>
+
+                    <v-layout row wrap v-else>
+                        <v-flex xs12>
+                            <table v-if="logCommits">
+                                <thead>
+                                    <tr>
+                                        <th>Author</th>
+                                        <th>Date</th>
+                                        <th>Comment</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(i,k) in logCommits" :key="k">
+                                        <td>{{i.Author}}</td>
+                                        <td>{{i.Date}}</td>
+                                        <td>{{i.Comment}}</td>
+                                        <td><v-btn small outline @click="showFullLog(k)">details</v-btn></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogCommitsLog = !dialogCommitsLog">close</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
 
     </v-container>
 </template>
@@ -174,9 +269,17 @@
 
         data: () => ({
             repoData: null,
+            lastCommit: null,
+            logCommits: null,
             fullRepoLog: null,
             currentHost: null,
             currentEnv: null,
+            commitLoading: false,
+            dialogCommitsLog: false,
+            logLoading: false,
+            // --------
+
+
             WSProgress: {
                 errors: [],
                 done: [],
@@ -288,35 +391,54 @@
         },
         methods: {
             async showFullLog(commit) {
+                this.fullRepoLog = null;
                 this.dialogChanges = true;
                 this.fullRepoLog = (await environmentService.GitLog(this.currentHost, this.currentEnv, commit)).data;
                 console.log(this.fullRepoLog);
             },
+
+            async showLogDialog() {
+                this.dialogCommitsLog = true;
+                this.logLoading = true;
+                this.logCommits = (await environmentService.GitLogEnv(this.currentHost, this.currentEnv)).data[this.currentHost][this.currentEnv];
+                this.logLoading = false;
+
+                // this.repoData = [];
+                // for (let i in tmp) {
+                //     if (tmp[i] !== "") {
+                //         if (tmp[i].indexOf("HEAD") !== -1) {
+                //         } else {
+                //             let splt = tmp[i].split(" ");
+                //             this.repoData.push({
+                //                 commit: splt[0],
+                //                 ticket: splt[1],
+                //                 msg: splt.splice(3).join(" "),
+                //             });
+                //         }
+                //     }
+                // }
+            },
+
             async showDialog(host, envName) {
+                this.commitLoading = true;
+                this.lastCommit = null;
                 this.dialog = true;
-                this.repoData = [];
                 this.currentHost = host;
                 this.currentEnv = envName;
-                let tmp = (await environmentService.GitLogEnv(host, envName)).data[host][envName];
-                for (let i in tmp) {
-                    if (tmp[i] !== "") {
-                        if (tmp[i].indexOf("HEAD") !== -1) {
-                        } else {
-                            let splt = tmp[i].split(" ");
-                            this.repoData.push({
-                                commit: splt[0],
-                                ticket: splt[1],
-                                msg: splt.splice(3).join(" "),
-                            });
-                        }
-                    }
-                }
+                this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
+                this.commitLoading = false;
             }
         }
     }
 </script>
 
 <style>
+    .added {
+        background-color: lightgreen;
+    }
+    .removed {
+        background-color: lightpink;
+    }
     .checkTable {
         /*margin: 0 auto;*/
         min-width: 400px;
