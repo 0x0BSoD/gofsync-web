@@ -150,8 +150,25 @@
                                 <v-card-text>
                                     <v-layout row wrap>
                                         <v-flex xs2 pt-2>{{swe.hgName}}</v-flex>
-                                        <v-flex xs1 pt-2 v-if="swe.pc_count">PC: {{swe.pc_count}}</v-flex>
-                                        <v-flex xs1 pt-2 v-if="swe.ovr_count">OVR: {{swe.ovr_count}}</v-flex>
+
+                                        <v-flex xs1 pt-2 v-if="swe.pc_count"> PC:
+                                            <v-chip v-if="swe.pc_countMiss" color="warning">
+                                                {{swe.pc_count}}
+                                            </v-chip>
+                                            <v-chip v-else>
+                                                {{swe.pc_count}}
+                                            </v-chip>
+                                        </v-flex>
+
+                                        <v-flex xs1 pt-2 v-if="swe.ovr_count"> OVR:
+                                            <v-chip v-if="swe.ovr_countMiss" color="warning">
+                                                {{swe.ovr_count}}
+                                            </v-chip>
+                                            <v-chip v-else>
+                                                {{swe.ovr_count}}
+                                            </v-chip>
+                                        </v-flex>
+
                                         <v-flex xs1>
                                             <v-chip label v-if="swe.environment.targetId === -1" color="red">
                                                 {{swe.environment.name}}
@@ -393,7 +410,9 @@
                                     tHost: this.tHost[target],
                                     sHost: this.sHost,
                                     pc_count: null,
+                                    pc_countMiss: false,
                                     ovr_count: null,
+                                    ovr_countMiss: false,
                                     environment: {
                                         name: hostGroup.environment,
                                         targetId: null,
@@ -446,6 +465,16 @@
                                             let parsedPc = PuppetMethods.parse(targetHG.puppet_classes);
                                             this.checkRes["batch"][target][i].ovr_count = parsedPc.PuppetClassesOverrides;
                                             this.checkRes["batch"][target][i].pc_count = parsedPc.PuppetClassesCount;
+
+                                            let uItem = this.hgUniq.find(i => i.name === targetHGList[j].name);
+
+                                            if (uItem.pc_count !== parsedPc.PuppetClassesCount) {
+                                                this.checkRes["batch"][target][i].pc_countMiss = true;
+                                            }
+                                            if (uItem.ovr_count !== parsedPc.PuppetClassesOverrides) {
+                                                this.checkRes["batch"][target][i].ovr_countMiss = true;
+                                            }
+
                                             let HGNameLink = i.replace(/\./g, "-");
                                             this.checkRes["batch"][target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
                                         }

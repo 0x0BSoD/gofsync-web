@@ -619,13 +619,6 @@
 
 
                     }
-                    // this.$router.push({
-                    //     query: {
-                    //         "source": this.sHost,
-                    //         "env": this.env,
-                    //         "hg": val,
-                    //     }
-                    // });
                 }
             },
             tHost: {
