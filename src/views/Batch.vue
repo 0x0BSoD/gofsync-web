@@ -116,22 +116,35 @@
                         </v-card-title>
 
                         <v-card>
-                            <v-card-text>
-                                <v-layout row wrap>
-                                    <v-flex xs12
-                                            v-for="(h, k) in hgUniq"
-                                            :key="k"
-                                    >
-                                        <v-layout row wrap>
-                                            <v-flex xs2>{{h.name}}</v-flex>
-                                            <v-flex xs2>Updated: {{h.updated}}</v-flex>
-                                            <v-flex xs2>PuppetClasses: {{h.pc_count}}</v-flex>
-                                            <v-flex xs2>Overrides: {{h.ovr_count}}</v-flex>
-                                            <v-flex xs4 v-if="h.updating">Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" rhombus-size="15" color="#607d8b"/></v-flex>
-                                        </v-layout>
-                                    </v-flex>
-                                </v-layout>
-                            </v-card-text>
+
+                            <v-expansion-panel
+                                    v-model="panelForUniqHG"
+                                    expand
+                            >
+                                <v-expansion-panel-content>
+                                    <template v-slot:header>
+                                        <div>Source HostGroups</div>
+                                    </template>
+                                    <v-card>
+                                        <v-card-text>
+                                            <v-layout row wrap>
+                                                <v-flex xs12
+                                                        v-for="(h, k) in hgUniq"
+                                                        :key="k"
+                                                >
+                                                    <v-layout row wrap>
+                                                        <v-flex xs2>{{h.name}}</v-flex>
+                                                        <v-flex xs2>Updated: {{h.updated}}</v-flex>
+                                                        <v-flex xs2>PuppetClasses: {{h.pc_count}}</v-flex>
+                                                        <v-flex xs2>Overrides: {{h.ovr_count}}</v-flex>
+                                                        <v-flex xs4 v-if="h.updating">Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" rhombus-size="15" color="#607d8b"/></v-flex>
+                                                    </v-layout>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-expansion-panel-content>
+                            </v-expansion-panel>
                         </v-card>
 
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
@@ -257,6 +270,7 @@
         },
 
         data: () => ({
+            panelForUniqHG: [true],
             e1: 0,
             sHost: "spb01-puppet.lab.nordigy.ru",
             tHost: [],
