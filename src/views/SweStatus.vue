@@ -578,7 +578,10 @@
             await Common.auth(this);
 
             // ======
-            this.environments = (await environmentService.ListAll()).data;
+
+            let tmp = (await environmentService.ListAll()).data;
+            for (let i in tmp) { tmp[i].sort(Common.dynamicSort("name")); }
+            this.environments = tmp;
             this.full_environments = (await environmentService.ListAll()).data;
             for (let i in this.environments) {
                 this.hosts.push(i);

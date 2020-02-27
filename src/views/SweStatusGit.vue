@@ -102,13 +102,17 @@
         <v-dialog
                 v-model="dialog"
                 max-width="1000"
+                scrollable
         >
             <v-card>
-                <v-toolbar class="text-xs-center" dark color="#0066ff">
-                    <v-toolbar-title>{{currentEnv}}</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <div><span class="grey--text">{{currentHost}}</span><br></div>
-                </v-toolbar>
+                <v-card-title>
+                    <v-toolbar class="text-xs-center" dark color="#0066ff">
+                        <v-toolbar-title>{{currentEnv}}</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                        <div><span class="grey--text"><v-chip dark>{{currentHost}}</v-chip></span><br></div>
+                    </v-toolbar>
+                </v-card-title>
+
 
                 <v-card-text>
                     <v-layout row wrap v-if="commitLoading">
@@ -122,11 +126,44 @@
                         </v-flex>
                     </v-layout>
 
+                    <v-layout v-else-if="pulling" row wrap>
+                        <v-flex xs12>Updating ...</v-flex>
+                        <v-flex xs12>
+                            <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+                        </v-flex>
+                    </v-layout>
+
+                    <v-layout v-else-if="cloning" row wrap>
+                        <v-flex xs12>Uploading ...</v-flex>
+                        <v-flex xs12>
+                            <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
+                        </v-flex>
+                    </v-layout>
+
+                    <v-layout row wrap v-else-if="noRepo">
+                        <v-flex xs12>
+                            <v-alert
+                                    v-model="noRepo"
+                                    type="warning"
+                            >
+                                Environment repo not exist on the host probably.
+                            </v-alert>
+                        </v-flex>
+                    </v-layout>
+
                     <v-layout row wrap v-else>
+                        <v-flex xs12>
+                            <v-alert
+                                    v-model="noChangesInCommit"
+                                    dismissible
+                                    type="success"
+                            >
+                                Already on last commit
+                            </v-alert>
+                        </v-flex>
                         <v-flex xs12 v-if="lastCommit">
                             <table>
                                 <thead>
-                                <tr><th></th></tr>
                                 <tr><th></th></tr>
                                 </thead>
                                 <tbody>
@@ -146,7 +183,7 @@
                             </table>
                         </v-flex>
                         <v-flex xs12 v-if="lastCommit">
-                            <v-card v-for="(d, k) in lastCommit.Diffs" :key="k">
+                            <v-card class="mb-2" v-for="(d, k) in lastCommit.Diffs" :key="k">
                                 <v-card-text>
                                     <v-layout row wrap>
                                         <v-flex xs12 v-for="(s, j) in d.split('\n')" :key="j">
@@ -161,8 +198,9 @@
                     </v-layout>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn @click.native="dialog = !dialog">Update</v-btn>
-                    <v-btn @click="showLogDialog()">Log</v-btn>
+                    <v-btn v-if="noRepo" @click="gitClone()">Upload</v-btn>
+                    <v-btn v-else @click="gitPull()">Update</v-btn>
+                    <v-btn @click="showLogDialog()" :disabled="noRepo">Log</v-btn>
                     <v-spacer></v-spacer>
                     <v-btn @click.native="dialog = !dialog">close</v-btn>
                 </v-card-actions>
@@ -172,19 +210,52 @@
         <v-dialog
                 v-model="dialogChanges"
                 max-width="1000"
+                fullscreen
+                hide-overlay
+                transition="dialog-bottom-transition"
         >
-            <v-card>
-                <v-toolbar class="text-xs-center" dark color="#0066ff">
-                    <v-toolbar-title>Code Log</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                </v-toolbar>
+            <v-card
+                class="hide-overflow"
+                style="position: relative;"
+            >
+                <v-card-title>
+                    <v-toolbar
+                        class="text-xs-center"
+                        dark
+                        color="#0066ff"
+                        scroll-off-screen
+                        scroll-target="#scrolling-techniques"
+                    >
+                        <v-toolbar-title>Code Log</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                    </v-toolbar>
+                </v-card-title>
+
 
                 <v-card-text>
-                    <v-layout row>
-                        <v-flex xs12>
-                            <pre>
-                                {{fullRepoLog}}
-                            </pre>
+                    <v-layout row wrap v-if="commitLoading">
+                        <v-flex xs12 >
+                            <fingerprint-spinner
+                                    class="spinner"
+                                    :animation-duration="1500"
+                                    :size="64"
+                                    color="#7ac2ff"
+                            />
+                        </v-flex>
+                    </v-layout>
+                    <v-layout v-else row>
+                        <v-flex xs12 v-if="fullRepoLog">
+                            <v-card v-for="(d, k) in fullRepoLog.Diffs" :key="k">
+                                <v-card-text>
+                                    <v-layout row wrap>
+                                        <v-flex xs12 v-for="(s, j) in d.split('\n')" :key="j">
+                                            <pre v-if="s.startsWith('+')" class="added">{{s}}</pre>
+                                            <pre v-else-if="s.startsWith('-')" class="removed">{{s}}</pre>
+                                            <pre v-else>{{s}}</pre>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-card-text>
+                            </v-card>
                         </v-flex>
                     </v-layout>
                 </v-card-text>
@@ -197,13 +268,16 @@
         <!-- ======================================================================================================= -->
         <v-dialog
                 v-model="dialogCommitsLog"
-                max-width="1000"
+                max-width="1200"
+                scrollable
         >
             <v-card>
-                <v-toolbar class="text-xs-center" dark color="#0066ff">
-                    <v-toolbar-title>Log of Commits</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                </v-toolbar>
+                <v-card-title>
+                    <v-toolbar class="text-xs-center" dark color="#0066ff">
+                        <v-toolbar-title>Log of Commits</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                    </v-toolbar>
+                </v-card-title>
 
                 <v-card-text>
 
@@ -220,7 +294,7 @@
 
                     <v-layout row wrap v-else>
                         <v-flex xs12>
-                            <table v-if="logCommits">
+                            <table v-if="logCommits" class="logTable">
                                 <thead>
                                     <tr>
                                         <th>Author</th>
@@ -232,7 +306,7 @@
                                 <tbody>
                                     <tr v-for="(i,k) in logCommits" :key="k">
                                         <td>{{i.Author}}</td>
-                                        <td>{{i.Date}}</td>
+                                        <td>{{i.Date.split("T")[0]}}</td>
                                         <td>{{i.Comment}}</td>
                                         <td><v-btn small outline @click="showFullLog(k)">details</v-btn></td>
                                     </tr>
@@ -277,6 +351,10 @@
             commitLoading: false,
             dialogCommitsLog: false,
             logLoading: false,
+            pulling: false,
+            cloning: false,
+            noChangesInCommit: false,
+            noRepo: false,
             // --------
 
 
@@ -343,11 +421,7 @@
             await Common.auth(this);
 
             // ======
-            this.environments = (await environmentService.ListAll()).data;
-            this.full_environments = (await environmentService.ListAll()).data;
-            for (let i in this.environments) {
-                this.hosts.push(i);
-            }
+            await this.loadEnvs();
         },
 
         watch: {
@@ -390,11 +464,56 @@
             },
         },
         methods: {
+
+            async loadEnvs() {
+                let tmp = (await environmentService.ListAll()).data;
+
+                for (let i in tmp) { tmp[i].sort(Common.dynamicSort("name")); }
+
+                this.environments = tmp;
+                this.full_environments = (await environmentService.ListAll()).data;
+                for (let i in this.environments) {
+                    this.hosts.push(i);
+                }
+            },
+
+            async gitClone() {
+                this.cloning = true;
+
+                let resp = await environmentService.GitClone(this.currentHost, this.currentEnv);
+
+                console.info(resp.data);
+                this.noRepo = false;
+                this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
+                this.pulling = false;
+                await this.loadEnvs();
+                this.$forceUpdate();
+
+                this.cloning = false;
+            },
+
+            async gitPull() {
+                this.pulling = true;
+                let old_date = this.lastCommit.Date;
+                let resp = await environmentService.GitPull(this.currentHost, this.currentEnv);
+
+                console.info(resp.data);
+
+                this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
+                if (old_date === this.lastCommit.Date) {
+                    this.noChangesInCommit = true;
+                }
+                this.pulling = false;
+                await this.loadEnvs();
+                this.$forceUpdate();
+            },
+
             async showFullLog(commit) {
                 this.fullRepoLog = null;
+                this.commitLoading = true;
                 this.dialogChanges = true;
                 this.fullRepoLog = (await environmentService.GitLog(this.currentHost, this.currentEnv, commit)).data;
-                console.log(this.fullRepoLog);
+                this.commitLoading = false;
             },
 
             async showLogDialog() {
@@ -402,30 +521,19 @@
                 this.logLoading = true;
                 this.logCommits = (await environmentService.GitLogEnv(this.currentHost, this.currentEnv)).data[this.currentHost][this.currentEnv];
                 this.logLoading = false;
-
-                // this.repoData = [];
-                // for (let i in tmp) {
-                //     if (tmp[i] !== "") {
-                //         if (tmp[i].indexOf("HEAD") !== -1) {
-                //         } else {
-                //             let splt = tmp[i].split(" ");
-                //             this.repoData.push({
-                //                 commit: splt[0],
-                //                 ticket: splt[1],
-                //                 msg: splt.splice(3).join(" "),
-                //             });
-                //         }
-                //     }
-                // }
             },
 
             async showDialog(host, envName) {
+                this.noRepo = false;
                 this.commitLoading = true;
                 this.lastCommit = null;
                 this.dialog = true;
                 this.currentHost = host;
                 this.currentEnv = envName;
                 this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
+                if (this.lastCommit.Author === "") {
+                    this.noRepo = true;
+                }
                 this.commitLoading = false;
             }
         }
@@ -443,4 +551,13 @@
         /*margin: 0 auto;*/
         min-width: 400px;
     }
+    .logTable {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        text-align: left;
+        padding: 8px;
+    }
+    tr:nth-child(even) {background-color: #f2f2f2;}
 </style>
