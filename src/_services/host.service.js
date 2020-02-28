@@ -5,11 +5,16 @@ export const hostService = {
     hosts,
     ClientHosts,
     ClientHostsAll,
+    Statistic,
 };
 
 // GET ===========================================
 function hosts() {
     return Api().get("hosts/foreman");
+}
+
+function Statistic(host) {
+    return Api().get(`hosts/trend/${host}`);
 }
 
 function Info(host) {

@@ -115,30 +115,36 @@
                             Results
                         </v-card-title>
 
-<!--                        <v-layout v-if="checkInProgress" row wrap>-->
-<!--                            <v-layout row wrap v-if="wip" class="text-xs-center">-->
-<!--                                <v-flex xs12>-->
-<!--                                    <h2 v-if="WSProgress.message">{{WSProgress.item}}</h2>-->
-<!--                                    <v-chip label v-if="WSProgress.message">{{WSProgress.message}}</v-chip>-->
-<!--                                </v-flex>-->
-<!--                            </v-layout>-->
-<!--                        </v-layout>-->
-
                         <v-card>
-                            <v-card-text>
-                                <v-layout row wrap>
-                                    <v-flex xs12
-                                            v-for="(h, k) in hgUniq"
-                                            :key="k"
-                                    >
-                                        <v-layout row wrap>
-                                            <v-flex xs2>{{h.name}}</v-flex>
-                                            <v-flex xs2>Updated: {{h.updated}}</v-flex>
-                                            <v-flex xs8 v-if="h.updating">Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" rhombus-size="15" color="#607d8b"/></v-flex>
-                                        </v-layout>
-                                    </v-flex>
-                                </v-layout>
-                            </v-card-text>
+
+                            <v-expansion-panel
+                                    v-model="panelForUniqHG"
+                                    expand
+                            >
+                                <v-expansion-panel-content>
+                                    <template v-slot:header>
+                                        <div>Source HostGroups</div>
+                                    </template>
+                                    <v-card>
+                                        <v-card-text>
+                                            <v-layout row wrap>
+                                                <v-flex xs12
+                                                        v-for="(h, k) in hgUniq"
+                                                        :key="k"
+                                                >
+                                                    <v-layout row wrap>
+                                                        <v-flex xs2>{{h.name}}</v-flex>
+                                                        <v-flex xs2>Updated: {{h.updated}}</v-flex>
+                                                        <v-flex xs2>PuppetClasses: {{h.pc_count}}</v-flex>
+                                                        <v-flex xs2>Overrides: {{h.ovr_count}}</v-flex>
+                                                        <v-flex xs4 v-if="h.updating">Updating <looping-rhombuses-spinner class="ml-2" :animation-duration="2500" rhombus-size="15" color="#607d8b"/></v-flex>
+                                                    </v-layout>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-expansion-panel-content>
+                            </v-expansion-panel>
                         </v-card>
 
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
@@ -149,14 +155,33 @@
                                 v-for="(swes, host) in checkRes.batch"
                                 :key="host"
                         >
+                            <v-chip label pt-1 pb-1>{{host}}</v-chip>
                             <v-card
                                     v-for="(swe, idx) in swes"
                                     :key="idx"
                             >
                                 <v-card-text>
                                     <v-layout row wrap>
-                                        <v-flex xs3 pt-2>{{swe.tHost}}</v-flex>
-                                        <v-flex xs1 pt-2>{{swe.hgName}}</v-flex>
+                                        <v-flex xs2 pt-2>{{swe.hgName}}</v-flex>
+
+                                        <v-flex xs1 pt-2 v-if="swe.pc_count"> PC:
+                                            <v-chip v-if="swe.pc_countMiss" color="warning">
+                                                {{swe.pc_count}}
+                                            </v-chip>
+                                            <v-chip v-else>
+                                                {{swe.pc_count}}
+                                            </v-chip>
+                                        </v-flex>
+
+                                        <v-flex xs1 pt-2 v-if="swe.ovr_count"> OVR:
+                                            <v-chip v-if="swe.ovr_countMiss" color="warning">
+                                                {{swe.ovr_count}}
+                                            </v-chip>
+                                            <v-chip v-else>
+                                                {{swe.ovr_count}}
+                                            </v-chip>
+                                        </v-flex>
+
                                         <v-flex xs1>
                                             <v-chip label v-if="swe.environment.targetId === -1" color="red">
                                                 {{swe.environment.name}}
@@ -228,6 +253,8 @@
     import {Common} from "./methods";
     import {LoopingRhombusesSpinner} from 'epic-spinners'
 
+    import {PuppetMethods} from "./hostgroup/methods"
+
     export default {
         //========================================================================================================
         // COMPOUNDED
@@ -243,6 +270,7 @@
         },
 
         data: () => ({
+            panelForUniqHG: [true],
             e1: 0,
             sHost: "spb01-puppet.lab.nordigy.ru",
             tHost: [],
@@ -372,7 +400,14 @@
                     try {
                         if (this.hostGroupSelected.hasOwnProperty(hg)) {
                             hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupSelected[hg])).data;
-                            this.hgUniq.push({"name":hostGroup.name, "updated":hostGroup.updated, "updating":false});
+                            let parsedPc = PuppetMethods.parse(hostGroup.puppet_classes);
+                            this.hgUniq.push({
+                                "name":hostGroup.name,
+                                "updated":hostGroup.updated,
+                                "pc_count":parsedPc.PuppetClassesCount,
+                                "ovr_count":parsedPc.PuppetClassesOverrides,
+                                "updating":false
+                            });
                         }
                     } catch (e) {
                         this.wip = false;
@@ -388,6 +423,10 @@
                                     hgName: hostGroup.name,
                                     tHost: this.tHost[target],
                                     sHost: this.sHost,
+                                    pc_count: null,
+                                    pc_countMiss: false,
+                                    ovr_count: null,
+                                    ovr_countMiss: false,
                                     environment: {
                                         name: hostGroup.environment,
                                         targetId: null,
@@ -437,6 +476,19 @@
                                         if (targetHGList[j].name === i) {
                                             let ID = targetHGList[j].id;
                                             let targetHG = (await hostGroupService.Get(target, ID)).data;
+                                            let parsedPc = PuppetMethods.parse(targetHG.puppet_classes);
+                                            this.checkRes["batch"][target][i].ovr_count = parsedPc.PuppetClassesOverrides;
+                                            this.checkRes["batch"][target][i].pc_count = parsedPc.PuppetClassesCount;
+
+                                            let uItem = this.hgUniq.find(i => i.name === targetHGList[j].name);
+
+                                            if (uItem.pc_count !== parsedPc.PuppetClassesCount) {
+                                                this.checkRes["batch"][target][i].pc_countMiss = true;
+                                            }
+                                            if (uItem.ovr_count !== parsedPc.PuppetClassesOverrides) {
+                                                this.checkRes["batch"][target][i].ovr_countMiss = true;
+                                            }
+
                                             let HGNameLink = i.replace(/\./g, "-");
                                             this.checkRes["batch"][target][i].hg_link = `https://${target}/hostgroups/${targetHG.foreman_id}-SWE-${HGNameLink}/edit`;
                                         }

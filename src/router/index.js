@@ -7,6 +7,7 @@ import JsonEditor from '../views/editor/JsonEditor';
 import Locations from '../views/editor/LocationsEditor';
 import Error from '../views/Error';
 import SweStatus from '../views/SweStatus';
+import SweStatusGit from '../views/SweStatusGit';
 import Index from '../views/Index';
 
 Vue.use(Router);
@@ -42,6 +43,11 @@ const router = new Router({
             path: '/swe',
             name: 'swe',
             component: SweStatus
+        },
+        {
+            path: '/swegit',
+            name: 'swegit',
+            component: SweStatusGit
         },
         {
             path: '/error',

@@ -15,9 +15,29 @@ export const environmentService = {
     SVNRepoCheckout,
     SVNForemanUpdate,
     SVNBatch,
+    GitClone,
+    GitPull,
+    GitLogAll,
+    GitLogEnv,
+    GitLog,
 };
 
 // GET ===========================================
+function GitClone(host, swe) {
+    return Api().get(`env/git/clone/${host}/${swe}`);
+}
+function GitPull(host, swe) {
+    return Api().get(`env/git/pull/${host}/${swe}`);
+}
+function GitLogAll(host) {
+    return Api().get(`env/git/log/${host}`);
+}
+function GitLogEnv(host, swe, commit) {
+    return Api().get(`env/git/log/${host}/${swe}`);
+}
+function GitLog(host, swe, commit) {
+    return Api().get(`env/git/log/${host}/${swe}/${commit}`);
+}
 function List(host) {
         return Api().get(`env/${host}`);
 }

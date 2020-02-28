@@ -449,7 +449,7 @@
             }
         }
     }
-</script>час
+</script>
 
 <style>
 
