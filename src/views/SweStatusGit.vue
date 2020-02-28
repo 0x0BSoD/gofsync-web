@@ -540,7 +540,7 @@
     }
 </script>
 
-<style>
+<style scoped>
     .added {
         background-color: lightgreen;
     }

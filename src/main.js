@@ -4,7 +4,6 @@ import './plugins/vuetify'
 import './plugins/cookies'
 import './plugins/vue-particles'
 import './plugins/vuewebsocket'
-import './plugins/vuecodemirror'
 
 import App from './App.vue'
 import router from './router'

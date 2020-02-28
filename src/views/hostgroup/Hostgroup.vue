@@ -252,67 +252,123 @@
             </v-flex>
         </v-layout>
 
-        <!--    ============================================ HostGroups ============================================    -->
+        <!--    ============================================   Trends   ============================================    -->
         <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
-            <v-flex xs12 v-if="hostGroups.length > 0">
-                <v-btn-toggle v-model="toggle_status" class="mb-2">
-                    <v-btn flat dark color="success">Pro</v-btn>
-                    <v-btn flat dark color="primary">Dev</v-btn>
-                    <v-btn flat dark color="warning">To remove</v-btn>
-                    <v-btn flat>w/o state</v-btn>
-                </v-btn-toggle>
-                <br/>
-                <div v-if="toggle_status === 0">
-                    <v-btn
-                            v-for="(val, i) in hostGroups"
-                            :key="i"
-                            v-if="val.name !== 'SWE' && val.status === 'pro'"
-                            @click="setHG(val.id)">
-                        {{val.name}}
-                        <v-icon right v-if="val.status === 'pro'" color="success">trip_origin</v-icon>
-                    </v-btn>
-                </div>
-                <div v-else-if="toggle_status === 1">
-                    <v-btn
-                            v-for="(val, i) in hostGroups"
-                            :key="i"
-                            v-if="val.name !== 'SWE' && val.status === 'dev'"
-                            @click="setHG(val.id)">
-                        {{val.name}}
-                        <v-icon right v-if="val.status === 'dev'" color="primary">trip_origin</v-icon>
-                    </v-btn>
-                </div>
-                <div v-else-if="toggle_status === 2">
-                    <v-btn
-                            v-for="(val, i) in hostGroups"
-                            :key="i"
-                            v-if="val.name !== 'SWE' && val.status === '_toremove'"
-                            @click="setHG(val.id)">
-                        {{val.name}}
-                        <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
-                    </v-btn>
-                </div>
-                <div v-else-if="toggle_status === 3">
-                    <v-btn
-                            v-for="(val, i) in hostGroups"
-                            :key="i"
-                            v-if="val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"
-                            @click="setHG(val.id)">
-                        {{val.name}}
-                    </v-btn>
-                </div>
-                <div v-else>
-                    <v-btn
-                            v-for="(val, i) in hostGroups"
-                            :key="i"
-                            v-if="val.name !== 'SWE'"
-                            @click="setHG(val.id)">
-                        {{val.name}}
-                        <v-icon right v-if="val.status === 'pro'" color="success">trip_origin</v-icon>
-                        <v-icon right v-if="val.status === 'dev'" color="primary">trip_origin</v-icon>
-                        <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
-                    </v-btn>
-                </div>
+            <v-flex xs3 v-if="statistics">
+                <v-card class="mb-2" >
+                    <v-card-text >
+                        <table class="info_table">
+                            <thead>
+                            <tr>
+                                <th>Last Runs</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><v-chip color="success" label>Success:</v-chip></td>
+                                <td>{{statistics.success}}</td>
+                            </tr>
+                            <tr>
+                                <td><v-chip color="warning" label>Restart Failures:</v-chip></td>
+                                <td>{{statistics.r_failed}}</td>
+                            </tr>
+                            <tr>
+                                <td><v-chip color="error" label>Failed:</v-chip></td>
+                                <td>{{statistics.failed}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <v-icon
+                                class="mr-2"
+                                small
+                        >
+                            alarm
+                        </v-icon>
+                        <span class="caption grey--text font-weight-light">
+                                                        last run <strong><a target="_blank" :rel="statistics.host" :href="`https://${sHost}/hosts/${statistics.last_host}/reports`">{{statistics.last_host}}</a></strong>
+                                                    </span>
+
+                    </v-card-text>
+                </v-card>
+            </v-flex>
+            <v-flex xs9 v-if="statistics">
+                <v-card class="ml-1 mb-2" >
+                    <v-card-text>
+                        <line-chart
+                                :chart-data="statistics.trend">
+                        </line-chart>
+                    </v-card-text>
+                </v-card>
+            </v-flex>
+
+        <!--    ============================================ HostGroups ============================================    -->
+            <v-flex xs12>
+                <v-card>
+                    <v-card-text>
+                        <v-flex xs12 v-if="hostGroups.length > 0">
+                            <v-btn-toggle v-model="toggle_status" class="mb-2">
+                                <v-btn flat dark color="success">Pro</v-btn>
+                                <v-btn flat dark color="primary">Dev</v-btn>
+                                <v-btn flat dark color="warning">To remove</v-btn>
+                                <v-btn flat>w/o state</v-btn>
+                            </v-btn-toggle>
+                            <br/>
+                            <div v-if="toggle_status === 0">
+                                <v-btn
+                                        v-for="(val, i) in hostGroups"
+                                        :key="i"
+                                        v-if="val.name !== 'SWE' && val.status === 'pro'"
+                                        @click="setHG(val.id)">
+                                    {{val.name}}
+                                    <v-icon right v-if="val.status === 'pro'" color="success">trip_origin</v-icon>
+                                </v-btn>
+                            </div>
+                            <div v-else-if="toggle_status === 1">
+                                <v-btn
+                                        v-for="(val, i) in hostGroups"
+                                        :key="i"
+                                        v-if="val.name !== 'SWE' && val.status === 'dev'"
+                                        @click="setHG(val.id)">
+                                    {{val.name}}
+                                    <v-icon right v-if="val.status === 'dev'" color="primary">trip_origin</v-icon>
+                                </v-btn>
+                            </div>
+                            <div v-else-if="toggle_status === 2">
+                                <v-btn
+                                        v-for="(val, i) in hostGroups"
+                                        :key="i"
+                                        v-if="val.name !== 'SWE' && val.status === '_toremove'"
+                                        @click="setHG(val.id)">
+                                    {{val.name}}
+                                    <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                                </v-btn>
+                            </div>
+                            <div v-else-if="toggle_status === 3">
+                                <v-btn
+                                        v-for="(val, i) in hostGroups"
+                                        :key="i"
+                                        v-if="val.name !== 'SWE' && val.status !== '_toremove' && val.status !== 'dev' && val.status !== 'pro'"
+                                        @click="setHG(val.id)">
+                                    {{val.name}}
+                                </v-btn>
+                            </div>
+                            <div v-else>
+                                <v-btn
+                                        v-for="(val, i) in hostGroups"
+                                        :key="i"
+                                        v-if="val.name !== 'SWE'"
+                                        @click="setHG(val.id)">
+                                    {{val.name}}
+                                    <v-icon right v-if="val.status === 'pro'" color="success">trip_origin</v-icon>
+                                    <v-icon right v-if="val.status === 'dev'" color="primary">trip_origin</v-icon>
+                                    <v-icon right v-if="val.status === '_toremove'" color="warning">trip_origin</v-icon>
+                                </v-btn>
+                            </div>
+                        </v-flex>
+                    </v-card-text>
+                </v-card>
             </v-flex>
         </v-layout>
         <!--    ============================================ /HostGroups ============================================    -->
@@ -352,6 +408,9 @@
     import {PuppetMethods} from "./methods"
     import {mapGetters} from "vuex";
 
+
+    import LineChart from "../../components/hostgroups/chart"
+
     export default {
         //========================================================================================================
         // COMPONENTS
@@ -359,7 +418,8 @@
         components: {
             Locations,
             HGInfo,
-            HGDiff
+            HGDiff,
+            LineChart,
         },
 
         //========================================================================================================
@@ -401,6 +461,7 @@
             btn_logout: false,
             updateDB: false,
             showPC: false,
+            statistics: null,
             // source ======
             sHost: null,
             hostGroupId: null,
@@ -515,6 +576,7 @@
                     // Load source info =================================
                     this.hostGroups = (await hostGroupService.List(val)).data;
                     this.hostGroupsFull = (await hostGroupService.List(val)).data;
+                    this.statistics = (await hostService.Statistic(val)).data;
 
                     let tmpEnv = (await environmentService.List(val)).data;
                     let reg = new RegExp('(([0-9]).*|v.*)');
@@ -881,12 +943,6 @@
                     this.targPc = targetPCData.PuppetClasses;
                     this.targetLoaded = true;
 
-                    // try {
-                    //     PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                    // } catch (e) {
-                    //     console.error(e);
-                    // }
-
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
@@ -897,4 +953,4 @@
     }
 </script>
 
-<style></style>
+<style scoped></style>
