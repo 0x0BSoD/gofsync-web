@@ -842,7 +842,6 @@
 
                     this.dialogBatchSweRunning = true;
 
-                    console.time("be");
 
                     for (let h in this.progressStruct) {
                         for (let e in this.progressStruct[h]) {
@@ -871,7 +870,6 @@
                         }
                     }
 
-                    console.timeEnd("be");
 
                 } else {
                     let postParams = {};
