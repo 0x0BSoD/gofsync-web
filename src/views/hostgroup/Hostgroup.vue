@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid>
 
         <!--    ============================================ Alerts ============================================    -->
         <v-alert
@@ -254,7 +254,7 @@
 
         <!--    ============================================   Trends   ============================================    -->
         <v-layout row wrap v-if="!sourceLoaded && !targetLoaded">
-            <v-flex xs3 v-if="statistics">
+            <v-flex xs12 md3 v-if="statistics">
                 <v-card class="mb-2" >
                     <v-card-text >
                         <table class="info_table">
@@ -280,20 +280,33 @@
                             </tbody>
                         </table>
 
-                        <v-icon
-                                class="mr-2"
-                                small
-                        >
-                            alarm
-                        </v-icon>
-                        <span class="caption grey--text font-weight-light">
-                                                        last run <strong><a target="_blank" :rel="statistics.host" :href="`https://${sHost}/hosts/${statistics.last_host}/reports`">{{statistics.last_host}}</a></strong>
-                                                    </span>
+                        <div class="pt-2">
+                            <v-icon class="mr-2" small>alarm</v-icon>
+                            <span class="caption grey--text font-weight-light">
+                                Last Hosts:
+                            </span>
+<!--                            <strong v-for="(v,k) in statistics.last_hosts" :key="k">-->
+<!--                                {{v}} {{k}}-->
+<!--                                <a target="_blank" :rel="statistics.host" :href="`https://${sHost}/hosts/${statistics.last_host}/reports`">-->
+<!--                                    {{statistics.last_host}}-->
+<!--                                </a>-->
+<!--                            </strong>-->
+<!--                        </span>-->
+                        </div>
+                        <div>
+                            <div v-for="(v,k) in statistics.last_hosts" :key="k">
+                                <v-chip small label v-if="v" color="success">Success</v-chip>
+                                <v-chip small label v-else color="warning">Success</v-chip>
+                                <a target="_blank" :rel="k" :href="`https://${sHost}/hosts/${k}/reports`">{{k}}</a>
+                            </div>
+                        </div>
+
+
 
                     </v-card-text>
                 </v-card>
             </v-flex>
-            <v-flex xs9 v-if="statistics">
+            <v-flex xs12 md9 v-if="statistics">
                 <v-card class="ml-1 mb-2" >
                     <v-card-text>
                         <line-chart
@@ -305,9 +318,9 @@
 
         <!--    ============================================ HostGroups ============================================    -->
             <v-flex xs12>
-                <v-card>
+                <v-card v-if="hostGroups.length > 0">
                     <v-card-text>
-                        <v-flex xs12 v-if="hostGroups.length > 0">
+                        <v-flex xs12>
                             <v-btn-toggle v-model="toggle_status" class="mb-2">
                                 <v-btn flat dark color="success">Pro</v-btn>
                                 <v-btn flat dark color="primary">Dev</v-btn>
@@ -498,7 +511,7 @@
             link: false,
             targetDiff: false,
             hgUpdate: true,
-            toggle_status: null,
+            toggle_status: 0,
             WSProgress: {
                 errors: [],
                 done: [],
@@ -576,7 +589,19 @@
                     // Load source info =================================
                     this.hostGroups = (await hostGroupService.List(val)).data;
                     this.hostGroupsFull = (await hostGroupService.List(val)).data;
+
                     this.statistics = (await hostService.Statistic(val)).data;
+                    let tmpHosts = {};
+                    let count = 1;
+
+                    for (let i in this.statistics.last_hosts) {
+                        if (count === 7) { break }
+                        console.log(i);
+                        tmpHosts[i] = this.statistics.last_hosts[i];
+                        count++
+                    }
+                    this.statistics.last_hosts = tmpHosts;
+
 
                     let tmpEnv = (await environmentService.List(val)).data;
                     let reg = new RegExp('(([0-9]).*|v.*)');
@@ -727,9 +752,9 @@
                             }
 
                             this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
-                            let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                            let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
-                            this.targPc = targetPCData.PuppetClasses;
+                            // let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
+                            // let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
+                            // this.targPc = targetPCData.PuppetClasses;
 
                             this.targetLoaded = true;
 
