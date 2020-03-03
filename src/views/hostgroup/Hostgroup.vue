@@ -285,18 +285,11 @@
                             <span class="caption grey--text font-weight-light">
                                 Last Hosts:
                             </span>
-<!--                            <strong v-for="(v,k) in statistics.last_hosts" :key="k">-->
-<!--                                {{v}} {{k}}-->
-<!--                                <a target="_blank" :rel="statistics.host" :href="`https://${sHost}/hosts/${statistics.last_host}/reports`">-->
-<!--                                    {{statistics.last_host}}-->
-<!--                                </a>-->
-<!--                            </strong>-->
-<!--                        </span>-->
                         </div>
                         <div>
                             <div v-for="(v,k) in statistics.last_hosts" :key="k">
                                 <v-chip small label v-if="v" color="success">Success</v-chip>
-                                <v-chip small label v-else color="warning">Success</v-chip>
+                                <v-chip small label v-else color="warning">Failed</v-chip>
                                 <a target="_blank" :rel="k" :href="`https://${sHost}/hosts/${k}/reports`">{{k}}</a>
                             </div>
                         </div>
@@ -568,6 +561,7 @@
                 async handler(val) {
                     // RESET =================================
                     PuppetMethods.resetMismatch(this);
+                    this.statistics = null;
                     this.env = "any";
                     this.tHost = null;
                     this.existData = null;
