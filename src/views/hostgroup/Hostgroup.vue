@@ -590,7 +590,6 @@
 
                     for (let i in this.statistics.last_hosts) {
                         if (count === 7) { break }
-                        console.log(i);
                         tmpHosts[i] = this.statistics.last_hosts[i];
                         count++
                     }
@@ -739,25 +738,17 @@
                         if (this.foremanCheckHG) {
                             let targetId = null;
                             let targetHgs = (await hostGroupService.List(this.tHost)).data;
+
                             for (let i in targetHgs) {
                                 if (targetHgs.hasOwnProperty(i)) {
+                                    console.log(targetHgs[i].name, this.hostGroup.name);
                                     if (targetHgs[i].name === this.hostGroup.name) targetId = targetHgs[i].id;
                                 }
                             }
 
                             this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
-                            // let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                            // let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
-                            // this.targPc = targetPCData.PuppetClasses;
 
                             this.targetLoaded = true;
-
-                            // try {
-                            //     PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                            // } catch (e) {
-                            //     console.error(e);
-                            //     this.wip = false;
-                            // }
 
                             let name = this.hostGroup.name.replace(/\./g, "-");
                             this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
@@ -789,7 +780,6 @@
 
                     this.hostGroup = (await hostGroupService.Get(this.sHost, this.hostGroupId)).data;
                     this.pc = {};
-                    // await hostGroupService.GitCommit(this.sHost, this.hostGroupId);
                     this.hgDone = true;
                     this.hgDoneMsg = `HostGroup ${this.hostGroup.name} data updated`;
                 } catch (e) {
@@ -810,18 +800,10 @@
                 this.pc_count = sourcePCData.PuppetClassesCount;
                 this.ovr_count = sourcePCData.PuppetClassesOverrides;
                 this.pc = sourcePCData.PuppetClasses;
-                try {
-                    if (this.tHost) {
-                        let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                        // PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                    }
-                } catch (e) {
-                    console.error(e);
-                } finally {
-                    this.tHost = old_th;
-                    this.sourceLoaded = true;
-                    this.wip = false;
-                }
+
+                this.tHost = old_th;
+                this.sourceLoaded = true;
+                this.wip = false;
             },
 
             async updateTargetHG() {
@@ -872,17 +854,8 @@
                         }
                     }
                     this.targetHostGroup = (await hostGroupService.Get(this.tHost, targetId)).data;
-                    // fill puppet classes info
-                    let targetPCData = PuppetMethods.parse(this.targetHostGroup.puppet_classes);
-                    let sourcePCData = PuppetMethods.parse(this.hostGroup.puppet_classes);
-                    this.targPc = targetPCData.PuppetClasses;
-                    this.targetLoaded = true;
 
-                    // try {
-                    //     PuppetMethods.setMismatch(this, sourcePCData, targetPCData);
-                    // } catch (e) {
-                    //     console.error(e);
-                    // }
+                    this.targetLoaded = true;
 
                     let name = this.hostGroup.name.replace(/\./g, "-");
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
@@ -890,7 +863,6 @@
                 }
 
                 this.targetLoaded = true;
-                //this.$disconnect();
                 this.wip = false;
             },
 
@@ -914,14 +886,14 @@
                     if (this.hgUpdate) {
                         this.wipMessage = "Updating source ...";
                         await hostGroupService.FUpdate(this.sHost, this.hostGroup.name);
-                        this.wipMessage = "Uploading to target host ...";
-                        let response = (await hostGroupService.Send(data));
-                        if (response.status === 200) {
-                        }
                     }
 
-                    this.wipMessage = "Updating data ...";
-                    response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
+                    this.wipMessage = "Uploading to target host ...";
+                    await hostGroupService.Send(data);
+
+                    // this.wipMessage = "Updating data ...";
+                    // response2 = (await hostGroupService.FUpdate(this.tHost, this.hostGroup.name));
+
                     this.wipMessage = false;
                     this.wip = false;
                 } catch (e) {
@@ -966,7 +938,6 @@
                     this.link = `https://${this.tHost}/hostgroups/${this.targetHostGroup.foreman_id}-SWE-${name}/edit`;
 
                 }
-                //this.$disconnect();
             },
         }
     }

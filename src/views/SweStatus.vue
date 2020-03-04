@@ -616,7 +616,7 @@
                         for (let host in this.full_environments) {
                             this.environments[host] = [];
                             for (let i in this.full_environments[host]) {
-                                if (this.full_environments[host][i].name.includes(val)) {
+                                if (this.full_environments[host][i].name.match(`.*${val}$`)) {
                                     this.environments[host].push(this.full_environments[host][i]);
                                 }
                             }
