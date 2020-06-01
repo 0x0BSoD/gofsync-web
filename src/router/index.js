@@ -8,6 +8,7 @@ import Locations from '../views/editor/LocationsEditor';
 import Error from '../views/Error';
 import SweStatus from '../views/SweStatus';
 import SweStatusGit from '../views/SweStatusGit';
+import Jobs from '../views/Jobs';
 import Index from '../views/Index';
 
 Vue.use(Router);
@@ -53,6 +54,11 @@ const router = new Router({
             path: '/error',
             name: 'error',
             component: Error
+        },
+        {
+            path: '/jobs',
+            name: 'jobs',
+            component: Jobs
         },
         {
             path: '/',

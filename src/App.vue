@@ -182,6 +182,72 @@
                     </v-list-tile>
                     <!-- === swe btn's === -->
 
+                    <!-- === git swe btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'swegit'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>code</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>GIT SWE Code</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>GIT SWE Code</span>
+                    </v-tooltip>
+
+                    <v-list-tile
+                            v-else
+                            :to="{name:'swegit'}"
+                    >
+                        <v-list-tile-action>
+                            <v-icon>code</v-icon>
+                        </v-list-tile-action>
+
+                        <v-list-tile-content>
+                            <v-list-tile-title>GIT SWE Code</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                    <!-- === git swe btn's === -->
+
+                    <!-- === jobs btn's === -->
+                    <v-tooltip right v-if="mini">
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile
+                                    v-on="on"
+                                    :to="{name:'jobs'}"
+                            >
+                                <v-list-tile-action>
+                                    <v-icon>donut_small</v-icon>
+                                </v-list-tile-action>
+
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Sync Jobs</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </template>
+                        <span>Sync Jobs</span>
+                    </v-tooltip>
+
+                    <v-list-tile
+                            v-else
+                            :to="{name:'jobs'}"
+                    >
+                        <v-list-tile-action>
+                            <v-icon>donut_small</v-icon>
+                        </v-list-tile-action>
+
+                        <v-list-tile-content>
+                            <v-list-tile-title>Sync Jobs</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                    <!-- === jobs swe btn's === -->
+
                     <v-divider></v-divider>
 
                     <!-- === loc btn's === -->
