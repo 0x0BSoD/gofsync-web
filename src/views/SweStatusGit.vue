@@ -33,7 +33,7 @@
                                             </v-btn>
                                         </template>
                                         <v-list>
-                                            <v-list-tile :disabled="true" @click="addEnvironment(host)">
+                                            <v-list-tile @click="addEnvironment(host)">
                                                 <v-list-tile-title>Add Environment</v-list-tile-title>
                                             </v-list-tile>
                                         </v-list>
@@ -100,7 +100,7 @@
 
         <!-- ======================================================================================================= -->
         <v-dialog
-                v-model="dialog"
+                v-model="dialogInfo"
                 max-width="1000"
                 scrollable
         >
@@ -202,7 +202,7 @@
                     <v-btn v-else @click="gitPull()">Update</v-btn>
                     <v-btn @click="showLogDialog()" :disabled="noRepo">Log</v-btn>
                     <v-spacer></v-spacer>
-                    <v-btn @click.native="dialog = !dialog">close</v-btn>
+                    <v-btn @click.native="dialogInfo = !dialogInfo">close</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -322,6 +322,77 @@
             </v-card>
         </v-dialog>
 
+        <v-dialog
+                v-model="dialogAddEnvironment"
+                max-width="800"
+        >
+            <v-card>
+                <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                    <v-toolbar-title>Adding new environment</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-btn @click.native="dialogAddEnvironment = !dialogAddEnvironment" icon><v-icon>close</v-icon></v-btn>
+                </v-toolbar>
+
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs10>
+                            <v-autocomplete
+                                    solo
+                                    label="Environments"
+                                    multiple
+                                    v-model="selectedBranches"
+                                    :items="branches"
+                                    clearable
+                            ></v-autocomplete>
+                        </v-flex>
+
+                        <v-flex xs2>
+                            <v-tooltip bottom>
+                                <template v-slot:activator="{ on }">
+                                    <v-btn @click="addAllBranches()" color="primary" dark v-on="on">ADD ALL</v-btn>
+                                </template>
+                                <span>All with SWE</span>
+                            </v-tooltip>
+                        </v-flex>
+
+                        <v-flex xs12>
+                            <v-autocomplete
+                                    solo
+                                    label="Hosts"
+                                    multiple
+                                    v-model="selectedHosts"
+                                    :items="hosts"
+                                    clearable
+                            ></v-autocomplete>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-btn :disabled="selectedHosts.length === 0 || selectedBranches.length === 0" @click="submit()">Submit</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-dialog
+                v-model="dialogAddEnvironmentProgress"
+                max-width="800">
+            <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                <v-toolbar-title>Adding new environment ...</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn @click.native="dialogAddEnvironment = !dialogAddEnvironment" icon><v-icon>close</v-icon></v-btn>
+            </v-toolbar>
+
+            <v-card-text>
+                <v-layout row wrap>
+                    <v-flex xs12>
+
+                    </v-flex>
+                </v-layout>
+            </v-card-text>
+
+        </v-dialog>
+
     </v-container>
 </template>
 
@@ -355,9 +426,6 @@
             cloning: false,
             noChangesInCommit: false,
             noRepo: false,
-            // --------
-
-
             WSProgress: {
                 errors: [],
                 done: [],
@@ -368,47 +436,22 @@
                 },
             },
             hosts: [],
-            selectHosts: [],
+            selectedHosts: [],
             environments: [],
             full_environments: [],
-            svnInfo: {
-                repository: {},
-                directory: {},
-            },
-            svnLog: [],
-            allSwe: [],
-            toUpdate: [],
-            checkoutIfReq: false,
-            swe_loading: false,
-            swe_updating: false,
-            svn_get_error: false,
-            svn_get_error_msg: null,
-            svn_repo: null,
             filter: null,
             repo: null,
-            dialogHost: null,
-            dialogSwe: null,
-            newEnvName: null,
-            newEnvError: null,
-            dialog: false,
+            dialogInfo: false,
             dialogChanges: false,
             dialogEditRepo: false,
             dialogBatchSwe: false,
             dialogBatchSweRunning: false,
             dialogAddEnvironment: false,
             dialogAddEnvironmentProgress: false,
-            progressStruct: {},
-            dialogTitle: null,
-            checkCode: false,
-            importClasses: false,
             wip: true,
-            addEnvStepNum: 1,
-            addSteps: {
-                1: { title: "Checking", icon: "pause", progress: false, msg: null, show: true},
-                2: { title: "Adding to Foreman", icon: "pause", progress: false, msg: null, show: true},
-                3: { title: "Getting code", icon: "pause", progress: false, msg: null, show: true},
-                4: { title: "Importing Classes", icon: "pause", progress: false, msg: null, show: true},
-            },
+            selectedBranches: [],
+            branches: [],
+            progressStruct: {},
         }),
 
         components: {
@@ -466,12 +509,12 @@
         methods: {
 
             async loadEnvs() {
-                let tmp = (await environmentService.ListAll()).data;
+                let tmp = (await environmentService.ListAll(true)).data;
 
                 for (let i in tmp) { tmp[i].sort(Common.dynamicSort("name")); }
 
                 this.environments = tmp;
-                this.full_environments = (await environmentService.ListAll()).data;
+                this.full_environments = (await environmentService.ListAll(true)).data;
                 for (let i in this.environments) {
                     this.hosts.push(i);
                 }
@@ -527,7 +570,7 @@
                 this.noRepo = false;
                 this.commitLoading = true;
                 this.lastCommit = null;
-                this.dialog = true;
+                this.dialogInfo = true;
                 this.currentHost = host;
                 this.currentEnv = envName;
                 this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
@@ -535,7 +578,39 @@
                     this.noRepo = true;
                 }
                 this.commitLoading = false;
-            }
+            },
+
+            async addEnvironment() {
+                this.dialogAddEnvironment = true;
+                this.branches = (await environmentService.Branches()).data;
+            },
+
+            addAllBranches() {
+                this.selectedBranches = this.branches.filter(i => i.includes("swe"));
+            },
+
+            async submit() {
+                for (let i in this.selectedHosts) {
+                    let host = this.selectedHosts[i];
+                    for (let j in this.selectedBranches) {
+                        let branch = this.selectedBranches[j];
+
+                        this.progressStruct[host] = {
+                            Name: branch,
+                            InProgress: false,
+                            Message: null,
+
+                        };
+
+                        let response = (await environmentService.GitLog(host, branch, "HEAD")).data;
+                        if (response.Date === "0001-01-01T00:00:00Z") {
+                            console.log("Code not found on host");
+                        } else {
+                            console.log(response);
+                        }
+                    }
+                }
+            },
         }
     }
 </script>

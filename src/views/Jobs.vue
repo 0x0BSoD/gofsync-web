@@ -168,7 +168,7 @@
                 };
 
                 params.swe_list = this.selected_hostGroups;
-                params.locations_list = this.selected_locations;
+                params.locations_list = this.selected_locations.map(i => i.toLowerCase());
 
                 this.output =  `==>\n${ JSON.stringify(params, null, 2) }`;
 

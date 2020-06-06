@@ -3,6 +3,7 @@ import Api from "./Api";
 export const environmentService = {
     List,
     ListAll,
+    Branches,
     Check,
     Update,
     ForemanID,
@@ -41,8 +42,15 @@ function GitLog(host, swe, commit) {
 function List(host) {
         return Api().get(`env/${host}`);
 }
-function ListAll() {
-    return Api().get("env");
+function ListAll(git) {
+    if (git) {
+        return Api().get("env", {params: {git: 'true'}});
+    } else {
+        return Api().get("env");
+    }
+}
+function Branches() {
+    return Api().get("env/git/branches");
 }
 function SVNInfo(host, name) {
     return Api().get(`env/svn/info/${host}/${name}`);

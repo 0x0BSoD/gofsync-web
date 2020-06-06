@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid>
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout row wrap>
@@ -579,10 +579,10 @@
 
             // ======
 
-            let tmp = (await environmentService.ListAll()).data;
+            let tmp = (await environmentService.ListAll(false)).data;
             for (let i in tmp) { tmp[i].sort(Common.dynamicSort("name")); }
             this.environments = tmp;
-            this.full_environments = (await environmentService.ListAll()).data;
+            this.full_environments = (await environmentService.ListAll(false)).data;
             for (let i in this.environments) {
                 this.hosts.push(i);
             }
