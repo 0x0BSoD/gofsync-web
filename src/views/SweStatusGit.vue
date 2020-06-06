@@ -380,17 +380,43 @@
             <v-toolbar class="text-xs-center" dark color="#7ac2ff">
                 <v-toolbar-title>Adding new environment ...</v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn @click.native="dialogAddEnvironment = !dialogAddEnvironment" icon><v-icon>close</v-icon></v-btn>
+                <v-btn @click.native="dialogAddEnvironmentProgress = !dialogAddEnvironmentProgress" icon><v-icon>close</v-icon></v-btn>
             </v-toolbar>
-
-            <v-card-text>
-                <v-layout row wrap>
-                    <v-flex xs12>
-
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-
+            <v-card>
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs12 v-for="(items,host) in progressStruct" :key="host">
+                            <v-card>
+                                <v-card-title>
+                                    <div><span class="grey--text"><v-chip dark>{{host}}</v-chip></span><br></div>
+                                </v-card-title>
+                                <v-card-text v-for="(i,k) in items" :key="k">
+                                    <v-layout row wrap>
+                                        <v-flex xs12>
+                                            <v-card>
+                                                <v-card-text>
+                                                    <v-layout row wrap>
+                                                        <v-flex xs3><v-chip label>{{ i.Name }}</v-chip></v-flex>
+                                                        <v-flex xs2 v-if="i.InProgress">
+                                                            <looping-rhombuses-spinner class="ml-2 mt-3" :animation-duration="2500"
+                                                                                       :rhombus-size="15" color="#607d8b"/>
+                                                        </v-flex>
+                                                        <v-flex xs3 v-if="i.Message && i.Message.length > 0" class="mt-2">{{ i.Message }}</v-flex>
+                                                        <v-flex xs2 v-if="i.Exist && i.InProgress"><v-chip label color="primary">Updating</v-chip></v-flex>
+                                                        <v-flex xs2 v-else-if="i.InProgress"><v-chip label color="primary">Uploading</v-chip></v-flex>
+                                                        <v-flex xs2 v-if="i.Error"><v-chip label color="warning">Failed</v-chip></v-flex>
+                                                        <v-flex xs2 v-if="i.Done"><v-chip label color="success">Done</v-chip></v-flex>
+                                                    </v-layout>
+                                                </v-card-text>
+                                            </v-card>
+                                        </v-flex>
+                                    </v-layout>
+                                </v-card-text>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+            </v-card>
         </v-dialog>
 
     </v-container>
@@ -524,8 +550,8 @@
                 this.cloning = true;
 
                 let resp = await environmentService.GitClone(this.currentHost, this.currentEnv);
-
                 console.info(resp.data);
+
                 this.noRepo = false;
                 this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
                 this.pulling = false;
@@ -538,8 +564,8 @@
             async gitPull() {
                 this.pulling = true;
                 let old_date = this.lastCommit.Date;
-                let resp = await environmentService.GitPull(this.currentHost, this.currentEnv);
 
+                let resp = await environmentService.GitPull(this.currentHost, this.currentEnv);
                 console.info(resp.data);
 
                 this.lastCommit = (await environmentService.GitLog(this.currentHost, this.currentEnv, "HEAD")).data;
@@ -592,21 +618,69 @@
             async submit() {
                 for (let i in this.selectedHosts) {
                     let host = this.selectedHosts[i];
+                    let tmp = [];
                     for (let j in this.selectedBranches) {
                         let branch = this.selectedBranches[j];
-
-                        this.progressStruct[host] = {
+                        tmp.push({
                             Name: branch,
                             InProgress: false,
                             Message: null,
+                            Exist: false,
+                            Done: false,
+                            Error: false,
+                        });
+                    }
+                    this.progressStruct[host] = tmp;
+                }
 
-                        };
+                this.dialogAddEnvironment = false;
+                this.dialogAddEnvironmentProgress = true;
 
-                        let response = (await environmentService.GitLog(host, branch, "HEAD")).data;
+                for (let host in this.progressStruct) {
+                    for (let i in this.progressStruct[host]) {
+                        this.progressStruct[host][i].InProgress = true;
+                        this.progressStruct[host][i].Message = "Checking";
+                        this.$forceUpdate();
+
+                        let response = (await environmentService.GitLog(host, this.progressStruct[host][i].Name, "HEAD")).data;
                         if (response.Date === "0001-01-01T00:00:00Z") {
-                            console.log("Code not found on host");
+                            let resp = (await environmentService.ForemanID({host: host, env: this.progressStruct[host][i].Name})).data;
+                            if (resp === -1) {
+                                this.progressStruct[host][i].Message = "Creating environment ...";
+                                this.$forceUpdate();
+                                response = (await environmentService.Submit({host: host, env: this.progressStruct[host][i].Name})).data;
+                            }
+                            this.progressStruct[host][i].Message = "Cloning code ...";
+                            this.$forceUpdate();
+                            resp = await environmentService.GitClone(host, this.progressStruct[host][i].Name);
+                            console.info(resp.data);
                         } else {
-                            console.log(response);
+                            this.progressStruct[host][i].Exist = true;
+                            this.progressStruct[host][i].Message = "Updating code ...";
+                            this.$forceUpdate();
+                            let resp = await environmentService.GitPull(host, this.progressStruct[host][i].Name);
+                            console.info(resp.data);
+                        }
+
+                        let postParams = {
+                            "host": host,
+                            "environment": this.progressStruct[host][i].Name,
+                            "dry_run": false,
+                        };
+                        try {
+                            this.progressStruct[host][i].Message = "Importing classes ...";
+                            this.$forceUpdate();
+                            let resp = (await environmentService.SVNForemanUpdate(postParams));
+                            console.info(resp.data);
+                            this.progressStruct[host][i].Message = null;
+                            this.progressStruct[host][i].Done = true;
+                        } catch (e) {
+                            this.progressStruct[host][i].Message = e.Message;
+                            this.progressStruct[host][i].Error = true;
+                        } finally {
+                            this.progressStruct[host][i].InProgress = false;
+                            await this.loadEnvs();
+                            this.$forceUpdate();
                         }
                     }
                 }
