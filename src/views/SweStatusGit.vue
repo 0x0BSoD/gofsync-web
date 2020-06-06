@@ -3,13 +3,16 @@
         <v-item-group>
             <v-container grid-list-md>
                 <v-layout row wrap>
-                    <v-flex xs12>
+                    <v-flex xs10>
                         <v-text-field
                                 label="Filter"
                                 v-model="filter"
                                 outline
                                 clearable
                         ></v-text-field>
+                    </v-flex>
+                    <v-flex xs2>
+                        <v-btn large flat @click="addEnvironment('')">BATCH</v-btn>
                     </v-flex>
                     <v-flex
                             v-for="(env, host) in environments"
@@ -325,6 +328,7 @@
         <v-dialog
                 v-model="dialogAddEnvironment"
                 max-width="800"
+                persistent
         >
             <v-card>
                 <v-toolbar class="text-xs-center" dark color="#7ac2ff">
@@ -606,7 +610,12 @@
                 this.commitLoading = false;
             },
 
-            async addEnvironment() {
+            async addEnvironment(host) {
+
+                this.selectedHosts = [];
+                this.selectedBranches = [];
+
+                if (host.length > 0) { this.selectedHosts.push(host) }
                 this.dialogAddEnvironment = true;
                 this.branches = (await environmentService.Branches()).data;
             },
