@@ -504,7 +504,7 @@
             link: false,
             targetDiff: false,
             hgUpdate: true,
-            toggle_status: 0,
+            toggle_status: -1,
             WSProgress: {
                 errors: [],
                 done: [],

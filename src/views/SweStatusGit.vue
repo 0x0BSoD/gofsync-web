@@ -12,7 +12,7 @@
                         ></v-text-field>
                     </v-flex>
                     <v-flex xs2>
-                        <v-btn large flat @click="addEnvironment('')">BATCH</v-btn>
+                        <v-btn large flat @click="addEnvironment('')">ADD ENV</v-btn>
                     </v-flex>
                     <v-flex
                             v-for="(env, host) in environments"

@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid>
 
         <!--    ============================================ Progress ============================================    -->
         <v-layout row wrap v-if="wipMessage">
@@ -58,6 +58,7 @@
             <!--                <v-btn large>add new location</v-btn>-->
                             <v-btn v-if="location" :disabled="wip" large @click="submitBtn(host, location)">save</v-btn>
                             <v-btn v-if="location" :disabled="wip" large @click="submitAsDialog(location)">save as</v-btn>
+                            <v-btn v-if="location" :disabled="wip" large @click="summaryDialog(host, location)">short summary</v-btn>
                         </v-flex>
         </v-layout>
         <!--        <v-flex xs12 mb-3>-->
@@ -136,6 +137,33 @@
                 </v-expansion-panel>
             </v-flex>
         </v-layout>
+            <v-dialog
+                    v-model="sumDialog"
+                    max-width="800px"
+            >
+                <v-card
+                        class="mx-auto"
+                >
+                    <v-toolbar class="text-xs-center" dark color="#7ac2ff">
+                        <v-toolbar-title>Location summary</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                    </v-toolbar>
+                    <v-card-text>
+                        <v-card dark>
+                            <v-card-text>
+                                <v-btn-toggle dark v-model="toggle_status" class="mb-2">
+                                    <v-btn flat dark color="success">Text</v-btn>
+                                    <v-btn flat dark color="primary">Jira</v-btn>
+                                    <v-btn flat dark color="warning">JSON</v-btn>
+                                </v-btn-toggle>
+                            <pre>
+{{ locationSummary }}
+                            </pre>
+                            </v-card-text>
+                        </v-card>
+                    </v-card-text>
+                </v-card>
+            </v-dialog>
 
                 <v-dialog
                         v-model="dialog"
@@ -222,9 +250,11 @@
         // DATA
         //========================================================================================================
         data: () => ({
+            toggle_status: 0,
             selectedPC: [],
             locations: [],
             location: null,
+            locationSummary: null,
             locNewName: null,
             hosts: [],
             host: null,
@@ -239,6 +269,7 @@
             search: null,
             caseSensitive: false,
             pcSync: false,
+            sumDialog: false,
             wipMessage: null,
             WSProgress: {
                 errors: [],
@@ -269,6 +300,11 @@
             nowActions: {
                 async handler(val) {
                     await Common.webSocketParser(val, this);
+                }
+            },
+            toggle_status: {
+                async handler(val) {
+                    this.locationSummary =  (await locationsService.Overrides(this.location, this.host, val)).data;
                 }
             },
             selectedPC: {
@@ -363,6 +399,11 @@
             },
         },
         methods: {
+            async summaryDialog(host, locName) {
+                this.sumDialog = true;
+                this.locationSummary =  (await locationsService.Overrides(locName, host, 0)).data;
+                // let tmp = (await locationsService.Overrides(val, this.host)).data;
+            },
             async submit (params) {
                 try {
                     this.wip = true;

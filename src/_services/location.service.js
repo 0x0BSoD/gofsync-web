@@ -12,8 +12,19 @@ function List() {
     return Api().get(`loc`);
 }
 
-function Overrides(locName, host) {
-    return Api().get(`loc/overrides/${host}/${locName}`);
+function Overrides(locName, host, format) {
+    console.log(format);
+    switch (format) {
+        case 0:
+            return Api().get(`loc/overrides/${host}/${locName}?format=text`);
+        case 1:
+            return Api().get(`loc/overrides/${host}/${locName}?format=jira`);
+        case 2:
+            return Api().get(`loc/overrides/${host}/${locName}`);
+        default:
+            return Api().get(`loc/overrides/${host}/${locName}`);
+    }
+
 }
 
 // POST ===========================================

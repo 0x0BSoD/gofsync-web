@@ -179,6 +179,9 @@
                     console.error(e);
                     this.output += `\n<==\n${ JSON.stringify(e, null, 2) }`;
                 }
+
+                this.jobs = (await jobsService.GetAll()).data;
+                this.$forceUpdate();
                 this.working = false;
             },
 
