@@ -6,6 +6,9 @@
                 </v-btn>
             </v-toolbar-title>
             <v-spacer></v-spacer>
+            <v-chip label color="success" dark>{{ statistics.success }}</v-chip>
+            <v-chip label color="warning" dark>{{ statistics.r_failed }}</v-chip>
+            <v-chip label color="error" dark>{{ statistics.failed }}</v-chip>
 <!--            <v-chip v-if="hg.env === 'stage'" small color="success">STAGE</v-chip>-->
 <!--            <v-chip v-if="hg.env === 'prod'" small color="warning">PROD</v-chip>-->
 
@@ -43,6 +46,9 @@
                     <v-list-tile @click="$emit('menuEvent', `hostgroup::${hg.host}`)">
                         <v-list-tile-title>hosts by HG</v-list-tile-title>
                     </v-list-tile>
+                    <v-list-tile @click="$emit('menuEvent', `config::${hg.host}`)">
+                        <v-list-tile-title>config</v-list-tile-title>
+                    </v-list-tile>
                 </v-list>
             </v-menu>
         </v-toolbar>
@@ -72,12 +78,17 @@
 </template>
 
 <script>
+    import {hostService} from "../../_services";
+
     export default {
-        data: () => ({}),
+        data: () => ({
+            statistics: {},
+        }),
         props: [
             "hg"
         ],
         async mounted() {
+            this.statistics = (await hostService.Statistic(this.hg.host)).data;
         },
         watch: {},
         methods: {},

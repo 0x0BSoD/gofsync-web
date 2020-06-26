@@ -1,7 +1,7 @@
 <template>
-    <v-container>
+    <v-container fluid>
         <v-item-group>
-            <v-container grid-list-md>
+            <v-container grid-list-md fluid>
                 <v-layout wrap>
                     <v-flex xs12>
                         <v-progress-linear v-if="wip" :indeterminate="wip"></v-progress-linear>
@@ -48,6 +48,39 @@
                 </v-layout>
             </v-container>
         </v-item-group>
+
+        <v-dialog
+                v-model="dialogConfig"
+                max-width="800"
+                persistent
+        >
+            <v-card>
+                <v-toolbar dark color="#7ac2ff">
+                    <v-toolbar-title>{{dialogTitle}}</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                </v-toolbar>
+                <v-card-text>
+                    <v-radio-group v-model="selectedVCS">
+                        <template v-slot:label>
+                            <div>VCS for storing the manifests <strong>code</strong></div>
+                        </template>
+                        <v-radio value="SVN">
+                            <template v-slot:label>
+                                <div><strong class="success--text">SVN</strong></div>
+                            </template>
+                        </v-radio>
+                        <v-radio value="GIT">
+                            <template v-slot:label>
+                                <div><strong class="primary--text">GIT</strong></div>
+                            </template>
+                        </v-radio>
+                    </v-radio-group>
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn @click="submitVcsChange()">submit</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
 
         <v-dialog
                 v-model="sweHosts"
@@ -227,6 +260,10 @@
                 },
             },
             globalWork: false,
+            dialogConfig: false,
+            selectedVCS: "",
+            vcsHostSelected: "",
+            foremans: [],
         }),
 
         components: {
@@ -240,6 +277,7 @@
             this.wip = true;
             this.locations  = (await locationsService.List()).data;
             this.locations.sort(Common.dynamicSort("host"));
+            this.foremans = (await hostService.hosts()).data;
             this.wip = false;
         },
         watch: {
@@ -295,10 +333,32 @@
                     case "updateHG":
                         await this.updateHG(arg);
                         break;
+                    case "config":
+                        await this.showConfigDialog(arg);
+                        break;
                     default:
                         console.log(method);
                         console.log(arg);
                 }
+            },
+            async showConfigDialog(host) {
+                this.dialogTitle = host;
+                let current_host = this.foremans.filter(i => { console.log(i); return  i.name === host });
+                if (current_host[0].git) {
+                    this.selectedVCS = "GIT";
+                } else {
+                    this.selectedVCS = "SVN";
+                }
+                this.dialogConfig = true;
+                this.vcsHostSelected = host;
+            },
+            async submitVcsChange() {
+                let val = 0;
+                if (this.selectedVCS === "GIT") {
+                    val = 1;
+                }
+                await hostService.setVCS(this.vcsHostSelected, val);
+                this.dialogConfig = false;
             },
             async showSweDialog(host) {
                 this.dialogTitle = host;

@@ -2,6 +2,7 @@ import Api from "./Api";
 
 export const hostService = {
     Info,
+    setVCS,
     hosts,
     ClientHosts,
     ClientHostsAll,
@@ -12,6 +13,11 @@ export const hostService = {
 function hosts() {
     return Api().get("hosts/foreman");
 }
+
+function setVCS(host, val) {
+    return Api().get(`hosts/${host}/vcs/${val}`);
+}
+
 
 function Statistic(host) {
     return Api().get(`hosts/trend/${host}`);
