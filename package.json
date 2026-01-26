@@ -10,7 +10,7 @@
     "axios": "1.8.2",
     "chart.js": "^2.9.3",
     "epic-spinners": "^1.1.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.23",
     "material-design-icons-iconfont": "^5.0.1",
     "v-jsoneditor": "^1.2.3",
     "vue": "^2.6.6",
